@@ -1,0 +1,15 @@
+# marker-pdf 1.x pulls the CLASSIC surya stack (surya-ocr 0.17.x, plain torch
+# models) — NOT the new vLLM-based VLM. That's what runs on plain PyTorch.
+marker-pdf==1.10.2
+
+# Bubba's hint, made exact: transformers 5.x removed SuryaDecoderConfig.pad_token_id
+# (surya #484). 4.57.3 is the known-good pin. Installed AFTER marker to win resolution.
+transformers==4.57.3
+
+# Thin HTTP wrapper
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# html -> markdown for the block-anchored output (also a marker dep, pinned here)
+markdownify==1.1.0

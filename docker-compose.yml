@@ -1,0 +1,77 @@
+name: pdf-md-parser
+
+services:
+  # ── The "swamp": Python + torch + marker, sealed behind one HTTP endpoint.
+  #    Internal only — never exposed to the host network.
+  marker-server:
+    build: ./marker-server
+    restart: unless-stopped
+    environment:
+      - TORCH_DEVICE=${TORCH_DEVICE:-cpu}
+      # Override the image's HF_HOME into the persisted cache (surya/datalab
+      # weights already go to /root/.cache/datalab). One volume covers both.
+      - HF_HOME=/root/.cache/huggingface
+    volumes:
+      - model-cache:/root/.cache
+    expose:
+      - "8000"
+    healthcheck:
+      # /health only answers once models are loaded (lifespan blocks serving),
+      # so a 200 here is a real readiness signal. Generous start_period for the
+      # first-run model download.
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=3).status==200 else 1)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 600s
+
+  # ── The control plane: .NET orchestrator, SQLite ledger, REST + SignalR.
+  #    Serves the dashboard later. The only port published to the host.
+  api:
+    build: ./PdfParser.Api
+    restart: unless-stopped
+    # Run as the invoking host user so written files stay theirs, not root's.
+    # `make up` injects DOCKER_UID/GID from `id`; falls back to 1000 otherwise.
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
+    depends_on:
+      marker-server:
+        condition: service_healthy   # don't start the watcher until marker is ready
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - App__WatchRoot=/host
+      - App__WatchSubdir=${WATCH_SUBDIR:-Downloads}
+      - App__VaultDir=/vault
+      - App__MarkerUrl=${MARKER_URL:-http://marker-server:8000}
+      - App__OllamaUrl=${OLLAMA_URL:-http://host.docker.internal:11434}
+      - App__OllamaModel=${OLLAMA_MODEL:-qwen2.5:7b-instruct}
+      - App__DebounceSeconds=${DEBOUNCE_SECONDS:-2}
+    ports:
+      - "${API_PORT:-6670}:8080"   # direct API + Scalar (the SPA goes through web)
+    volumes:
+      # Whole home mounted so the watched folder can be ANY subfolder, switchable
+      # from the frontend (the watchSubdir setting). /host/<watchSubdir> is watched.
+      - ${WATCH_ROOT:-${HOME}}:/host
+      - ${VAULT_DIR:-./vault}:/vault
+    extra_hosts:
+      # Lets the bridged container reach host Ollama. Ollama must listen
+      # beyond 127.0.0.1 — see README "The one host tweak".
+      - "host.docker.internal:host-gateway"
+
+  # ── The dashboard: built SPA served by nginx, which proxies /api + /hub to the
+  #    api container. This is the public entry point.
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-6669}:80"   # localhost:6669  →  zlo i naopako  (the app)
+
+volumes:
+  model-cache:

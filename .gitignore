@@ -1,0 +1,37 @@
+# Secrets / local config
+.env
+
+# Vault output (generated)
+vault/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
+# .NET
+bin/
+obj/
+*.user
+appsettings.Development.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Models / caches
+models/
+.hf-cache/
+
+# Frontend (later)
+node_modules/
+dist/
+
+# Editor
+.vs/
+.idea/
+*.swp
+.DS_Store
+
+# Claude
+CLAUDE.md
