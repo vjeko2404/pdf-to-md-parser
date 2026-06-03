@@ -39,10 +39,10 @@ export function LlmStatusPill() {
   return (
     <span
       className={cn(
-        'inline-flex max-w-[18rem] items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs',
+        'inline-flex max-w-[40vw] items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs sm:max-w-[18rem] sm:px-2.5',
         online ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground',
       )}
-      title={test?.detail ?? undefined}
+      title={isApi ? label : (test?.detail ?? undefined)}
     >
       <Icon className="size-3.5 shrink-0" />
       <span
@@ -51,7 +51,9 @@ export function LlmStatusPill() {
           online ? 'bg-emerald-500' : 'bg-muted-foreground/50',
         )}
       />
-      <span className="truncate">{label}</span>
+      {/* Label is the main offender for top-bar overflow on phones — hide it below sm,
+          leaving the compact icon + status dot. Full text returns on tablet/desktop. */}
+      <span className="hidden truncate sm:inline">{label}</span>
     </span>
   )
 }

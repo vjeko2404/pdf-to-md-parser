@@ -37,7 +37,7 @@ export function DocumentCard({
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 rounded-xl border bg-card p-4 transition-shadow hover:shadow-sm',
+        'flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-4 transition-shadow hover:shadow-sm',
         selected && 'ring-2 ring-primary',
       )}
     >
@@ -57,7 +57,7 @@ export function DocumentCard({
 
       {doc.summary && (
         <Tooltip content={doc.summary} delay={2000} className="block">
-          <p className="line-clamp-2 cursor-default text-sm text-muted-foreground">{doc.summary}</p>
+          <p className="line-clamp-2 cursor-default wrap-break-word text-sm text-muted-foreground">{doc.summary}</p>
         </Tooltip>
       )}
 

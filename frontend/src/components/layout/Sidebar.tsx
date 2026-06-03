@@ -5,7 +5,7 @@ import { NAV } from './nav'
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
-    <nav className="flex w-60 shrink-0 flex-col gap-1 border-r bg-card p-3">
+    <nav className="flex h-full w-60 shrink-0 flex-col gap-1 overflow-y-auto border-r bg-card p-3">
       {NAV.map(({ to, label, icon: Icon, end }) => (
         <NavLink
           key={to}

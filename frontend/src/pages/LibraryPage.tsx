@@ -175,6 +175,7 @@ export function LibraryPage() {
         onSort={setSort}
         view={view}
         onView={setView}
+        showViewSwitcher={!isMobile}
         selectedCount={selected.size}
         onEnrichSelected={enrichSelected}
         onDeleteSelected={() => setDeleteTarget({ kind: 'many', ids: [...selected] })}
@@ -189,10 +190,10 @@ export function LibraryPage() {
         <div className="rounded-xl border border-dashed bg-card/50 p-10 text-center text-muted-foreground">
           No documents yet. Drop a PDF above to get started.
         </div>
-      ) : view === 'grid' ? (
-        <DocumentGrid {...sharedProps} />
-      ) : (
+      ) : view === 'table' && !isMobile ? (
         <DocumentTable {...sharedProps} onToggleAll={toggleAll} sort={sort} onSort={setSort} />
+      ) : (
+        <DocumentGrid {...sharedProps} />
       )}
 
       <ConfirmDialog

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { RefObject } from 'react'
 import { Document, Page } from 'react-pdf'
 import '@/lib/pdfWorker'
@@ -12,6 +12,18 @@ export function PdfPane({
   containerRef: RefObject<HTMLDivElement | null>
 }) {
   const [pages, setPages] = useState(0)
+  // Fit the rendered page to the container instead of a fixed 560px — on a phone that
+  // fixed width overflowed horizontally. Capped at 560 so it never balloons on desktop.
+  const [pageWidth, setPageWidth] = useState(560)
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const measure = () => setPageWidth(Math.max(240, Math.min(560, el.clientWidth - 32)))
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [containerRef, url])
 
   if (!url)
     return (
@@ -34,7 +46,7 @@ export function PdfPane({
             data-page={i}
             className="pdf-page mx-auto mb-4 w-fit overflow-hidden rounded shadow"
           >
-            <Page pageNumber={i + 1} width={560} renderTextLayer={false} renderAnnotationLayer={false} />
+            <Page pageNumber={i + 1} width={pageWidth} renderTextLayer={false} renderAnnotationLayer={false} />
           </div>
         ))}
       </Document>

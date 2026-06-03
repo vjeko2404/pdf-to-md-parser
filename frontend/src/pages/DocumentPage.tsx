@@ -189,12 +189,22 @@ export function DocumentPage() {
 
       <div
         className={cn(
-          'grid flex-1 gap-3 overflow-hidden',
-          layout === 'split' ? (isMobile ? 'grid-rows-2' : 'grid-cols-2') : 'grid-cols-1',
+          'grid gap-3',
+          // Desktop: panes fill the remaining viewport height (sync-scroll needs a fixed box).
+          // Mobile: give each pane a tall, usable height and let the page scroll — cramming two
+          // rows into the short phone viewport made each pane unreadably small.
+          isMobile
+            ? 'grid-cols-1'
+            : cn('flex-1 overflow-hidden', layout === 'split' ? 'grid-cols-2' : 'grid-cols-1'),
         )}
       >
         {showPdf && (
-          <div className="group relative overflow-hidden rounded-xl border">
+          <div
+            className={cn(
+              'group relative overflow-hidden rounded-xl border',
+              isMobile && 'h-[80vh]',
+            )}
+          >
             <div className={overlayCls}>
               <Button asChild variant="ghost" size="icon" title="Download PDF" disabled={!pdfUrl}>
                 <a href={pdfUrl ?? undefined} download={doc?.originalName}>
@@ -209,7 +219,12 @@ export function DocumentPage() {
           </div>
         )}
         {showMd && (
-          <div className="group relative overflow-hidden rounded-xl border bg-card">
+          <div
+            className={cn(
+              'group relative overflow-hidden rounded-xl border bg-card',
+              isMobile && 'h-[80vh]',
+            )}
+          >
             <div className={overlayCls}>
               <Button variant="ghost" size="icon" onClick={copyMd} title="Copy Markdown">
                 <Copy className="size-4" />

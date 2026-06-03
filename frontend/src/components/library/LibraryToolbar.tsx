@@ -21,6 +21,7 @@ export interface LibraryToolbarProps {
   onSort: (v: string) => void
   view: ViewMode
   onView: (v: ViewMode) => void
+  showViewSwitcher?: boolean
   selectedCount: number
   onEnrichSelected: () => void
   onDeleteSelected: () => void
@@ -43,6 +44,7 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
     onSort,
     view,
     onView,
+    showViewSwitcher = true,
     selectedCount,
     onEnrichSelected,
     onDeleteSelected,
@@ -130,7 +132,7 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
         )}
         {paused ? 'Resume' : 'Pause'}
       </Button>
-      <ViewSwitcher mode={view} onChange={onView} />
+      {showViewSwitcher && <ViewSwitcher mode={view} onChange={onView} />}
     </div>
   )
 }

@@ -31,7 +31,7 @@ export function UserMenu() {
     <div className="relative" ref={ref}>
       <Button variant="ghost" size="sm" onClick={() => setOpen((o) => !o)} className="gap-1.5">
         <UserIcon className="size-4" />
-        <span className="max-w-32 truncate">{user.username}</span>
+        <span className="max-w-20 truncate sm:max-w-32">{user.username}</span>
         {isAdmin && <ShieldCheck className="size-3.5 text-primary" />}
         <ChevronDown className="size-3.5 opacity-60" />
       </Button>
