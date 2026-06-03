@@ -23,6 +23,12 @@ public class AppOptions
     /// generated under the vault (vault/.secretkey).</summary>
     public string SecretKey { get; set; } = "";
 
+    /// <summary>HMAC-SHA256 signing key for issued JWTs. MUST be set (long random
+    /// string) in production — seeded from the JWT_KEY env var via compose. If empty,
+    /// a random keyfile is generated under the vault (vault/.jwtkey) so local dev still
+    /// works, but tokens won't survive a vault wipe.</summary>
+    public string JwtKey { get; set; } = "";
+
     /// <summary>Default enrichment system prompt (editable live in settings).</summary>
     public string EnrichPrompt { get; set; } =
         "You extract structured metadata from a document. The text may be in German, "

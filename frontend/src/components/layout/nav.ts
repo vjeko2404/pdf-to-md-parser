@@ -19,7 +19,7 @@ export const NAV: NavItem[] = [
   { to: '/', label: 'Library', icon: FileText, end: true },
   { to: '/categories', label: 'Categories', icon: Tags },
   { to: '/folders', label: 'Folders', icon: FolderTree },
-  { to: '/ollama', label: 'Ollama', icon: Bot },
+  { to: '/ai', label: 'AI', icon: Bot },
   { to: '/settings', label: 'Settings', icon: Settings },
   { to: '/logs', label: 'Logs', icon: ScrollText },
 ]

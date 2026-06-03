@@ -1,9 +1,9 @@
 import { Section } from '@/components/common/Section'
 import { Toggle } from '@/components/common/Toggle'
+import { LlmProviderPanel } from '@/components/settings/LlmProviderPanel'
 import { ModelsPanel } from '@/components/ollama/ModelsPanel'
 import { PullPanel } from '@/components/ollama/PullPanel'
 import { PromptPanel } from '@/components/ollama/PromptPanel'
-import { useOllamaStatus } from '@/hooks/useOllama'
 import { usePatchSettings, useSettings } from '@/hooks/useSettings'
 
 function ToggleRow({
@@ -29,22 +29,20 @@ function ToggleRow({
 }
 
 export function OllamaPage() {
-  const { data: status } = useOllamaStatus()
   const { data: settings } = useSettings()
   const patch = usePatchSettings()
-  const online = status?.online ?? false
   const setBool = (key: string, v: boolean) => patch.mutate({ [key]: String(v) })
+  const isOllama = (settings?.llmProvider ?? 'ollama') !== 'openai'
 
   return (
     <div className="flex max-w-3xl flex-col gap-4">
-      <Section
-        title="Ollama"
-        description={online ? `online · ${status?.version}` : status?.error ? `offline — ${status.error}` : 'offline'}
-      >
+      <LlmProviderPanel />
+
+      <Section title="Enrichment" description="Tagging, summary & auto-categorize behaviour">
         <div className="flex flex-col gap-4">
           <ToggleRow
             label="Enrichment enabled"
-            hint="Master switch — when off, the app never calls Ollama."
+            hint="Master switch — when off, the app never calls the LLM."
             checked={settings?.enrichmentEnabled === 'true'}
             onChange={(v) => setBool('enrichmentEnabled', v)}
           />
@@ -63,11 +61,16 @@ export function OllamaPage() {
         </div>
       </Section>
 
-      <ModelsPanel
-        activeModel={settings?.ollamaModel}
-        onSelect={(m) => patch.mutate({ ollamaModel: m })}
-      />
-      <PullPanel />
+      {isOllama && (
+        <>
+          <ModelsPanel
+            activeModel={settings?.ollamaModel}
+            onSelect={(m) => patch.mutate({ ollamaModel: m })}
+          />
+          <PullPanel />
+        </>
+      )}
+
       <PromptPanel
         value={settings?.enrichPrompt ?? ''}
         onSave={(p) => patch.mutate({ enrichPrompt: p })}

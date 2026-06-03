@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
+import { getToken } from '@/api/token'
 
 type Handler = (...args: never[]) => void
 
@@ -11,7 +12,7 @@ type Handler = (...args: never[]) => void
 export function useSignalR(handlers: Record<string, Handler>) {
   useEffect(() => {
     const conn = new HubConnectionBuilder()
-      .withUrl('/hub/live')
+      .withUrl('/hub/live', { accessTokenFactory: () => getToken() ?? '' })
       .withAutomaticReconnect()
       .configureLogging(LogLevel.Warning)
       .build()

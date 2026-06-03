@@ -46,11 +46,13 @@ public class PipelineWorker(
 
     private async Task ProcessAsync(long id, CancellationToken ct)
     {
-        var doc = await repo.GetByIdAsync(id);
+        var doc = await repo.GetByIdInternalAsync(id);
         if (doc is null)
             return;
 
-        var watchDir = settings.WatchDir;
+        var owner = doc.OwnerUserId ?? 0;
+        // A fresh ingest sits in the OWNER's watched folder.
+        var watchDir = settings.For(owner).WatchDir;
         var vaultDir = settings.VaultDir;
 
         // On a fresh ingest the file is in the watch dir; on a retry it's the archive.
@@ -62,7 +64,7 @@ public class PipelineWorker(
         var sw = Stopwatch.StartNew();
         await repo.SetStatusAsync(id, DocumentStatus.Processing);
         await repo.AddEventAsync(id, "info", "convert", $"Processing {doc.OriginalName}");
-        await Broadcast(id, DocumentStatus.Processing, doc.OriginalName, ct);
+        await Broadcast(owner, id, DocumentStatus.Processing, doc.OriginalName, ct);
 
         try
         {
@@ -110,7 +112,7 @@ public class PipelineWorker(
             await repo.SaveResultAsync(doc, plain);
 
             await repo.AddEventAsync(id, "info", "done", $"Done in {sw.ElapsedMilliseconds} ms");
-            await Broadcast(id, DocumentStatus.Done, doc.OriginalName, ct);
+            await Broadcast(owner, id, DocumentStatus.Done, doc.OriginalName, ct);
             logger.LogInformation(
                 "Converted {Name} (#{Id}) in {Ms} ms",
                 doc.OriginalName,
@@ -119,12 +121,12 @@ public class PipelineWorker(
             );
 
             // 5. Optional best-effort auto-enrich ---------------------------
-            if (settings.AutoEnrich)
+            if (settings.For(owner).AutoEnrich)
             {
                 if (await enrichment.EnrichAsync(doc, ct))
                 {
                     await repo.AddEventAsync(id, "info", "enrich", "Auto-enriched");
-                    await Broadcast(id, DocumentStatus.Done, doc.OriginalName, ct);
+                    await Broadcast(owner, id, DocumentStatus.Done, doc.OriginalName, ct);
                 }
                 else
                 {
@@ -138,7 +140,7 @@ public class PipelineWorker(
             await repo.SetStatusAsync(id, DocumentStatus.Failed, ex.Message);
             await repo.AddEventAsync(id, "error", "convert", ex.Message);
             // Leave the original in place — keeps it retryable.
-            await Broadcast(id, DocumentStatus.Failed, doc.OriginalName, ct);
+            await Broadcast(owner, id, DocumentStatus.Failed, doc.OriginalName, ct);
         }
     }
 
@@ -170,8 +172,8 @@ public class PipelineWorker(
         }
     }
 
-    private Task Broadcast(long id, DocumentStatus status, string name, CancellationToken ct) =>
-        hub.Clients.All.SendAsync(
+    private Task Broadcast(long ownerUserId, long id, DocumentStatus status, string name, CancellationToken ct) =>
+        hub.Clients.User(ownerUserId.ToString()).SendAsync(
             "documentUpdated",
             new
             {

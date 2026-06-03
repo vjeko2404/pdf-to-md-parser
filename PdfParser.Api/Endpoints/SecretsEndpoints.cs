@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using PdfParser.Api.Auth;
 using PdfParser.Api.Data;
 
 namespace PdfParser.Api.Endpoints;
@@ -8,33 +10,35 @@ public static class SecretsEndpoints
     {
         var g = app.MapGroup("/api/secrets").WithTags("Secrets");
 
-        // Masked list (never returns plaintext).
-        g.MapGet("/", (SecretsService s) => Results.Ok(s.List()));
+        // Masked list (never returns plaintext) — only the caller's own secrets.
+        g.MapGet("/", (ClaimsPrincipal user, SecretsService s) => Results.Ok(s.List(user.GetUserId())));
 
         // Explicit reveal of a single secret.
         g.MapGet(
             "/{key}/reveal",
-            (string key, SecretsService s) =>
-                s.Reveal(key) is { } v ? Results.Ok(new { key, value = v }) : Results.NotFound()
+            (string key, ClaimsPrincipal user, SecretsService s) =>
+                s.Reveal(user.GetUserId(), key) is { } v
+                    ? Results.Ok(new { key, value = v })
+                    : Results.NotFound()
         );
 
         // Create/update.
         g.MapPut(
             "/",
-            (SecretPut body, SecretsService s) =>
+            (SecretPut body, ClaimsPrincipal user, SecretsService s) =>
             {
                 if (string.IsNullOrWhiteSpace(body.Key))
                     return Results.BadRequest("key required");
-                s.Set(body.Key, body.Value ?? "");
+                s.Set(user.GetUserId(), body.Key, body.Value ?? "");
                 return Results.NoContent();
             }
         );
 
         g.MapDelete(
             "/{key}",
-            (string key, SecretsService s) =>
+            (string key, ClaimsPrincipal user, SecretsService s) =>
             {
-                s.Delete(key);
+                s.Delete(user.GetUserId(), key);
                 return Results.NoContent();
             }
         );

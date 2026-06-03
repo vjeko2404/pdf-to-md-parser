@@ -90,7 +90,7 @@ export function DocumentCard({
             size="sm"
             onClick={() => onDelete(doc.id)}
             title="Delete from vault"
-            className="text-muted-foreground hover:bg-destructive hover:text-destructive-foreground"
+            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
           >
             <Trash2 className="size-4" />
           </Button>

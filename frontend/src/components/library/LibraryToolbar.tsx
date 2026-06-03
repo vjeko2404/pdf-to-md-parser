@@ -17,6 +17,8 @@ export interface LibraryToolbarProps {
   categories: Category[]
   categoryId: string
   onCategory: (v: string) => void
+  sort: string
+  onSort: (v: string) => void
   view: ViewMode
   onView: (v: ViewMode) => void
   selectedCount: number
@@ -34,6 +36,8 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
     categories,
     categoryId,
     onCategory,
+    sort,
+    onSort,
     view,
     onView,
     selectedCount,
@@ -78,6 +82,12 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
           </option>
         ))}
       </Select>
+      <Select value={sort} onChange={onSort} title="Sort">
+        <option value="">Newest</option>
+        <option value="oldest">Oldest</option>
+        <option value="name">Name A–Z</option>
+        <option value="status">Status</option>
+      </Select>
       {selectedCount > 0 && (
         <>
           <Button
@@ -93,7 +103,7 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
             )}
             {enriching ? 'Enriching…' : `Enrich ${selectedCount}`}
           </Button>
-          <Button variant="destructive" size="sm" onClick={onDeleteSelected} disabled={enriching}>
+          <Button variant="button_red" size="sm" onClick={onDeleteSelected} disabled={enriching}>
             <Trash2 className="size-4" /> Delete {selectedCount}
           </Button>
         </>

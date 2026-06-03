@@ -48,11 +48,11 @@ export function ConfirmDialog({
         <h2 className="text-base font-semibold">{title}</h2>
         {description && <p className="mt-2 text-sm text-muted-foreground">{description}</p>}
         <div className="mt-5 flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={onCancel}>
+          <Button variant="button_neutral" size="sm" onClick={onCancel}>
             {cancelLabel}
           </Button>
           <Button
-            variant={destructive ? 'destructive' : 'button_primary'}
+            variant={destructive ? 'button_red' : 'button_primary'}
             size="sm"
             onClick={onConfirm}
           >

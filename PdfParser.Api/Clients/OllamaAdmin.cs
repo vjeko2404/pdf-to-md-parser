@@ -21,15 +21,15 @@ public class OllamaAdmin(
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
-    private string BaseUrl => settings.OllamaUrl.TrimEnd('/');
+    private string BaseUrl(long userId) => settings.For(userId).OllamaUrl.TrimEnd('/');
 
     /// <summary>
     /// Ping the server's /api/version. Pass <paramref name="urlOverride"/> to test an
     /// arbitrary URL (e.g. an unsaved value typed in Settings) instead of the saved one.
     /// </summary>
-    public async Task<OllamaStatus> StatusAsync(CancellationToken ct, string? urlOverride = null)
+    public async Task<OllamaStatus> StatusAsync(long userId, CancellationToken ct, string? urlOverride = null)
     {
-        var baseUrl = (string.IsNullOrWhiteSpace(urlOverride) ? settings.OllamaUrl : urlOverride).TrimEnd('/');
+        var baseUrl = (string.IsNullOrWhiteSpace(urlOverride) ? settings.For(userId).OllamaUrl : urlOverride).TrimEnd('/');
         try
         {
             var v = await http.GetFromJsonAsync<VersionResponse>($"{baseUrl}/api/version", Json, ct);
@@ -41,21 +41,21 @@ public class OllamaAdmin(
         }
     }
 
-    public async Task<IReadOnlyList<OllamaModel>> ListModelsAsync(CancellationToken ct)
+    public async Task<IReadOnlyList<OllamaModel>> ListModelsAsync(long userId, CancellationToken ct)
     {
-        var tags = await http.GetFromJsonAsync<TagsResponse>($"{BaseUrl}/api/tags", Json, ct);
+        var tags = await http.GetFromJsonAsync<TagsResponse>($"{BaseUrl(userId)}/api/tags", Json, ct);
         return tags?.Models ?? [];
     }
 
-    public async Task<IReadOnlyList<LoadedModel>> LoadedAsync(CancellationToken ct)
+    public async Task<IReadOnlyList<LoadedModel>> LoadedAsync(long userId, CancellationToken ct)
     {
-        var ps = await http.GetFromJsonAsync<PsResponse>($"{BaseUrl}/api/ps", Json, ct);
+        var ps = await http.GetFromJsonAsync<PsResponse>($"{BaseUrl(userId)}/api/ps", Json, ct);
         return ps?.Models ?? [];
     }
 
-    public async Task DeleteModelAsync(string name, CancellationToken ct)
+    public async Task DeleteModelAsync(long userId, string name, CancellationToken ct)
     {
-        using var req = new HttpRequestMessage(HttpMethod.Delete, $"{BaseUrl}/api/delete")
+        using var req = new HttpRequestMessage(HttpMethod.Delete, $"{BaseUrl(userId)}/api/delete")
         {
             Content = JsonContent.Create(new { name }),
         };
@@ -63,12 +63,14 @@ public class OllamaAdmin(
         resp.EnsureSuccessStatusCode();
     }
 
-    /// <summary>Pull a model, streaming {status,total,completed} progress over SignalR.</summary>
-    public async Task PullAsync(string name, CancellationToken ct)
+    /// <summary>Pull a model, streaming {status,total,completed} progress over SignalR to
+    /// the requesting user only.</summary>
+    public async Task PullAsync(long userId, string name, CancellationToken ct)
     {
+        var client = hub.Clients.User(userId.ToString());
         try
         {
-            using var req = new HttpRequestMessage(HttpMethod.Post, $"{BaseUrl}/api/pull")
+            using var req = new HttpRequestMessage(HttpMethod.Post, $"{BaseUrl(userId)}/api/pull")
             {
                 Content = JsonContent.Create(new { name, stream = true }),
             };
@@ -84,7 +86,7 @@ public class OllamaAdmin(
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
                 var node = JsonSerializer.Deserialize<JsonElement>(line);
-                await hub.Clients.All.SendAsync(
+                await client.SendAsync(
                     "ollamaPull",
                     new
                     {
@@ -96,12 +98,12 @@ public class OllamaAdmin(
                     ct
                 );
             }
-            await hub.Clients.All.SendAsync("ollamaPull", new { name, status = "done" }, ct);
+            await client.SendAsync("ollamaPull", new { name, status = "done" }, ct);
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Ollama pull failed for {Name}", name);
-            await hub.Clients.All.SendAsync(
+            await client.SendAsync(
                 "ollamaPull",
                 new { name, status = "error", error = ex.Message },
                 CancellationToken.None

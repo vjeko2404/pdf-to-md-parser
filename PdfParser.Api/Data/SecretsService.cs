@@ -39,41 +39,42 @@ public class SecretsService
         return key;
     }
 
-    public IReadOnlyList<SecretInfo> List()
+    public IReadOnlyList<SecretInfo> List(long userId)
     {
         using var c = _db.Open();
         var rows = c.Query<(string Key, string ValueEnc, string UpdatedAt)>(
-            "SELECT Key, ValueEnc, UpdatedAt FROM secrets ORDER BY Key"
+            "SELECT Key, ValueEnc, UpdatedAt FROM secrets WHERE UserId = @userId ORDER BY Key",
+            new { userId }
         );
         return rows.Select(r => new SecretInfo(r.Key, Mask(Decrypt(r.ValueEnc)), r.UpdatedAt)).ToList();
     }
 
-    public string? Reveal(string key)
+    public string? Reveal(long userId, string key)
     {
         using var c = _db.Open();
         var enc = c.QuerySingleOrDefault<string>(
-            "SELECT ValueEnc FROM secrets WHERE Key = @key",
-            new { key }
+            "SELECT ValueEnc FROM secrets WHERE UserId = @userId AND Key = @key",
+            new { userId, key }
         );
         return enc is null ? null : Decrypt(enc);
     }
 
-    public void Set(string key, string value)
+    public void Set(long userId, string key, string value)
     {
         using var c = _db.Open();
         c.Execute(
             """
-            INSERT INTO secrets (Key, ValueEnc, UpdatedAt) VALUES (@key, @enc, @ts)
-            ON CONFLICT(Key) DO UPDATE SET ValueEnc = @enc, UpdatedAt = @ts;
+            INSERT INTO secrets (UserId, Key, ValueEnc, UpdatedAt) VALUES (@userId, @key, @enc, @ts)
+            ON CONFLICT(UserId, Key) DO UPDATE SET ValueEnc = @enc, UpdatedAt = @ts;
             """,
-            new { key, enc = Encrypt(value), ts = DateTime.UtcNow.ToString("o") }
+            new { userId, key, enc = Encrypt(value), ts = DateTime.UtcNow.ToString("o") }
         );
     }
 
-    public void Delete(string key)
+    public void Delete(long userId, string key)
     {
         using var c = _db.Open();
-        c.Execute("DELETE FROM secrets WHERE Key = @key", new { key });
+        c.Execute("DELETE FROM secrets WHERE UserId = @userId AND Key = @key", new { userId, key });
     }
 
     private string Encrypt(string plain)

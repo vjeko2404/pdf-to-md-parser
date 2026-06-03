@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using PdfParser.Api.Auth;
 using PdfParser.Api.Data;
 
 namespace PdfParser.Api.Endpoints;
@@ -8,19 +10,28 @@ public static class StatsEndpoints
     {
         app.MapGet(
                 "/api/stats",
-                async (DocumentRepository repo) => Results.Ok(await repo.StatsAsync())
+                async (ClaimsPrincipal user, DocumentRepository repo) =>
+                    Results.Ok(await repo.StatsAsync(user.GetUserId()))
             )
             .WithTags("Dashboard");
 
         app.MapGet(
                 "/api/events",
-                async (DocumentRepository repo) => Results.Ok(await repo.GetEventsAsync(null))
+                async (ClaimsPrincipal user, DocumentRepository repo) =>
+                    Results.Ok(await repo.GetEventsAsync(null, user.GetUserId()))
             )
             .WithTags("Dashboard");
 
-        app.MapGet("/api/facets", async (DocumentRepository repo) => Results.Ok(await repo.FacetsAsync()))
+        app.MapGet(
+                "/api/facets",
+                async (ClaimsPrincipal user, DocumentRepository repo) =>
+                    Results.Ok(await repo.FacetsAsync(user.GetUserId()))
+            )
             .WithTags("Dashboard");
 
-        app.MapGet("/api/health", () => Results.Ok(new { status = "ok" })).WithTags("Dashboard");
+        // Health is public (used by container probes / uptime checks).
+        app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }))
+            .AllowAnonymous()
+            .WithTags("Dashboard");
     }
 }

@@ -7,28 +7,29 @@ using PdfParser.Api.Models;
 namespace PdfParser.Api.Clients;
 
 /// <summary>
-/// Host Ollama (Vulkan) enrichment. URL + model come from live settings. Uses
-/// structured outputs — we hand Ollama a JSON schema so it returns a validated
-/// object, not prose. Best-effort: any failure returns null.
+/// Host Ollama (Vulkan) enrichment. URL + model come from the calling user's live
+/// settings. Uses structured outputs — we hand Ollama a JSON schema so it returns a
+/// validated object, not prose. Best-effort: any failure returns null.
 /// </summary>
 public class OllamaClient(HttpClient http, SettingsService settings, ILogger<OllamaClient> logger)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
-    public async Task<EnrichResult?> EnrichAsync(string text, CancellationToken ct)
+    public async Task<EnrichResult?> EnrichAsync(long userId, string text, CancellationToken ct)
     {
         try
         {
-            var baseUrl = settings.OllamaUrl.TrimEnd('/');
+            var s = settings.For(userId);
+            var baseUrl = s.OllamaUrl.TrimEnd('/');
             var excerpt = text.Length > 6000 ? text[..6000] : text;
             var payload = new
             {
-                model = settings.OllamaModel,
+                model = s.OllamaModel,
                 stream = false,
                 format = Schema,
                 messages = new[]
                 {
-                    new { role = "system", content = settings.EnrichPrompt },
+                    new { role = "system", content = s.EnrichPrompt },
                     new { role = "user", content = excerpt },
                 },
             };
@@ -55,6 +56,7 @@ public class OllamaClient(HttpClient http, SettingsService settings, ILogger<Oll
     /// chosen names (a subset of <paramref name="categories"/>), or null on failure.
     /// </summary>
     public async Task<string[]?> ClassifyAsync(
+        long userId,
         string text,
         IReadOnlyList<string> categories,
         CancellationToken ct
@@ -64,7 +66,8 @@ public class OllamaClient(HttpClient http, SettingsService settings, ILogger<Oll
             return [];
         try
         {
-            var baseUrl = settings.OllamaUrl.TrimEnd('/');
+            var s = settings.For(userId);
+            var baseUrl = s.OllamaUrl.TrimEnd('/');
             var excerpt = text.Length > 6000 ? text[..6000] : text;
             var sys =
                 "You assign a document to categories. Choose ONLY from this exact list: "
@@ -73,7 +76,7 @@ public class OllamaClient(HttpClient http, SettingsService settings, ILogger<Oll
                 + "(possibly empty). Never invent names outside the list.";
             var payload = new
             {
-                model = settings.OllamaModel,
+                model = s.OllamaModel,
                 stream = false,
                 format = ClassifySchema,
                 messages = new[]
@@ -102,19 +105,20 @@ public class OllamaClient(HttpClient http, SettingsService settings, ILogger<Oll
     /// Generate a prose summary using the (separate, editable) summary prompt.
     /// Plain text out — no JSON schema. Returns null on any failure.
     /// </summary>
-    public async Task<string?> SummarizeAsync(string text, CancellationToken ct)
+    public async Task<string?> SummarizeAsync(long userId, string text, CancellationToken ct)
     {
         try
         {
-            var baseUrl = settings.OllamaUrl.TrimEnd('/');
+            var s = settings.For(userId);
+            var baseUrl = s.OllamaUrl.TrimEnd('/');
             var excerpt = text.Length > 6000 ? text[..6000] : text;
             var payload = new
             {
-                model = settings.OllamaModel,
+                model = s.OllamaModel,
                 stream = false,
                 messages = new[]
                 {
-                    new { role = "system", content = settings.SummaryPrompt },
+                    new { role = "system", content = s.SummaryPrompt },
                     new { role = "user", content = excerpt },
                 },
             };

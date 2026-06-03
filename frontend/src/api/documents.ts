@@ -51,6 +51,8 @@ export const documentsApi = {
   remove: (id: number) => api.del<void>(`/documents/${id}`),
   removeBatch: (ids: number[]) => api.post<{ deleted: number }>('/documents/delete', { ids }),
   reenrich: (id: number) => api.post<DocumentDto>(`/documents/${id}/reenrich`),
+  updateTags: (id: number, tags: string[]) =>
+    api.patch<DocumentDto>(`/documents/${id}/tags`, { tags }),
   enrichBatch: (ids: number[]) => api.post<EnrichResult[]>('/documents/enrich', { ids }),
   events: (id: number) => api.get<EventDto[]>(`/documents/${id}/events`),
   markdown: (id: number) => api.get<string>(`/documents/${id}/markdown`),

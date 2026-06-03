@@ -23,4 +23,15 @@ export const useReenrich = () => useInvalidatingMutation((id: number) => documen
 export const useRetry = () => useInvalidatingMutation((id: number) => documentsApi.retry(id))
 export const useEnrichBatch = () => useInvalidatingMutation((ids: number[]) => documentsApi.enrichBatch(ids))
 export const useDeleteDocument = () => useInvalidatingMutation((id: number) => documentsApi.remove(id))
+
+export function useUpdateTags(id: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (tags: string[]) => documentsApi.updateTags(id, tags),
+    onSuccess: (doc) => {
+      qc.setQueryData(['document', id], doc)
+      qc.invalidateQueries({ queryKey: KEY })
+    },
+  })
+}
 export const useDeleteBatch = () => useInvalidatingMutation((ids: number[]) => documentsApi.removeBatch(ids))

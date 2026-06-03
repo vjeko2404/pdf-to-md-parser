@@ -17,12 +17,13 @@ public class CategorizationService(CategoryRepository cats, LlmService llm)
         if (d.MdPath is null || !File.Exists(d.MdPath))
             return [];
 
-        var categories = (await cats.ListAsync()).ToList();
+        var uid = d.OwnerUserId ?? 0;
+        var categories = (await cats.ListAsync(uid)).ToList();
         if (categories.Count == 0)
             return [];
 
         var text = Helpers.StripAnchors(await File.ReadAllTextAsync(d.MdPath, ct));
-        var chosen = await llm.ClassifyAsync(text, categories.Select(c => c.Name).ToList(), ct);
+        var chosen = await llm.ClassifyAsync(uid, text, categories.Select(c => c.Name).ToList(), ct);
         if (chosen is null)
             return [];
 

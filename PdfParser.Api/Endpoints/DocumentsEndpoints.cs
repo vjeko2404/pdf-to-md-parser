@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using PdfParser.Api.Auth;
 using PdfParser.Api.Data;
 using PdfParser.Api.Models;
 using PdfParser.Api.Pipeline;
@@ -12,10 +14,11 @@ public static class DocumentsEndpoints
     {
         var g = app.MapGroup("/api/documents").WithTags("Documents");
 
-        // Search (FTS5 when q present) + detailed filters.
+        // Search (FTS5 when q present) + detailed filters — scoped to the caller.
         g.MapGet(
             "/",
             async (
+                ClaimsPrincipal user,
                 DocumentRepository repo,
                 string? q,
                 DocumentStatus? status,
@@ -51,21 +54,21 @@ public static class DocumentsEndpoints
                     categoryId,
                     sort
                 );
-                return Results.Ok(await repo.SearchAsync(query));
+                return Results.Ok(await repo.SearchAsync(query, user.GetUserId()));
             }
         );
 
         g.MapGet(
             "/{id:long}",
-            async (long id, DocumentRepository repo) =>
-                await repo.GetByIdAsync(id) is { } d ? Results.Ok(d) : Results.NotFound()
+            async (long id, ClaimsPrincipal user, DocumentRepository repo) =>
+                await repo.GetByIdAsync(id, user.GetUserId()) is { } d ? Results.Ok(d) : Results.NotFound()
         );
 
         g.MapGet(
             "/{id:long}/markdown",
-            async (long id, DocumentRepository repo) =>
+            async (long id, ClaimsPrincipal user, DocumentRepository repo) =>
             {
-                var d = await repo.GetByIdAsync(id);
+                var d = await repo.GetByIdAsync(id, user.GetUserId());
                 if (d?.MdPath is null || !File.Exists(d.MdPath))
                     return Results.NotFound();
                 return Results.Text(await File.ReadAllTextAsync(d.MdPath), "text/markdown");
@@ -75,9 +78,9 @@ public static class DocumentsEndpoints
         // Block list → the sync-scroll coordinate map for the viewer.
         g.MapGet(
             "/{id:long}/blocks",
-            async (long id, DocumentRepository repo) =>
+            async (long id, ClaimsPrincipal user, DocumentRepository repo) =>
             {
-                var d = await repo.GetByIdAsync(id);
+                var d = await repo.GetByIdAsync(id, user.GetUserId());
                 if (d?.LayoutJsonPath is null || !File.Exists(d.LayoutJsonPath))
                     return Results.NotFound();
                 return Results.Text(
@@ -90,9 +93,9 @@ public static class DocumentsEndpoints
         // Stream the archived original for the PDF pane.
         g.MapGet(
             "/{id:long}/pdf",
-            async (long id, DocumentRepository repo) =>
+            async (long id, ClaimsPrincipal user, DocumentRepository repo) =>
             {
-                var d = await repo.GetByIdAsync(id);
+                var d = await repo.GetByIdAsync(id, user.GetUserId());
                 if (d?.ArchivedPdfPath is null || !File.Exists(d.ArchivedPdfPath))
                     return Results.NotFound();
                 return Results.File(
@@ -105,20 +108,23 @@ public static class DocumentsEndpoints
 
         g.MapGet(
             "/{id:long}/events",
-            async (long id, DocumentRepository repo) => Results.Ok(await repo.GetEventsAsync(id))
+            async (long id, ClaimsPrincipal user, DocumentRepository repo) =>
+                Results.Ok(await repo.GetEventsAsync(id, user.GetUserId()))
         );
 
         // Direct drag-and-drop upload — stage the PDF into the archive, dedup, enqueue.
-        // Bypasses the watcher entirely (written outside the watch dir).
+        // Bypasses the watcher entirely (written outside the watch dir). Owned by the uploader.
         g.MapPost(
                 "/upload",
                 async (
                     IFormFile file,
+                    ClaimsPrincipal user,
                     DocumentRepository repo,
                     ProcessingQueue queue,
                     SettingsService settings
                 ) =>
                 {
+                    var userId = user.GetUserId();
                     if (file is null || file.Length == 0)
                         return Results.BadRequest("empty file");
                     if (!file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
@@ -130,7 +136,7 @@ public static class DocumentsEndpoints
                     var sha = Helpers.Sha256Hex(bytes);
                     var name = Path.GetFileName(file.FileName);
 
-                    var existing = await repo.GetByShaAsync(sha);
+                    var existing = await repo.GetByShaAsync(sha, userId);
                     if (existing is not null)
                     {
                         if (existing.Status is DocumentStatus.Done or DocumentStatus.Skipped)
@@ -147,6 +153,7 @@ public static class DocumentsEndpoints
 
                     var doc = new Document
                     {
+                        OwnerUserId = userId,
                         Sha256 = sha,
                         OriginalName = name,
                         Slug = Helpers.Slugify(name),
@@ -157,39 +164,56 @@ public static class DocumentsEndpoints
                     var id = await repo.InsertUploadedAsync(doc);
                     await repo.AddEventAsync(id, "info", "upload", $"Uploaded {name}");
                     await queue.EnqueueAsync(id);
-                    return Results.Ok(await repo.GetByIdAsync(id));
+                    return Results.Ok(await repo.GetByIdAsync(id, userId));
                 }
             )
             .DisableAntiforgery();
 
-        // Delete a document and all its artifacts (DB row, FTS, events, category
-        // links, markdown dir + images, blocks.json, archived PDF).
+        // Delete a document and all its artifacts (scoped to the owner).
         g.MapDelete(
             "/{id:long}",
-            async (long id, DocumentRepository repo) =>
-                await repo.DeleteAsync(id) ? Results.NoContent() : Results.NotFound()
+            async (long id, ClaimsPrincipal user, DocumentRepository repo) =>
+                await repo.DeleteAsync(id, user.GetUserId()) ? Results.NoContent() : Results.NotFound()
         );
 
-        // Batch delete — the frontend selects N documents and removes them all.
-        // ("delete" can't collide with /{id:long}; that route only matches numbers.)
+        // Batch delete — only the caller's own documents are removed.
         g.MapPost(
             "/delete",
-            async (DeleteBatchRequest req, DocumentRepository repo) =>
+            async (DeleteBatchRequest req, ClaimsPrincipal user, DocumentRepository repo) =>
             {
+                var userId = user.GetUserId();
                 var deleted = 0;
                 foreach (var id in req.Ids)
-                    if (await repo.DeleteAsync(id))
+                    if (await repo.DeleteAsync(id, userId))
                         deleted++;
                 return Results.Ok(new { deleted });
+            }
+        );
+
+        // Replace a document's tags (manual tag editing from the detail page).
+        g.MapPatch(
+            "/{id:long}/tags",
+            async (long id, UpdateTagsRequest req, ClaimsPrincipal user, DocumentRepository repo) =>
+            {
+                var userId = user.GetUserId();
+                if (await repo.GetByIdAsync(id, userId) is null)
+                    return Results.NotFound();
+                var tags = (req.Tags ?? [])
+                    .Select(t => t.Trim())
+                    .Where(t => t.Length > 0)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+                await repo.UpdateTagsAsync(id, tags);
+                return Results.Ok(await repo.GetByIdAsync(id, userId));
             }
         );
 
         // Requeue a failed (or any) document.
         g.MapPost(
             "/{id:long}/retry",
-            async (long id, DocumentRepository repo, ProcessingQueue queue) =>
+            async (long id, ClaimsPrincipal user, DocumentRepository repo, ProcessingQueue queue) =>
             {
-                if (await repo.GetByIdAsync(id) is null)
+                if (await repo.GetByIdAsync(id, user.GetUserId()) is null)
                     return Results.NotFound();
                 await repo.SetStatusAsync(id, DocumentStatus.Queued);
                 await queue.EnqueueAsync(id);
@@ -200,9 +224,9 @@ public static class DocumentsEndpoints
         // Enrich ONE document (re-reads saved Markdown, no reconvert). Frontend-triggered.
         g.MapPost(
             "/{id:long}/reenrich",
-            async (long id, DocumentRepository repo, EnrichmentService enrich) =>
+            async (long id, ClaimsPrincipal user, DocumentRepository repo, EnrichmentService enrich) =>
             {
-                var d = await repo.GetByIdAsync(id);
+                var d = await repo.GetByIdAsync(id, user.GetUserId());
                 if (d is null)
                     return Results.NotFound();
                 return await enrich.EnrichAsync(d)
@@ -215,16 +239,17 @@ public static class DocumentsEndpoints
             }
         );
 
-        // Batch enrichment — the frontend selects N documents and triggers tagging.
-        // Sequential on purpose: enrichment shares one local LLM, no point fanning out.
+        // Batch enrichment — the frontend selects N of the caller's documents and triggers tagging.
+        // Sequential on purpose: enrichment shares one LLM, no point fanning out.
         g.MapPost(
             "/enrich",
-            async (EnrichBatchRequest req, DocumentRepository repo, EnrichmentService enrich) =>
+            async (EnrichBatchRequest req, ClaimsPrincipal user, DocumentRepository repo, EnrichmentService enrich) =>
             {
+                var userId = user.GetUserId();
                 var results = new List<object>();
                 foreach (var id in req.Ids)
                 {
-                    var d = await repo.GetByIdAsync(id);
+                    var d = await repo.GetByIdAsync(id, userId);
                     if (d is null)
                     {
                         results.Add(
@@ -243,7 +268,7 @@ public static class DocumentsEndpoints
                         {
                             id,
                             ok,
-                            error = ok ? null : "no markdown or Ollama failed",
+                            error = ok ? null : "no markdown or LLM failed",
                         }
                     );
                 }
@@ -258,3 +283,6 @@ public record EnrichBatchRequest(long[] Ids);
 
 /// <summary>Request body for POST /api/documents/delete.</summary>
 public record DeleteBatchRequest(long[] Ids);
+
+/// <summary>Request body for PATCH /api/documents/{id}/tags.</summary>
+public record UpdateTagsRequest(string[]? Tags);

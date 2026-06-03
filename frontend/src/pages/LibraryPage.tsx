@@ -23,6 +23,7 @@ export function LibraryPage() {
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('')
   const [categoryId, setCategoryId] = useState('')
+  const [sort, setSort] = useState('') // '' = newest first (default)
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
   const [view, setView] = useViewMode()
@@ -33,8 +34,9 @@ export function LibraryPage() {
       q: search || undefined,
       status: status || undefined,
       categoryId: categoryId ? Number(categoryId) : undefined,
+      sort: sort || undefined,
     }),
-    [search, status, categoryId],
+    [search, status, categoryId, sort],
   )
   const { data: docs = [], isLoading } = useDocuments(query)
   const { data: categories = [] } = useCategories()
@@ -139,6 +141,8 @@ export function LibraryPage() {
         categories={categories}
         categoryId={categoryId}
         onCategory={setCategoryId}
+        sort={sort}
+        onSort={setSort}
         view={view}
         onView={setView}
         selectedCount={selected.size}
@@ -155,7 +159,7 @@ export function LibraryPage() {
       ) : view === 'grid' ? (
         <DocumentGrid {...sharedProps} />
       ) : (
-        <DocumentTable {...sharedProps} onToggleAll={toggleAll} />
+        <DocumentTable {...sharedProps} onToggleAll={toggleAll} sort={sort} onSort={setSort} />
       )}
 
       <ConfirmDialog

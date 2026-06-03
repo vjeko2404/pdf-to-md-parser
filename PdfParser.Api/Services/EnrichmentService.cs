@@ -27,13 +27,15 @@ public class EnrichmentService(
     /// </summary>
     public async Task<bool> EnrichAsync(Document d, CancellationToken ct = default)
     {
-        if (!settings.EnrichmentEnabled)
+        var uid = d.OwnerUserId ?? 0;
+        var s = settings.For(uid);
+        if (!s.EnrichmentEnabled)
             return false;
         if (d.MdPath is null || !File.Exists(d.MdPath))
             return false;
 
         var plain = Helpers.StripAnchors(await File.ReadAllTextAsync(d.MdPath, ct));
-        var enrich = await llm.EnrichAsync(plain, ct);
+        var enrich = await llm.EnrichAsync(uid, plain, ct);
         if (enrich is null)
             return false;
 
@@ -47,18 +49,18 @@ public class EnrichmentService(
         // Dedicated summary pass with its own editable prompt — a fuller, prose
         // summary than the terse one bundled in the metadata schema. Falls back to
         // the inline summary if the dedicated call yields nothing.
-        var summary = await llm.SummarizeAsync(plain, ct);
+        var summary = await llm.SummarizeAsync(uid, plain, ct);
         d.Summary = !string.IsNullOrWhiteSpace(summary) ? summary : enrich.Summary;
 
         await repo.SaveResultAsync(d, plain);
 
-        if (settings.AutoCategorize)
+        if (s.AutoCategorize)
             await categorization.AutoCategorizeAsync(d, ct);
 
         // Push a live update so the dashboard refreshes this row the instant its
         // tags/summary land — crucial for batch enrich, where the HTTP call only
         // returns once every doc is done.
-        await hub.Clients.All.SendAsync(
+        await hub.Clients.User(uid.ToString()).SendAsync(
             "documentUpdated",
             new
             {

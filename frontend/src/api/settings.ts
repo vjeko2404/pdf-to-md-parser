@@ -12,4 +12,6 @@ export const settingsApi = {
   patch: (updates: Settings) => api.patch<Settings>('/settings', updates),
   /** Test the currently-selected (saved) LLM provider. */
   llmTest: () => api.get<LlmTestResult>('/settings/llm-test'),
+  /** Model ids for the active provider (for the model picker). */
+  llmModels: () => api.get<string[]>('/settings/llm-models'),
 }

@@ -30,9 +30,9 @@ public class OpenAiClient(
         + "parties (array of strings), doc_date (string, yyyy-mm-dd or empty), "
         + "doc_number (string), tags (array of strings), summary (string).";
 
-    public async Task<EnrichResult?> EnrichAsync(string text, CancellationToken ct)
+    public async Task<EnrichResult?> EnrichAsync(long userId, string text, CancellationToken ct)
     {
-        var content = await ChatAsync(settings.EnrichPrompt + EnrichSchemaHint, text, ct);
+        var content = await ChatAsync(userId, settings.For(userId).EnrichPrompt + EnrichSchemaHint, text, ct);
         if (string.IsNullOrWhiteSpace(content))
             return null;
         try
@@ -47,6 +47,7 @@ public class OpenAiClient(
     }
 
     public async Task<string[]?> ClassifyAsync(
+        long userId,
         string text,
         IReadOnlyList<string> categories,
         CancellationToken ct
@@ -59,7 +60,7 @@ public class OpenAiClient(
             + string.Join(", ", categories)
             + ". Respond with JSON {\"categories\": [...]} containing the matching names "
             + "(possibly empty). Never invent names outside the list.";
-        var content = await ChatAsync(sys, text, ct);
+        var content = await ChatAsync(userId, sys, text, ct);
         if (string.IsNullOrWhiteSpace(content))
             return null;
         try
@@ -75,28 +76,54 @@ public class OpenAiClient(
         }
     }
 
-    public async Task<string?> SummarizeAsync(string text, CancellationToken ct)
+    public async Task<string?> SummarizeAsync(long userId, string text, CancellationToken ct)
     {
-        var content = await ChatAsync(settings.SummaryPrompt, text, ct);
+        var content = await ChatAsync(userId, settings.For(userId).SummaryPrompt, text, ct);
         return string.IsNullOrWhiteSpace(content) ? null : content.Trim();
     }
 
-    /// <summary>Connectivity + auth check: GET {base}/models with the configured key.</summary>
-    public async Task<LlmTestResult> TestAsync(CancellationToken ct)
+    /// <summary>List the provider's model ids (for the Settings model picker). [] on failure.</summary>
+    public async Task<IReadOnlyList<string>> ListModelsAsync(long userId, CancellationToken ct)
     {
-        var baseUrl = settings.OpenAiBaseUrl.TrimEnd('/');
+        var s = settings.For(userId);
+        var baseUrl = s.OpenAiBaseUrl.TrimEnd('/');
+        var key = secrets.Reveal(userId, s.OpenAiApiKeyName);
+        if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(key))
+            return [];
+        try
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/models");
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
+            using var resp = await http.SendAsync(req, ct);
+            if (!resp.IsSuccessStatusCode)
+                return [];
+            var body = await resp.Content.ReadFromJsonAsync<ModelsResponse>(Json, ct);
+            return body?.Data?.Select(m => m.Id).OfType<string>().Order().ToList() ?? [];
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "OpenAI list-models failed");
+            return [];
+        }
+    }
+
+    /// <summary>Connectivity + auth check: GET {base}/models with the configured key.</summary>
+    public async Task<LlmTestResult> TestAsync(long userId, CancellationToken ct)
+    {
+        var s = settings.For(userId);
+        var baseUrl = s.OpenAiBaseUrl.TrimEnd('/');
         if (string.IsNullOrWhiteSpace(baseUrl))
             return new LlmTestResult(false, "No API base URL configured.");
-        var key = secrets.Reveal(settings.OpenAiApiKeyName);
+        var key = secrets.Reveal(userId, s.OpenAiApiKeyName);
         if (string.IsNullOrWhiteSpace(key))
-            return new LlmTestResult(false, $"No secret named '{settings.OpenAiApiKeyName}' found.");
+            return new LlmTestResult(false, $"No secret named '{s.OpenAiApiKeyName}' found.");
         try
         {
             using var req = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/models");
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
             using var resp = await http.SendAsync(req, ct);
             return resp.IsSuccessStatusCode
-                ? new LlmTestResult(true, $"{settings.OpenAiModel} via {baseUrl}")
+                ? new LlmTestResult(true, $"{s.OpenAiModel} via {baseUrl}")
                 : new LlmTestResult(false, $"HTTP {(int)resp.StatusCode} from {baseUrl}/models");
         }
         catch (Exception ex)
@@ -106,10 +133,11 @@ public class OpenAiClient(
     }
 
     /// <summary>One chat completion. Returns the assistant message content, or null.</summary>
-    private async Task<string?> ChatAsync(string system, string text, CancellationToken ct)
+    private async Task<string?> ChatAsync(long userId, string system, string text, CancellationToken ct)
     {
-        var baseUrl = settings.OpenAiBaseUrl.TrimEnd('/');
-        var key = secrets.Reveal(settings.OpenAiApiKeyName);
+        var s = settings.For(userId);
+        var baseUrl = s.OpenAiBaseUrl.TrimEnd('/');
+        var key = secrets.Reveal(userId, s.OpenAiApiKeyName);
         if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(key))
         {
             logger.LogWarning("OpenAI provider not configured (base URL or API key missing)");
@@ -123,7 +151,7 @@ public class OpenAiClient(
             // the prompt and extract it from the reply instead (ExtractJsonObject).
             var payload = new
             {
-                model = settings.OpenAiModel,
+                model = s.OpenAiModel,
                 temperature = 0,
                 messages = new[]
                 {
@@ -185,6 +213,18 @@ public class OpenAiClient(
     {
         [JsonPropertyName("categories")]
         public List<string>? Categories { get; set; }
+    }
+
+    private sealed class ModelsResponse
+    {
+        [JsonPropertyName("data")]
+        public List<ModelItem>? Data { get; set; }
+    }
+
+    private sealed class ModelItem
+    {
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
     }
 
     private sealed class ChatResponse

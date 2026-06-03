@@ -18,26 +18,46 @@ public class LlmService(
     SettingsService settings
 )
 {
-    private bool UseOpenAi => settings.UseOpenAi;
+    private bool UseOpenAi(long userId) => settings.For(userId).UseOpenAi;
 
-    public Task<EnrichResult?> EnrichAsync(string text, CancellationToken ct) =>
-        UseOpenAi ? openai.EnrichAsync(text, ct) : ollama.EnrichAsync(text, ct);
+    public Task<EnrichResult?> EnrichAsync(long userId, string text, CancellationToken ct) =>
+        UseOpenAi(userId) ? openai.EnrichAsync(userId, text, ct) : ollama.EnrichAsync(userId, text, ct);
 
     public Task<string[]?> ClassifyAsync(
+        long userId,
         string text,
         IReadOnlyList<string> categories,
         CancellationToken ct
-    ) => UseOpenAi ? openai.ClassifyAsync(text, categories, ct) : ollama.ClassifyAsync(text, categories, ct);
+    ) =>
+        UseOpenAi(userId)
+            ? openai.ClassifyAsync(userId, text, categories, ct)
+            : ollama.ClassifyAsync(userId, text, categories, ct);
 
-    public Task<string?> SummarizeAsync(string text, CancellationToken ct) =>
-        UseOpenAi ? openai.SummarizeAsync(text, ct) : ollama.SummarizeAsync(text, ct);
+    public Task<string?> SummarizeAsync(long userId, string text, CancellationToken ct) =>
+        UseOpenAi(userId) ? openai.SummarizeAsync(userId, text, ct) : ollama.SummarizeAsync(userId, text, ct);
 
-    /// <summary>Test the currently-selected provider (for the Settings "Test" button).</summary>
-    public async Task<LlmTestResult> TestAsync(CancellationToken ct)
+    /// <summary>Test the user's currently-selected provider (for the Settings "Test" button).</summary>
+    public async Task<LlmTestResult> TestAsync(long userId, CancellationToken ct)
     {
-        if (UseOpenAi)
-            return await openai.TestAsync(ct);
-        var s = await admin.StatusAsync(ct);
+        if (UseOpenAi(userId))
+            return await openai.TestAsync(userId, ct);
+        var s = await admin.StatusAsync(userId, ct);
         return new LlmTestResult(s.Online, s.Online ? $"Ollama {s.Version}" : s.Error);
+    }
+
+    /// <summary>Model ids for the user's active provider (for the Settings model picker). [] on failure.</summary>
+    public async Task<IReadOnlyList<string>> ListModelsAsync(long userId, CancellationToken ct)
+    {
+        try
+        {
+            if (UseOpenAi(userId))
+                return await openai.ListModelsAsync(userId, ct);
+            var models = await admin.ListModelsAsync(userId, ct);
+            return models.Select(m => m.Name).ToList();
+        }
+        catch
+        {
+            return [];
+        }
     }
 }

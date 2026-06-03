@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using PdfParser.Api.Auth;
 using PdfParser.Api.Clients;
 
 namespace PdfParser.Api.Endpoints;
@@ -10,20 +12,21 @@ public static class OllamaEndpoints
 
         // Online? version? — drives the UI's status indicator. Optional ?url= tests
         // an arbitrary (unsaved) server, powering the Settings "Test connection" button.
+        // Uses the caller's configured Ollama URL.
         g.MapGet(
             "/status",
-            async (OllamaAdmin o, string? url, CancellationToken ct) =>
-                Results.Ok(await o.StatusAsync(ct, url))
+            async (ClaimsPrincipal user, OllamaAdmin o, string? url, CancellationToken ct) =>
+                Results.Ok(await o.StatusAsync(user.GetUserId(), ct, url))
         );
 
         // Installed models (for the model dropdown).
         g.MapGet(
             "/models",
-            async (OllamaAdmin o, CancellationToken ct) =>
+            async (ClaimsPrincipal user, OllamaAdmin o, CancellationToken ct) =>
             {
                 try
                 {
-                    return Results.Ok(await o.ListModelsAsync(ct));
+                    return Results.Ok(await o.ListModelsAsync(user.GetUserId(), ct));
                 }
                 catch (Exception ex)
                 {
@@ -35,11 +38,11 @@ public static class OllamaEndpoints
         // Currently loaded-in-VRAM models.
         g.MapGet(
             "/ps",
-            async (OllamaAdmin o, CancellationToken ct) =>
+            async (ClaimsPrincipal user, OllamaAdmin o, CancellationToken ct) =>
             {
                 try
                 {
-                    return Results.Ok(await o.LoadedAsync(ct));
+                    return Results.Ok(await o.LoadedAsync(user.GetUserId(), ct));
                 }
                 catch (Exception ex)
                 {
@@ -48,25 +51,26 @@ public static class OllamaEndpoints
             }
         );
 
-        // Pull a model — returns immediately; progress streams over SignalR "ollamaPull".
+        // Pull a model — returns immediately; progress streams over SignalR "ollamaPull"
+        // to the requesting user.
         g.MapPost(
             "/pull",
-            (PullRequest req, OllamaAdmin o) =>
+            (PullRequest req, ClaimsPrincipal user, OllamaAdmin o) =>
             {
                 if (string.IsNullOrWhiteSpace(req.Name))
                     return Results.BadRequest("name required");
-                _ = o.PullAsync(req.Name, CancellationToken.None); // fire-and-forget; UI watches the hub
+                _ = o.PullAsync(user.GetUserId(), req.Name, CancellationToken.None); // fire-and-forget
                 return Results.Accepted();
             }
         );
 
         g.MapDelete(
             "/models/{name}",
-            async (string name, OllamaAdmin o, CancellationToken ct) =>
+            async (string name, ClaimsPrincipal user, OllamaAdmin o, CancellationToken ct) =>
             {
                 try
                 {
-                    await o.DeleteModelAsync(name, ct);
+                    await o.DeleteModelAsync(user.GetUserId(), name, ct);
                     return Results.NoContent();
                 }
                 catch (Exception ex)

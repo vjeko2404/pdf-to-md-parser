@@ -1,7 +1,8 @@
 import { Menu } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { ThemeToggle } from './ThemeToggle'
-import { OllamaStatusPill } from './OllamaStatusPill'
+import { LlmStatusPill } from './LlmStatusPill'
+import { UserMenu } from './UserMenu'
 
 export function TopBar({ isMobile, onMenu }: { isMobile: boolean; onMenu: () => void }) {
   return (
@@ -15,8 +16,9 @@ export function TopBar({ isMobile, onMenu }: { isMobile: boolean; onMenu: () => 
         PDF <span className="text-primary">→</span> Markdown
       </span>
       <div className="ml-auto flex items-center gap-2">
-        <OllamaStatusPill />
+        <LlmStatusPill />
         <ThemeToggle />
+        <UserMenu />
       </div>
     </header>
   )

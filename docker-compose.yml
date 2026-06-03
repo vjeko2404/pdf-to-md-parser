@@ -51,6 +51,10 @@ services:
       - App__OllamaUrl=${OLLAMA_URL:-http://host.docker.internal:11434}
       - App__OllamaModel=${OLLAMA_MODEL:-qwen2.5:7b-instruct}
       - App__DebounceSeconds=${DEBOUNCE_SECONDS:-2}
+      # Auth: JWT signing key + at-rest secret encryption key. Empty → vault keyfiles
+      # (fine for local dev). Set strong random values on a public VPS — see .env.example.
+      - App__JwtKey=${JWT_KEY:-}
+      - App__SecretKey=${APP_SECRET_KEY:-}
     ports:
       - "${API_PORT:-6670}:8080"   # direct API + Scalar (the SPA goes through web)
     volumes:

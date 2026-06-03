@@ -13,6 +13,11 @@ public enum DocumentStatus
 public class Document
 {
     public long Id { get; set; }
+
+    /// <summary>The tenant that owns this document. Null only transiently for pre-auth
+    /// rows before the first admin claims them.</summary>
+    public long? OwnerUserId { get; set; }
+
     public string Sha256 { get; set; } = "";
     public string OriginalName { get; set; } = "";
     public string Slug { get; set; } = "";

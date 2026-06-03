@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plug, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { Section } from '@/components/common/Section'
@@ -7,6 +8,7 @@ import { TextInput } from '@/components/common/inputs'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { useSettings, usePatchSettings } from '@/hooks/useSettings'
+import { useSecrets } from '@/hooks/useSecrets'
 import { ollamaApi } from '@/api/ollama'
 import { settingsApi } from '@/api/settings'
 
@@ -19,21 +21,37 @@ const KEYS = [
   'openaiApiKeyName',
 ]
 
+const MODELS_LIST_ID = 'llm-models'
+
 export function LlmProviderPanel() {
   const { data: settings } = useSettings()
+  const { data: secrets = [] } = useSecrets()
   const patch = usePatchSettings()
+  const qc = useQueryClient()
   const [draft, setDraft] = useState<Record<string, string>>({})
   const [testing, setTesting] = useState(false)
   useEffect(() => {
     if (settings) setDraft(settings)
   }, [settings])
 
+  // Model suggestions for the active (saved) provider — feeds a datalist on the model field.
+  const { data: models = [] } = useQuery({
+    queryKey: ['llm-models'],
+    queryFn: settingsApi.llmModels,
+    staleTime: 60_000,
+    retry: false,
+  })
+
   const set = (k: string, v: string) => setDraft((d) => ({ ...d, [k]: v }))
   const provider = draft.llmProvider ?? 'ollama'
 
   const save = () =>
     patch.mutate(Object.fromEntries(KEYS.map((k) => [k, draft[k] ?? ''])), {
-      onSuccess: () => toast.success('Provider settings saved'),
+      onSuccess: () => {
+        toast.success('Provider settings saved')
+        qc.invalidateQueries({ queryKey: ['llm-models'] })
+        qc.invalidateQueries({ queryKey: ['llm-test'] })
+      },
       onError: (e) => toast.error(e.message),
     })
 
@@ -65,6 +83,12 @@ export function LlmProviderPanel() {
     }
   }
 
+  // Secret-name dropdown: existing secret keys, keeping any already-saved value selectable.
+  const keyName = draft.openaiApiKeyName ?? ''
+  const secretNames = secrets.map((s) => s.key)
+  const secretOptions =
+    keyName && !secretNames.includes(keyName) ? [keyName, ...secretNames] : secretNames
+
   return (
     <Section
       title="LLM provider"
@@ -75,6 +99,12 @@ export function LlmProviderPanel() {
         </Button>
       }
     >
+      <datalist id={MODELS_LIST_ID}>
+        {models.map((m) => (
+          <option key={m} value={m} />
+        ))}
+      </datalist>
+
       <div className="flex flex-col gap-3">
         <Field label="Provider">
           <Select value={provider} onChange={(v) => set('llmProvider', v)}>
@@ -93,6 +123,7 @@ export function LlmProviderPanel() {
             </Field>
             <Field label="Ollama model">
               <TextInput
+                list={MODELS_LIST_ID}
                 value={draft.ollamaModel ?? ''}
                 onChange={(e) => set('ollamaModel', e.target.value)}
               />
@@ -115,22 +146,41 @@ export function LlmProviderPanel() {
                 placeholder="https://openrouter.ai/api/v1"
               />
             </Field>
-            <Field label="Model" hint="e.g. google/gemini-2.0-flash-exp:free">
+            <Field
+              label="Model"
+              hint={
+                models.length
+                  ? 'Pick from the list or type any model id.'
+                  : 'Type a model id (e.g. google/gemini-2.5-flash-lite). Save + test to load the list.'
+              }
+            >
               <TextInput
+                list={MODELS_LIST_ID}
                 value={draft.openaiModel ?? ''}
                 onChange={(e) => set('openaiModel', e.target.value)}
-                placeholder="google/gemini-2.0-flash-exp:free"
+                placeholder="google/gemini-2.5-flash-lite"
               />
             </Field>
             <Field
-              label="API key secret name"
-              hint="Add a Secret below with this exact name to hold the key value."
+              label="API key secret"
+              hint="The encrypted secret holding the key — add it in Settings → Secrets."
             >
-              <TextInput
-                value={draft.openaiApiKeyName ?? ''}
-                onChange={(e) => set('openaiApiKeyName', e.target.value)}
-                placeholder="LLM_API_KEY"
-              />
+              {secretOptions.length ? (
+                <Select value={keyName} onChange={(v) => set('openaiApiKeyName', v)}>
+                  <option value="">— select a secret —</option>
+                  {secretOptions.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </Select>
+              ) : (
+                <TextInput
+                  value={keyName}
+                  onChange={(e) => set('openaiApiKeyName', e.target.value)}
+                  placeholder="LLM_API_KEY (add it under Settings → Secrets)"
+                />
+              )}
             </Field>
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" size="sm" onClick={testProvider} disabled={testing}>
