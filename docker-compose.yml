@@ -1,3 +1,7 @@
+# Production / VPS compose — carries resource safeguards so CPU-mode marker
+# (torch grabs every core by default) can't peg a small box and freeze the
+# shell. Tuned for a 4-core VPS; override the MARKER_* vars in .env to retune.
+# For an UNRESTRICTED local run use:  docker compose -f docker-compose.yml.dev up -d
 name: pdf-md-parser
 
 services:
@@ -6,8 +10,16 @@ services:
   marker-server:
     build: ./marker-server
     restart: unless-stopped
+    # Hard CPU ceiling: never consume the whole box. 3.0 of 4 cores leaves one
+    # free for the shell / other services. Retune via MARKER_CPUS in .env.
+    cpus: ${MARKER_CPUS:-3.0}
     environment:
       - TORCH_DEVICE=${TORCH_DEVICE:-cpu}
+      # Thread caps for torch/BLAS — without these torch spawns one thread per
+      # core and thrashes against the cpus quota. Match these to MARKER_CPUS.
+      - OMP_NUM_THREADS=${MARKER_THREADS:-3}
+      - MKL_NUM_THREADS=${MARKER_THREADS:-3}
+      - OPENBLAS_NUM_THREADS=${MARKER_THREADS:-3}
       # Override the image's HF_HOME into the persisted cache (surya/datalab
       # weights already go to /root/.cache/datalab). One volume covers both.
       - HF_HOME=/root/.cache/huggingface
