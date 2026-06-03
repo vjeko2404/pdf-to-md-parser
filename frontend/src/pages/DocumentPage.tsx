@@ -5,6 +5,7 @@ import { ArrowLeft, Copy, Download, Printer } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
+import { formatDocType } from '@/lib/format'
 import { documentsApi } from '@/api/documents'
 import { parseTags } from '@/types/api'
 import { PdfPane } from '@/components/doc/PdfPane'
@@ -138,7 +139,7 @@ export function DocumentPage() {
           <span className="truncate font-medium">{doc?.originalName}</span>
           {doc?.docType && (
             <span className="rounded-md bg-accent px-2 py-0.5 text-xs text-accent-foreground">
-              {doc.docType}
+              {formatDocType(doc.docType)}
             </span>
           )}
           <div className="ml-auto">

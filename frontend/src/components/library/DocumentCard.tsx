@@ -3,8 +3,9 @@ import { FileText, Sparkles, RotateCcw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { StatusBadge } from './StatusBadge'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatDocType } from '@/lib/format'
 import { parseTags, type DocumentDto } from '@/types/api'
 
 export interface DocumentCardProps {
@@ -49,13 +50,17 @@ export function DocumentCard({
         <StatusBadge status={doc.status} />
       </div>
 
-      {doc.summary && <p className="line-clamp-2 text-sm text-muted-foreground">{doc.summary}</p>}
+      {doc.summary && (
+        <Tooltip content={doc.summary} delay={2000} className="block">
+          <p className="line-clamp-2 cursor-default text-sm text-muted-foreground">{doc.summary}</p>
+        </Tooltip>
+      )}
 
       {(doc.docType || tags.length > 0) && (
         <div className="flex flex-wrap items-center gap-1.5">
           {doc.docType && (
             <span className="rounded-md bg-accent px-2 py-0.5 text-xs text-accent-foreground">
-              {doc.docType}
+              {formatDocType(doc.docType)}
             </span>
           )}
           {tags.slice(0, 5).map((t) => (

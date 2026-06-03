@@ -1,3 +1,4 @@
+import { memo, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Link } from 'react-router-dom'
 import { UploadCloud, Settings } from 'lucide-react'
@@ -6,20 +7,29 @@ import { cn } from '@/lib/utils'
 import { useUploadDocument } from '@/hooks/useDocuments'
 import { useSettings } from '@/hooks/useSettings'
 
-export function Dropzone() {
+// memo'd + propless: while a document is processing, the Library page re-renders on every
+// SignalR `documentUpdated` (it invalidates the documents query). Those re-renders used to
+// reach the dropzone mid-drag and drop its drag-hover state, so drag-and-drop appeared dead
+// while click-to-browse still worked. Isolating it here keeps drag working during processing.
+function DropzoneImpl() {
   const upload = useUploadDocument()
   const { data: settings } = useSettings()
   const engine = settings?.conversionEngine ?? 'off'
   const off = engine === 'off' || engine === ''
 
-  const onDrop = (files: File[]) => {
-    for (const file of files) {
-      upload.mutate(file, {
-        onSuccess: () => toast.success(`Uploaded ${file.name}`),
-        onError: (e) => toast.error(`Failed: ${file.name}`, { description: String(e) }),
-      })
-    }
-  }
+  // Stable identity (upload.mutate is referentially stable in react-query) so the dropzone's
+  // event handlers don't churn.
+  const onDrop = useCallback(
+    (files: File[]) => {
+      for (const file of files) {
+        upload.mutate(file, {
+          onSuccess: () => toast.success(`Uploaded ${file.name}`),
+          onError: (e) => toast.error(`Failed: ${file.name}`, { description: String(e) }),
+        })
+      }
+    },
+    [upload.mutate],
+  )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -64,3 +74,5 @@ export function Dropzone() {
     </div>
   )
 }
+
+export const Dropzone = memo(DropzoneImpl)

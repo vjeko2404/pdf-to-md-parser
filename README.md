@@ -1,12 +1,13 @@
 # PDF to Markdown Parser
 
 A self-hosted application that watches a folder for new PDFs (or accepts
-drag-and-drop uploads), converts them to clean Markdown with
-[marker](https://github.com/datalab-to/marker) +
-[surya](https://github.com/datalab-to/surya), optionally enriches them with
-tags, summaries and categories via an LLM (local Ollama or any
-OpenAI-compatible API), archives the originals, and serves a searchable
-dashboard with a **PDF to Markdown sync-scroll** viewer.
+drag-and-drop uploads), converts them to clean Markdown using a **selectable
+conversion engine** — full [marker](https://github.com/datalab-to/marker) +
+[surya](https://github.com/datalab-to/surya) (locally, on a GPU, or on another
+machine), or a lightweight [pdfplumber](https://github.com/jsvine/pdfplumber)
+text extractor — optionally enriches them with tags, summaries and categories
+via an LLM (local Ollama or any OpenAI-compatible API), archives the originals,
+and serves a searchable dashboard with a **PDF to Markdown sync-scroll** viewer.
 
 The whole stack runs with a single `docker compose up -d`. It supports multiple
 users with per-user data isolation and JWT authentication, so it can run on
@@ -25,6 +26,12 @@ make up                       # docker compose up -d --build, injecting UID/GID/
 The first account to register becomes the administrator. Registration of
 further accounts is controlled by an admin toggle (open by default until the
 first user exists).
+
+> **Conversion is OFF by default.** A fresh install does not convert anything
+> until you pick an engine in **Settings -> Conversion engine** — so it never
+> pays marker's multi-gigabyte model load before you've chosen to use it. While
+> OFF, uploads and watched files are rejected with a clear message. See
+> [Conversion engines](#conversion-engines).
 
 - **`make up`** is the canonical run command. It injects `id -u`/`id -g`/`$HOME`
   so generated files stay owned by the host user and the watched folder lives
@@ -66,8 +73,15 @@ HOST
 ```
 
 **Pipeline:** `watch (or upload) -> size-stable debounce -> sha256 dedup ->
-marker /convert -> write md + images + blocks.json -> archive original ->
-commit (Done) -> [optional] enrich + auto-categorize`.
+convert (selected engine) -> write md + images + blocks.json -> archive original
+-> commit (Done) -> [optional] enrich + auto-categorize`.
+
+The conversion step dispatches to the user's selected engine, and every engine
+returns the same block-anchored contract, so the rest of the pipeline (and the
+sync-scroll viewer) is identical regardless of engine. When the engine is a
+marker server that is currently unreachable, the document is not failed — it is
+held `Queued`, re-checked on a short interval, and converts automatically once
+the server returns (see [Conversion engines](#conversion-engines)).
 
 Enrichment is decoupled from conversion: a slow or broken LLM never blocks or
 fails a conversion. A bad PDF is marked `Failed` and left in place (retryable),
@@ -121,6 +135,45 @@ Settings page can test the active provider and list its available models.
 
 ---
 
+## Conversion engines
+
+How PDFs become Markdown is a per-user, live setting (**Settings -> Conversion
+engine**), seeded by `CONVERSION_ENGINE` on first run. It dispatches in
+`PipelineWorker`; every option produces the same block-anchored output.
+
+| Engine | What it is | When to use |
+|--------|-----------|-------------|
+| **Off** (default) | No conversion. Uploads return `409` and watched files are ignored, with a clear "pick an engine" prompt in the UI. | Fresh installs, or to pause ingestion. |
+| **Marker — on this server** | Full marker + surya in the local `marker-server` container. Highest quality (OCR, layout, tables, equations), but heavy — loads several GB of models and is CPU-intensive. | A machine with RAM and cores (or a working GPU) to spare. |
+| **Marker — off this server** | The same marker quality, but served by a `marker-server` running on **another machine** (set its URL, with a Test button). Processing is **health-gated**: while that server is unreachable, documents wait and auto-resume when it returns — nothing fails. | A small VPS that offloads the heavy lifting to a beefier box (e.g. over a Tailscale tailnet). |
+| **pdfplumber** | A lightweight, near-instant text extractor (`/extract`) with no ML models. Reads the embedded text layer only — no OCR, tables or images. | Born-digital PDFs on a small box; scanned/image-only PDFs come out empty. |
+
+The marker engines are health-gated by `MarkerHealthMonitor` (a short-TTL probe
+of the target's `/health`). `GET /api/conversion/status` reports the active
+engine and live reachability; the Settings panel shows it and can test a remote
+URL before saving.
+
+### Offloading marker to another machine
+
+For a constrained host (a small VPS) you can run marker on a powerful machine and
+point the VPS at it. The repo ships standalone compose files that run **only**
+`marker-server`, published on port `8000`:
+
+```bash
+# On the powerful machine (CPU):
+docker compose -f docker-compose.yml.marker up -d --build
+tailscale ip -4    # the address to enter on the VPS as http://<ip>:8000
+```
+
+Then on the VPS: **Settings -> Conversion engine -> "Marker — off this server"**,
+enter `http://<that-ip>:8000`, Test, Save. A Tailscale tailnet between the two
+machines gives a private, zero-config link with no inbound ports opened.
+
+See [Gotchas](#gotchas-and-design-decisions) for the GPU (ROCm) variant of the
+standalone marker.
+
+---
+
 ## Stack
 
 ### Backend — `PdfParser.Api/` (.NET 10, C#)
@@ -134,13 +187,21 @@ Settings page can test the active provider and list its available models.
   `Microsoft.AspNetCore.OpenApi`, `Scalar.AspNetCore`.
 
 ### marker-server — `marker-server/` (Python 3.12, FastAPI)
-- A thin wrapper around marker's `PdfConverter`; models are loaded once at
-  startup and kept warm.
+- A thin wrapper around marker's `PdfConverter`. Models load **lazily on the
+  first `/convert`** (not at startup) and are kept warm afterwards, so a
+  default-OFF or pdfplumber-only deployment never pays the multi-gigabyte load,
+  and the container goes healthy immediately.
+- `/health` is a liveness probe — it returns `200` as soon as the server is up
+  and reports `modelsLoaded`. (This is why the api boots in seconds instead of
+  waiting for weights.)
 - `/convert` returns a block-anchored contract: Markdown where each block is
   preceded by `<a class="blk" data-block="..." data-page="N"></a>`, plus a flat
   `blocks[]` list of `{id, page, bbox, type}`. This powers the PDF to Markdown
   sync-scroll. It does not return marker's raw `metadata`, which crashes
   FastAPI's JSON encoder.
+- `/extract` is the lightweight engine: pdfplumber groups a PDF's text lines into
+  paragraph blocks with bounding boxes and emits the **same** contract as
+  `/convert` — no ML models touched.
 - **Version pins (see gotchas):** `marker-pdf==1.10.2`, `transformers==4.57.3`.
 
 ### Frontend — `frontend/` (Vite 8 + React 19 + TypeScript 6)
@@ -154,6 +215,9 @@ Settings page can test the active provider and list its available models.
   **react-pdf + react-markdown + remark-gfm + rehype-raw** (document viewer).
 - Authenticated SPA: login and register pages, an `AuthProvider`, route guards,
   a user menu, password change, and an admin panel.
+- The document viewer fetches the protected `/pdf` endpoint as an **authenticated
+  blob** and renders it from an object URL — a bare URL can't carry the bearer
+  token, so PDF.js/iframe/download would otherwise hit `401`.
 - `@/` alias maps to `src`. `cn` lives in `@/lib/utils`. Shared primitives live
   in `src/components/common/`.
 - Run with `npm run dev`; `npm run build` runs a full `tsc -b` and passes.
@@ -163,12 +227,17 @@ Settings page can test the active provider and list its available models.
 ## Project layout
 
 ```
-docker-compose.yml          marker-server + api + web (+ model-cache volume)
+docker-compose.yml          marker-server + api + web (+ model-cache volume); VPS-safe (CPU caps)
+docker-compose.yml.dev      same stack, NO resource caps — for a roomy dev workstation
+docker-compose.yml.marker   standalone marker only (offload target; publishes :8000)
+docker-compose.yml.marker.gpu  standalone marker on an AMD GPU via ROCm (experimental)
 Makefile                    make up/down/rebuild/logs/ps (injects UID/GID/HOME)
-.env.example                WATCH_ROOT, WATCH_SUBDIR, WEB_PORT, API_PORT,
-                            OLLAMA_*, JWT_KEY, APP_SECRET_KEY, etc.
+.env.example                WATCH_ROOT, WATCH_SUBDIR, WEB_PORT, API_PORT, OLLAMA_*,
+                            MARKER_CPUS/THREADS, CONVERSION_ENGINE, MARKER_REMOTE_URL,
+                            JWT_KEY, APP_SECRET_KEY, etc.
 
-marker-server/              app.py (block-anchored /convert), Dockerfile, requirements.txt
+marker-server/              app.py (lazy models, /convert + /extract), Dockerfile,
+                            Dockerfile.rocm (experimental GPU), requirements.txt
 
 PdfParser.Api/
   Program.cs                DI wiring, endpoint mapping, JWT auth, schema + settings init
@@ -181,7 +250,7 @@ PdfParser.Api/
                             SettingsService (per-user, env-seeded),
                             SecretsService (AES-GCM), SearchQuery
   Services/                 AuthService, PasswordHasher, LlmService,
-                            EnrichmentService, CategorizationService
+                            EnrichmentService, CategorizationService, MarkerHealthMonitor
   Endpoints/                Auth, Documents, Categories, Settings, Secrets,
                             Folders, Ollama, Stats
   Hubs/LiveHub.cs           SignalR push (documentUpdated, ollamaPull)
@@ -229,11 +298,11 @@ add their own policy.
 | PATCH | `/documents/{id}/tags {tags[]}` | manual tag editing (replaces tags, syncs the FTS tags column) |
 | DELETE / POST | `/documents/{id}` · `/documents/delete {ids[]}` | delete one / batch (removes the row, FTS entry, events, category links, markdown dir + images, blocks.json, archived PDF) |
 | GET/POST/PATCH/DELETE | `/categories` (+ `/documents/{id}/categories`, `/auto`) | taxonomy CRUD, assign/unassign, LLM auto-categorize |
-| GET/PATCH | `/settings` (+ `/settings/llm-test`, `/settings/llm-models`) | per-user live settings; `llm-test` pings the active provider, `llm-models` lists its model ids |
+| GET/PATCH | `/settings` (+ `/settings/llm-test`, `/settings/llm-models`, `/settings/marker-test?url=`) | per-user live settings; `llm-test`/`llm-models` for the LLM provider, `marker-test` probes a marker server URL |
 | GET/PUT/DELETE | `/secrets` (+ `/{key}/reveal`) | encrypted-at-rest secrets, masked list |
 | GET/POST/DELETE | `/ollama/status` · `/models` · `/ps` · `/pull` · `/models/{name}` | Ollama management (pull streams progress over SignalR `ollamaPull`) |
 | GET | `/folders/browse?sub=` | sandboxed host folder browser (under WATCH_ROOT) |
-| GET | `/stats` · `/events` · `/facets` · `/health` | dashboard widgets |
+| GET | `/stats` · `/events` · `/facets` · `/health` · `/conversion/status` | dashboard widgets; `conversion/status` = active engine + live marker reachability |
 | HUB | `/hub/live` | SignalR: `documentUpdated`, `ollamaPull` |
 
 ---
@@ -254,8 +323,12 @@ values (watch root, vault dir, marker URL, ports) stay in compose.
 | `OLLAMA_URL` | `http://host.docker.internal:11434` | host Ollama endpoint |
 | `OLLAMA_MODEL` | `qwen2.5:7b-instruct` | default Ollama model |
 | `DEBOUNCE_SECONDS` | `2` | size-stable wait before processing a new file |
-| `MARKER_URL` | `http://marker-server:8000` | internal marker service |
-| `TORCH_DEVICE` | `cpu` | set to `cuda` only after ROCm is proven on gfx1201 |
+| `MARKER_URL` | `http://marker-server:8000` | internal marker service (marker-host / pdfplumber) |
+| `CONVERSION_ENGINE` | `off` | seed engine: `off` · `marker-host` · `marker-remote` · `pdfplumber` |
+| `MARKER_REMOTE_URL` | (empty) | seed URL for the `marker-remote` engine (usually set in the UI) |
+| `MARKER_CPUS` | `3.0` | hard CPU ceiling for the marker container (4-core VPS default) |
+| `MARKER_THREADS` | `3` | torch/BLAS thread cap (`OMP/MKL/OPENBLAS_NUM_THREADS`) |
+| `TORCH_DEVICE` | `cpu` | `cuda` for the AMD GPU (ROCm) — see the GPU gotcha |
 | `JWT_KEY` | (vault keyfile) | JWT signing key — set a strong random value in production |
 | `APP_SECRET_KEY` | (vault keyfile) | master key for at-rest secret encryption |
 
@@ -334,6 +407,28 @@ to watch; either point `WATCH_SUBDIR` at a real ingestion directory or rely on
 drag-and-drop uploads through the dashboard. The `api` container runs as the host
 UID/GID (`make up` injects them) so written files stay owned by the deploying user.
 
+### 6. Pick a conversion engine (and size marker)
+
+Conversion is **OFF** until you choose an engine in **Settings -> Conversion
+engine** (or seed it with `CONVERSION_ENGINE`). On a small server you have three
+realistic options:
+
+- **pdfplumber** — light and instant, no models. Fine if your PDFs are
+  born-digital (have a real text layer).
+- **marker — off this server** — keep the VPS light and run marker on a beefier
+  machine; see [Conversion engines](#conversion-engines). This is the recommended
+  setup for a constrained VPS.
+- **marker — on this server** — only if the box has the headroom. The committed
+  `docker-compose.yml` caps the marker container at `MARKER_CPUS` cores /
+  `MARKER_THREADS` threads (defaults suit a 4-core VPS); a roomy workstation can
+  run `docker-compose.yml.dev` (no caps) instead.
+
+> **Swap matters for on-server marker.** Loading the surya models spikes to
+> several GB. On a small VPS with little or no swap the kernel can OOM-kill
+> marker mid-load (exit 137). Add swap (e.g. an 8 GB swapfile) if you run marker
+> on the server. Lazy loading means it's only paid on the first conversion, but
+> the spike is real. Offloading marker (option two) sidesteps this entirely.
+
 ---
 
 ## Gotchas and design decisions
@@ -363,10 +458,21 @@ UID/GID (`make up` injects them) so written files stay owned by the deploying us
    OpenAI-compatible API to keep enrichment, summaries and auto-categorization
    working.
 
-3. **GPU for marker is opt-in; CPU is the default.** CPU conversion is reliable on
-   the host hardware. To try marker on the GPU, swap `marker-server`'s base image
-   for `rocm/pytorch` and pass `/dev/kfd` and `/dev/dri`. ROCm in a container is
-   disposable and untested here.
+3. **GPU for marker on AMD (gfx1201 / RDNA4) works via ROCm — experimental.** CPU
+   is the default and reliable. The standalone GPU stack
+   (`docker-compose.yml.marker.gpu` + `marker-server/Dockerfile.rocm`) runs marker
+   on the GPU and is **verified working on gfx1201**. It installs the ROCm build of
+   torch (rocm6.3, matching the `torch 2.7.1` pin), passes `/dev/kfd` + `/dev/dri`,
+   runs `TORCH_DEVICE=cuda` (ROCm masquerades as CUDA in PyTorch), and sets
+   `TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1` to enable the fused flash /
+   memory-efficient attention kernels on RDNA4 — without it torch falls back to a
+   slow unfused "math" attention path. Caveats: it is pinned to ROCm 6.3 (the surya
+   stack pins torch 2.7.1), those AOTriton kernels are flagged experimental, and
+   `HSA_OVERRIDE_GFX_VERSION` is provided (commented) as a fallback if a card or
+   driver lacks native kernels. If anything misbehaves,
+   `docker compose -f docker-compose.yml.marker up` returns to the proven CPU build.
+   (This is distinct from gotcha 1: the *VLM* path needs vLLM, which still has no
+   RDNA4 kernels — classic surya on ROCm torch is what runs here.)
 
 4. **Files stay user-owned.** The `api` container runs as
    `${DOCKER_UID:-1000}:${DOCKER_GID:-1000}`. The whole `$HOME` is bind-mounted to
@@ -381,6 +487,14 @@ UID/GID (`make up` injects them) so written files stay owned by the deploying us
    `docker compose up -d --build --no-deps api`. A plain `--build api` can fail
    while evaluating other build contexts.
 
+7. **Marker models load lazily; processing is health-gated.** `marker-server`
+   no longer loads weights at startup — `/health` is liveness-only and the api no
+   longer blocks for minutes on model readiness. The first `/convert` pays the
+   load; conversions stay warm after. For the marker engines, `MarkerHealthMonitor`
+   probes the target before converting: if it is down, the document is held
+   `Queued` and re-checked (it is never failed), so an offline off-server marker
+   just pauses the queue and auto-resumes when it returns.
+
 ---
 
 ## Verification
@@ -391,3 +505,9 @@ UID/GID (`make up` injects them) so written files stay owned by the deploying us
 - End to end through the proxy: `curl localhost:16669/api/...` (production) or
   `localhost:5173/api/...` (dev). Authenticated routes require a bearer token from
   `/api/auth/login`.
+- Conversion engine: `GET /api/conversion/status` reports the active engine and
+  marker reachability. For a standalone/offload marker, confirm it from the api
+  host with `curl http://<marker-host>:8000/health`.
+- GPU marker: `docker compose -f docker-compose.yml.marker.gpu logs -f` during a
+  convert — the surya steps run on the GPU and the "experimental attention"
+  warnings disappear once `TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1` is active.

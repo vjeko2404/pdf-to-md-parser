@@ -3,7 +3,7 @@ import { ArrowDown, ArrowUp, RotateCcw, Sparkles, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { StatusBadge } from './StatusBadge'
-import { formatDate } from '@/lib/format'
+import { formatDate, formatDocType } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { parseTags, type DocumentDto } from '@/types/api'
 
@@ -81,8 +81,8 @@ export function DocumentTable({
               dir="asc"
               onClick={() => onSort(sort === 'name' ? '' : 'name')}
             />
-            <th className="hidden w-28 p-2 lg:table-cell">Type</th>
-            <th className="hidden w-52 p-2 md:table-cell">Tags</th>
+            <th className="hidden w-40 p-2 lg:table-cell">Type</th>
+            <th className="hidden w-64 p-2 md:table-cell">Tags</th>
             <th className="w-24 p-2">Status</th>
             <th className="hidden w-14 p-2 sm:table-cell">Pages</th>
             <SortHeader
@@ -92,12 +92,13 @@ export function DocumentTable({
               dir={sort === 'oldest' ? 'asc' : 'desc'}
               onClick={() => onSort(sort === 'oldest' ? '' : 'oldest')}
             />
-            <th className="w-28 p-2" />
+            <th className="w-28 p-2 text-right">Actions</th>
           </tr>
         </thead>
-        <tbody className="divide-y">
+        <tbody className="divide-y [&_td]:align-top">
           {docs.map((d) => {
             const tags = parseTags(d.tagsJson)
+            const type = formatDocType(d.docType)
             return (
               <tr key={d.id} className="hover:bg-accent/40">
                 <td className="p-2">
@@ -116,18 +117,18 @@ export function DocumentTable({
                     {d.originalName}
                   </Link>
                 </td>
-                <td className="hidden truncate p-2 text-muted-foreground lg:table-cell">
-                  {d.docType ?? '—'}
+                <td className="hidden truncate p-2 text-muted-foreground lg:table-cell" title={type}>
+                  {type}
                 </td>
                 <td className="hidden p-2 md:table-cell">
-                  <div className="flex gap-1 overflow-hidden">
-                    {tags.slice(0, 3).map((t) => (
+                  <div className="flex flex-wrap gap-1">
+                    {tags.map((t) => (
                       <button
                         key={t}
                         type="button"
                         onClick={() => onTagClick(t)}
                         title={`Search “${t}”`}
-                        className="max-w-24 truncate rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+                        className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
                       >
                         {t}
                       </button>

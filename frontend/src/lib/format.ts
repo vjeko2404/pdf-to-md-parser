@@ -28,3 +28,13 @@ export function formatTime(value: string | number | Date | null | undefined): st
   if (!d) return '—'
   return `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`
 }
+
+/** Humanize an LLM-generated doc_type (e.g. "register_extract" -> "Register Extract").
+ *  Display-only — the raw value stays the source of truth for filtering/facets. */
+export function formatDocType(docType?: string | null): string {
+  if (!docType) return '—'
+  return docType
+    .replace(/[_-]+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
