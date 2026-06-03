@@ -1,0 +1,43 @@
+# Standalone marker — runs ONLY marker-server on THIS machine (e.g. the 9950X3D), published
+# on a host port so a remote PDF_MD_Parser instance (the VPS) can use it as its "Marker — off
+# this server" engine over Tailscale.
+#
+# Fully separate from the main app stack: own compose project name, no api/web, no home bind
+# mount. Reuses the SAME image (./marker-server) so there's one source of truth for the build.
+#
+#   docker compose -f docker-compose.yml.marker up -d --build
+#   tailscale ip -4            # → the IP to enter on the VPS as http://<that-ip>:8000
+#
+# Then on the VPS: Settings → Conversion engine → "Marker — off this server" → that URL → Test.
+name: marker-standalone
+
+services:
+  marker-server:
+    build: ./marker-server           # reuse the app's marker image (Dockerfile + app.py)
+    restart: unless-stopped
+    environment:
+      - TORCH_DEVICE=${TORCH_DEVICE:-cpu}
+      # Persist surya/datalab weights to the named volume (same layout as the main stack).
+      - HF_HOME=/root/.cache/huggingface
+    volumes:
+      - model-cache:/root/.cache
+    ports:
+      # Publish 8000 so the VPS can reach it over Tailscale. Default binds all interfaces;
+      # set MARKER_BIND to your Tailscale IP (100.x.y.z) to expose it ONLY on the tailnet.
+      - "${MARKER_BIND:-0.0.0.0}:8000:8000"
+    healthcheck:
+      # Liveness — /health answers 200 immediately; marker models load lazily on first /convert.
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=3).status==200 else 1)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  model-cache:
