@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
-import { FileText, Sparkles, RotateCcw, Trash2 } from 'lucide-react'
+import { FileText, Pencil, RefreshCw, Sparkles, RotateCcw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { StatusBadge } from './StatusBadge'
+import { CategoryChips } from './CategoryChips'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 import { formatDate, formatDocType } from '@/lib/format'
@@ -14,6 +15,8 @@ export interface DocumentCardProps {
   onToggle: (id: number) => void
   onEnrich: (id: number) => void
   onRetry: (id: number) => void
+  onReconvert: (id: number) => void
+  onEdit: (doc: DocumentDto) => void
   onDelete: (id: number) => void
   onTagClick: (tag: string) => void
 }
@@ -24,6 +27,8 @@ export function DocumentCard({
   onToggle,
   onEnrich,
   onRetry,
+  onReconvert,
+  onEdit,
   onDelete,
   onTagClick,
 }: DocumentCardProps) {
@@ -56,6 +61,8 @@ export function DocumentCard({
         </Tooltip>
       )}
 
+      <CategoryChips categories={doc.categories} />
+
       {(doc.docType || tags.length > 0) && (
         <div className="flex flex-wrap items-center gap-1.5">
           {doc.docType && (
@@ -84,6 +91,17 @@ export function DocumentCard({
         <div className="flex gap-1">
           <Button variant="ghost" size="sm" onClick={() => onEnrich(doc.id)} title="Enrich with Ollama">
             <Sparkles className="size-4" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onEdit(doc)} title="Edit name & categories">
+            <Pencil className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onReconvert(doc.id)}
+            title="Re-create parsing"
+          >
+            <RefreshCw className="size-4" />
           </Button>
           {doc.status === 'Failed' && (
             <Button variant="ghost" size="sm" onClick={() => onRetry(doc.id)} title="Retry">

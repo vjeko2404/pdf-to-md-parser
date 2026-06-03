@@ -41,6 +41,8 @@ public class PipelineWorker(
         _stopping = stoppingToken;
         await foreach (var id in queue.ReadAllAsync(stoppingToken))
         {
+            // Park here while processing is paused (the dequeued id waits — FIFO is kept).
+            await queue.WaitIfPausedAsync(stoppingToken);
             try
             {
                 await ProcessAsync(id, stoppingToken);

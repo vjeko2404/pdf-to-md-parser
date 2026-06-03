@@ -3,6 +3,7 @@ import { Plus, Tag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Section } from "@/components/common/Section";
 import { Button } from "@/components/ui/Button";
+import { Link } from "@/components/ui/Link";
 import { TextInput } from "@/components/common/inputs";
 import { useCategories, useCreateCategory, useDeleteCategory } from "@/hooks/useCategories";
 
@@ -36,7 +37,13 @@ export function CategoriesPage() {
                 className="size-3 shrink-0 rounded-full"
                 style={{ background: c.color ?? "var(--muted-foreground)" }}
               />
-              <span className="flex-1 font-medium">{c.name}</span>
+              <Link
+                to={`/?categoryId=${c.id}`}
+                className="flex-1 font-medium text-foreground no-underline hover:text-primary hover:underline"
+                title={`View documents in ${c.name}`}
+              >
+                {c.name}
+              </Link>
               <span className="text-xs text-muted-foreground">{c.count ?? 0} docs</span>
               <Button variant="ghost" size="sm" onClick={() => del.mutate(c.id)} title="Delete">
                 <Trash2 className="size-4" />

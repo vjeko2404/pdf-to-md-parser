@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
-import { ArrowDown, ArrowUp, RotateCcw, Sparkles, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Pencil, RefreshCw, RotateCcw, Sparkles, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { StatusBadge } from './StatusBadge'
+import { CategoryChips } from './CategoryChips'
 import { formatDate, formatDocType } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { parseTags, type DocumentDto } from '@/types/api'
@@ -13,6 +14,8 @@ export interface DocumentTableProps {
   onToggle: (id: number) => void
   onEnrich: (id: number) => void
   onRetry: (id: number) => void
+  onReconvert: (id: number) => void
+  onEdit: (doc: DocumentDto) => void
   onDelete: (id: number) => void
   onTagClick: (tag: string) => void
   onToggleAll: () => void
@@ -57,6 +60,8 @@ export function DocumentTable({
   onToggle,
   onEnrich,
   onRetry,
+  onReconvert,
+  onEdit,
   onDelete,
   onTagClick,
   onToggleAll,
@@ -81,8 +86,9 @@ export function DocumentTable({
               dir="asc"
               onClick={() => onSort(sort === 'name' ? '' : 'name')}
             />
-            <th className="hidden w-40 p-2 lg:table-cell">Type</th>
-            <th className="hidden w-64 p-2 md:table-cell">Tags</th>
+            <th className="hidden w-36 p-2 lg:table-cell">Type</th>
+            <th className="hidden w-44 p-2 lg:table-cell">Categories</th>
+            <th className="hidden w-56 p-2 md:table-cell">Tags</th>
             <th className="w-24 p-2">Status</th>
             <th className="hidden w-14 p-2 sm:table-cell">Pages</th>
             <SortHeader
@@ -92,7 +98,7 @@ export function DocumentTable({
               dir={sort === 'oldest' ? 'asc' : 'desc'}
               onClick={() => onSort(sort === 'oldest' ? '' : 'oldest')}
             />
-            <th className="w-28 p-2 text-right">Actions</th>
+            <th className="w-40 p-2 text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y [&_td]:align-top">
@@ -120,6 +126,9 @@ export function DocumentTable({
                 <td className="hidden truncate p-2 text-muted-foreground lg:table-cell" title={type}>
                   {type}
                 </td>
+                <td className="hidden p-2 lg:table-cell">
+                  <CategoryChips categories={d.categories} />
+                </td>
                 <td className="hidden p-2 md:table-cell">
                   <div className="flex flex-wrap gap-1">
                     {tags.map((t) => (
@@ -146,6 +155,22 @@ export function DocumentTable({
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="sm" onClick={() => onEnrich(d.id)} title="Enrich">
                       <Sparkles className="size-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEdit(d)}
+                      title="Edit name & categories"
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onReconvert(d.id)}
+                      title="Re-create parsing"
+                    >
+                      <RefreshCw className="size-4" />
                     </Button>
                     {d.status === 'Failed' && (
                       <Button variant="ghost" size="sm" onClick={() => onRetry(d.id)} title="Retry">

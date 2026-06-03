@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9d5cff"/>
+      <stop offset="1" stop-color="#6d18f0"/>
+    </linearGradient>
+    <linearGradient id="arrow" x1="224" y1="256" x2="320" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#ece1ff"/>
+    </linearGradient>
+    <filter id="soft" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#2a0a55" flood-opacity="0.28"/>
+    </filter>
+    <filter id="soft2" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#2a0a55" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- maskable-safe background fills the whole canvas -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- back ghost sheet, tilted -->
+  <g filter="url(#soft)" transform="rotate(-9 168 256)">
+    <rect x="74" y="128" width="158" height="236" rx="20" fill="#ffffff" opacity="0.42"/>
+  </g>
+
+  <!-- PDF source sheet -->
+  <g filter="url(#soft)">
+    <path d="M80 132 h104 l40 40 v200 a16 16 0 0 1 -16 16 H80 a16 16 0 0 1 -16 -16 V148 a16 16 0 0 1 16 -16 z" fill="#ffffff"/>
+    <path d="M184 132 v24 a16 16 0 0 0 16 16 h24 z" fill="#d9c6ff"/>
+    <rect x="88" y="306" width="92" height="34" rx="8" fill="#6d18f0"/>
+    <text x="134" y="331" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="1">PDF</text>
+    <rect x="88" y="206" width="112" height="12" rx="6" fill="#cdb6f5"/>
+    <rect x="88" y="232" width="112" height="12" rx="6" fill="#e6dafb"/>
+    <rect x="88" y="258" width="72" height="12" rx="6" fill="#e6dafb"/>
+  </g>
+
+  <!-- MD output sheet -->
+  <g filter="url(#soft)">
+    <path d="M328 132 h104 l40 40 v200 a16 16 0 0 1 -16 16 H328 a16 16 0 0 1 -16 -16 V148 a16 16 0 0 1 16 -16 z" fill="#ffffff"/>
+    <path d="M432 132 v24 a16 16 0 0 0 16 16 h24 z" fill="#d9c6ff"/>
+    <g transform="translate(336 300)">
+      <rect x="0" y="0" width="120" height="62" rx="12" fill="none" stroke="#6d18f0" stroke-width="9"/>
+      <path d="M22 46 V16 l15 17 15 -17 v30" fill="none" stroke="#6d18f0" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M88 16 v20 m-12 -12 12 13 12 -13" fill="none" stroke="#6d18f0" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <rect x="336" y="206" width="112" height="12" rx="6" fill="#cdb6f5"/>
+    <rect x="336" y="232" width="112" height="12" rx="6" fill="#e6dafb"/>
+    <rect x="336" y="258" width="72" height="12" rx="6" fill="#e6dafb"/>
+  </g>
+
+  <!-- conversion arrow, drawn on top and centered in the gap -->
+  <g filter="url(#soft2)">
+    <path d="M222 256 h54 v-24 l44 36 -44 36 v-24 h-54 z" fill="url(#arrow)" stroke="#6d18f0" stroke-width="7" stroke-linejoin="round"/>
+  </g>
+</svg>

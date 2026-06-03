@@ -7,6 +7,8 @@ export interface DocumentGridProps {
   onToggle: (id: number) => void
   onEnrich: (id: number) => void
   onRetry: (id: number) => void
+  onReconvert: (id: number) => void
+  onEdit: (doc: DocumentDto) => void
   onDelete: (id: number) => void
   onTagClick: (tag: string) => void
 }
@@ -17,6 +19,8 @@ export function DocumentGrid({
   onToggle,
   onEnrich,
   onRetry,
+  onReconvert,
+  onEdit,
   onDelete,
   onTagClick,
 }: DocumentGridProps) {
@@ -30,6 +34,8 @@ export function DocumentGrid({
           onToggle={onToggle}
           onEnrich={onEnrich}
           onRetry={onRetry}
+          onReconvert={onReconvert}
+          onEdit={onEdit}
           onDelete={onDelete}
           onTagClick={onTagClick}
         />

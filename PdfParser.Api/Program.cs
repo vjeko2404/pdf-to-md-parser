@@ -126,6 +126,7 @@ app.MapAuthEndpoints();
 
 // Everything below requires a logged-in user. Admin-only routes add their own policy.
 app.MapDocumentsEndpoints();
+app.MapPipelineEndpoints();
 app.MapStatsEndpoints();
 app.MapSettingsEndpoints();
 app.MapOllamaEndpoints();

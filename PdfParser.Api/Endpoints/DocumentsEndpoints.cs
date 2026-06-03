@@ -138,39 +138,71 @@ public static class DocumentsEndpoints
 
                     using var ms = new MemoryStream();
                     await file.CopyToAsync(ms);
-                    var bytes = ms.ToArray();
-                    var sha = Helpers.Sha256Hex(bytes);
-                    var name = Path.GetFileName(file.FileName);
+                    return await IngestPdfAsync(
+                        ms.ToArray(),
+                        Path.GetFileName(file.FileName),
+                        userId,
+                        repo,
+                        queue,
+                        settings
+                    );
+                }
+            )
+            .DisableAntiforgery();
 
-                    var existing = await repo.GetByShaAsync(sha, userId);
-                    if (existing is not null)
+        // Mobile "scan with camera": phone uploads ordered (compressed) images, we stitch
+        // them into one multi-page PDF and feed it into the normal pipeline. Images arrive
+        // already downscaled/JPEG-encoded client-side (keeps payloads small, normalizes HEIC).
+        g.MapPost(
+                "/upload-photos",
+                async (
+                    HttpRequest request,
+                    ClaimsPrincipal user,
+                    DocumentRepository repo,
+                    ProcessingQueue queue,
+                    SettingsService settings
+                ) =>
+                {
+                    var userId = user.GetUserId();
+                    if (settings.For(userId).ConversionOff)
+                        return Results.Problem(
+                            detail: "No conversion engine selected — enable one in Settings.",
+                            statusCode: StatusCodes.Status409Conflict
+                        );
+                    if (!request.HasFormContentType)
+                        return Results.BadRequest("expected a multipart form");
+
+                    var form = await request.ReadFormAsync();
+                    var files = form.Files.GetFiles("files");
+                    var images = new List<byte[]>();
+                    foreach (var f in files)
                     {
-                        if (existing.Status is DocumentStatus.Done or DocumentStatus.Skipped)
-                            return Results.Ok(existing); // already have it
-                        await repo.SetStatusAsync(existing.Id, DocumentStatus.Queued);
-                        await queue.EnqueueAsync(existing.Id);
-                        return Results.Ok(existing);
+                        if (f.Length == 0)
+                            continue;
+                        if (!(f.ContentType ?? "").StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                            return Results.BadRequest($"not an image: {f.FileName}");
+                        using var ms = new MemoryStream();
+                        await f.CopyToAsync(ms);
+                        images.Add(ms.ToArray());
+                    }
+                    if (images.Count == 0)
+                        return Results.BadRequest("no images");
+
+                    byte[] pdf;
+                    try
+                    {
+                        pdf = ImagePdf.FromImages(images);
+                    }
+                    catch (Exception ex)
+                    {
+                        return Results.Problem(
+                            detail: $"could not build a PDF from the photos: {ex.Message}",
+                            statusCode: StatusCodes.Status422UnprocessableEntity
+                        );
                     }
 
-                    var pdfDir = Path.Combine(settings.VaultDir, "pdf");
-                    Directory.CreateDirectory(pdfDir);
-                    var dest = Helpers.UniquePath(Path.Combine(pdfDir, name));
-                    await File.WriteAllBytesAsync(dest, bytes);
-
-                    var doc = new Document
-                    {
-                        OwnerUserId = userId,
-                        Sha256 = sha,
-                        OriginalName = name,
-                        Slug = Helpers.Slugify(name),
-                        Status = DocumentStatus.Queued,
-                        ArchivedPdfPath = dest, // worker resolves source from here, skips re-archiving
-                        CreatedAt = DateTime.UtcNow,
-                    };
-                    var id = await repo.InsertUploadedAsync(doc);
-                    await repo.AddEventAsync(id, "info", "upload", $"Uploaded {name}");
-                    await queue.EnqueueAsync(id);
-                    return Results.Ok(await repo.GetByIdAsync(id, userId));
+                    var name = $"scan-{DateTime.UtcNow:yyyyMMdd-HHmmss}.pdf";
+                    return await IngestPdfAsync(pdf, name, userId, repo, queue, settings);
                 }
             )
             .DisableAntiforgery();
@@ -224,6 +256,64 @@ public static class DocumentsEndpoints
                 await repo.SetStatusAsync(id, DocumentStatus.Queued);
                 await queue.EnqueueAsync(id);
                 return Results.Accepted($"/api/documents/{id}");
+            }
+        );
+
+        // Re-create the parsing from scratch: delete the existing outputs and re-run the
+        // full pipeline against the archived PDF. Works on any status (incl. Done), unlike
+        // /retry which just requeues whatever's on disk.
+        g.MapPost(
+            "/{id:long}/reconvert",
+            async (long id, ClaimsPrincipal user, DocumentRepository repo, ProcessingQueue queue) =>
+            {
+                var d = await repo.GetByIdAsync(id, user.GetUserId());
+                if (d is null)
+                    return Results.NotFound();
+
+                // Best-effort wipe of on-disk outputs; the pipeline rewrites them.
+                try
+                {
+                    if (d.LayoutJsonPath is { } lp && File.Exists(lp))
+                        File.Delete(lp);
+                }
+                catch { /* leave orphan rather than fail */ }
+                var mdDir = d.MdPath is { } mp ? Path.GetDirectoryName(mp) : null;
+                try
+                {
+                    if (mdDir is not null && Directory.Exists(mdDir))
+                        Directory.Delete(mdDir, recursive: true);
+                }
+                catch { /* leave orphan rather than fail */ }
+
+                await repo.ResetForReconvertAsync(id);
+                await repo.AddEventAsync(id, "info", "convert", "Re-parsing requested");
+                await queue.EnqueueAsync(id);
+                return Results.Accepted($"/api/documents/{id}");
+            }
+        );
+
+        // Edit a document: rename the display name and/or replace its category set in one go.
+        // Display-name only — the slug and artifacts stay put (see UpdateNameAsync).
+        g.MapPatch(
+            "/{id:long}",
+            async (
+                long id,
+                UpdateDocumentRequest req,
+                ClaimsPrincipal user,
+                DocumentRepository repo,
+                CategoryRepository cats
+            ) =>
+            {
+                var userId = user.GetUserId();
+                if (await repo.GetByIdAsync(id, userId) is null)
+                    return Results.NotFound();
+
+                if (!string.IsNullOrWhiteSpace(req.OriginalName))
+                    await repo.UpdateNameAsync(id, req.OriginalName.Trim());
+                if (req.CategoryIds is not null)
+                    await cats.SetForDocumentAsync(id, req.CategoryIds, userId);
+
+                return Results.Ok(await repo.GetByIdAsync(id, userId));
             }
         );
 
@@ -282,6 +372,49 @@ public static class DocumentsEndpoints
             }
         );
     }
+
+    /// <summary>Shared ingest tail for /upload and /upload-photos: sha256 dedup (resume if
+    /// incomplete), stage the PDF in the vault archive, insert the row, enqueue.</summary>
+    private static async Task<IResult> IngestPdfAsync(
+        byte[] bytes,
+        string name,
+        long userId,
+        DocumentRepository repo,
+        ProcessingQueue queue,
+        SettingsService settings
+    )
+    {
+        var sha = Helpers.Sha256Hex(bytes);
+        var existing = await repo.GetByShaAsync(sha, userId);
+        if (existing is not null)
+        {
+            if (existing.Status is DocumentStatus.Done or DocumentStatus.Skipped)
+                return Results.Ok(existing); // already have it
+            await repo.SetStatusAsync(existing.Id, DocumentStatus.Queued);
+            await queue.EnqueueAsync(existing.Id);
+            return Results.Ok(existing);
+        }
+
+        var pdfDir = Path.Combine(settings.VaultDir, "pdf");
+        Directory.CreateDirectory(pdfDir);
+        var dest = Helpers.UniquePath(Path.Combine(pdfDir, name));
+        await File.WriteAllBytesAsync(dest, bytes);
+
+        var doc = new Document
+        {
+            OwnerUserId = userId,
+            Sha256 = sha,
+            OriginalName = name,
+            Slug = Helpers.Slugify(name),
+            Status = DocumentStatus.Queued,
+            ArchivedPdfPath = dest, // worker resolves source from here, skips re-archiving
+            CreatedAt = DateTime.UtcNow,
+        };
+        var id = await repo.InsertUploadedAsync(doc);
+        await repo.AddEventAsync(id, "info", "upload", $"Uploaded {name}");
+        await queue.EnqueueAsync(id);
+        return Results.Ok(await repo.GetByIdAsync(id, userId));
+    }
 }
 
 /// <summary>Request body for POST /api/documents/enrich.</summary>
@@ -292,3 +425,7 @@ public record DeleteBatchRequest(long[] Ids);
 
 /// <summary>Request body for PATCH /api/documents/{id}/tags.</summary>
 public record UpdateTagsRequest(string[]? Tags);
+
+/// <summary>Request body for PATCH /api/documents/{id} — rename and/or set categories.
+/// Both fields optional: null CategoryIds leaves categories untouched; an empty array clears them.</summary>
+public record UpdateDocumentRequest(string? OriginalName, long[]? CategoryIds);

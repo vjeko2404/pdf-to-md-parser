@@ -12,5 +12,6 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.6.9" />
+    <PackageReference Include="PDFsharp" Version="6.1.1" />
   </ItemGroup>
 </Project>

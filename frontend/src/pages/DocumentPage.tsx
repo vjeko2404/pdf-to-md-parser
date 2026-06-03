@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Copy, Download, Printer } from 'lucide-react'
+import { ArrowLeft, Copy, Download, Pencil, Printer, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
@@ -12,7 +12,10 @@ import { PdfPane } from '@/components/doc/PdfPane'
 import { MarkdownPane } from '@/components/doc/MarkdownPane'
 import { CategoryBar } from '@/components/doc/CategoryBar'
 import { TagBar } from '@/components/doc/TagBar'
+import { EditDocumentModal } from '@/components/library/EditDocumentModal'
 import { LayoutSwitch, type DocLayout } from '@/components/doc/LayoutSwitch'
+import { useReconvert } from '@/hooks/useDocuments'
+import { useCategories } from '@/hooks/useCategories'
 import { useSyncScroll } from '@/hooks/useSyncScroll'
 import { useIsMobile } from '@/hooks/useIsMobile'
 
@@ -33,6 +36,9 @@ export function DocumentPage() {
     localStorage.setItem('doc-layout', l)
     setLayout(l)
   }
+  const [editing, setEditing] = useState(false)
+  const reconvert = useReconvert()
+  const { data: categories = [] } = useCategories()
 
   const { data: doc } = useQuery({
     queryKey: ['document', docId],
@@ -142,7 +148,30 @@ export function DocumentPage() {
               {formatDocType(doc.docType)}
             </span>
           )}
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setEditing(true)}
+              title="Edit name & categories"
+              disabled={!doc}
+            >
+              <Pencil className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                reconvert.mutate(docId, {
+                  onSuccess: () => toast.success('Re-parsing queued'),
+                  onError: (e) => toast.error(e.message),
+                })
+              }
+              title="Re-create parsing"
+              disabled={!doc || reconvert.isPending}
+            >
+              <RefreshCw className="size-4" />
+            </Button>
             <LayoutSwitch value={layout} onChange={changeLayout} />
           </div>
         </div>
@@ -200,6 +229,12 @@ export function DocumentPage() {
           </div>
         )}
       </div>
+
+      <EditDocumentModal
+        doc={editing ? (doc ?? null) : null}
+        categories={categories}
+        onClose={() => setEditing(false)}
+      />
     </div>
   )
 }

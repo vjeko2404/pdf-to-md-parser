@@ -1,5 +1,12 @@
 export type DocumentStatus = 'Queued' | 'Processing' | 'Done' | 'Failed' | 'Skipped'
 
+/** Category as carried inline on a document (list + detail responses). */
+export interface DocCategory {
+  id: number
+  name: string
+  color?: string | null
+}
+
 export interface DocumentDto {
   id: number
   sha256: string
@@ -21,6 +28,7 @@ export interface DocumentDto {
   durationMs: number
   createdAt: string
   processedAt?: string | null
+  categories?: DocCategory[]
 }
 
 export interface EventDto {

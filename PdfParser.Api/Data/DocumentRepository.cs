@@ -28,10 +28,13 @@ public class DocumentRepository(Database db)
     public async Task<Document?> GetByIdAsync(long id, long userId)
     {
         using var c = db.Open();
-        return await c.QuerySingleOrDefaultAsync<Document>(
+        var doc = await c.QuerySingleOrDefaultAsync<Document>(
             "SELECT * FROM documents WHERE Id = @id AND OwnerUserId = @userId",
             new { id, userId }
         );
+        if (doc is not null)
+            await AttachCategoriesAsync(c, [doc]);
+        return doc;
     }
 
     /// <summary>Unscoped fetch for the pipeline (system context).</summary>
@@ -241,7 +244,92 @@ public class DocumentRepository(Database db)
         var where = " WHERE " + string.Join(" AND ", filters);
         var sql =
             $"SELECT d.* FROM documents d {string.Join(' ', joins)}{where} ORDER BY {order} LIMIT 300;";
-        return await c.QueryAsync<Document>(sql, p);
+        var docs = (await c.QueryAsync<Document>(sql, p)).ToList();
+        await AttachCategoriesAsync(c, docs);
+        return docs;
+    }
+
+    private sealed class DocCategoryRow
+    {
+        public long DocumentId { get; set; }
+        public long Id { get; set; }
+        public string Name { get; set; } = "";
+        public string? Color { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    /// <summary>One grouped query to hang each doc's categories off the result set — keeps
+    /// the list/detail JSON self-contained (drives the Library category column + edit modal).</summary>
+    private static async Task AttachCategoriesAsync(
+        Microsoft.Data.Sqlite.SqliteConnection c,
+        IReadOnlyList<Document> docs
+    )
+    {
+        if (docs.Count == 0)
+            return;
+        var ids = docs.Select(d => d.Id).ToArray();
+        var rows = await c.QueryAsync<DocCategoryRow>(
+            """
+            SELECT dc.DocumentId, c.Id, c.Name, c.Color, c.CreatedAt
+            FROM document_categories dc
+            JOIN categories c ON c.Id = dc.CategoryId
+            WHERE dc.DocumentId IN @ids
+            ORDER BY c.Name COLLATE NOCASE;
+            """,
+            new { ids }
+        );
+        var byDoc = rows.GroupBy(r => r.DocumentId)
+            .ToDictionary(
+                g => g.Key,
+                g => (IReadOnlyList<Category>)
+                    g.Select(r => new Category
+                        {
+                            Id = r.Id,
+                            Name = r.Name,
+                            Color = r.Color,
+                            CreatedAt = r.CreatedAt,
+                        })
+                        .ToList()
+            );
+        foreach (var d in docs)
+            if (byDoc.TryGetValue(d.Id, out var cs))
+                d.Categories = cs;
+    }
+
+    /// <summary>Rename the display name (and FTS title) only — the slug and on-disk artifact
+    /// paths are left untouched, so there are no file moves and no race with the converter.</summary>
+    public async Task UpdateNameAsync(long id, string name)
+    {
+        using var c = db.Open();
+        await c.ExecuteAsync(
+            "UPDATE documents SET OriginalName = @name WHERE Id = @id",
+            new { id, name }
+        );
+        // FTS row only exists once a doc has been converted; this no-ops before then.
+        await c.ExecuteAsync(
+            "UPDATE documents_fts SET title = @name WHERE rowid = @id",
+            new { id, name }
+        );
+    }
+
+    /// <summary>Wipe a doc's conversion outputs so it re-runs the whole pipeline from the
+    /// archived PDF: clears artifact paths + extracted/enriched metadata, drops the FTS row,
+    /// and sets the doc back to Queued. Keeps ArchivedPdfPath — that's the reconversion source.</summary>
+    public async Task ResetForReconvertAsync(long id)
+    {
+        using var c = db.Open();
+        await c.ExecuteAsync(
+            """
+            UPDATE documents SET
+                Status = 'Queued', MdPath = NULL, LayoutJsonPath = NULL, Pages = 0,
+                Language = NULL, DocType = NULL, DocDate = NULL, DocNumber = NULL,
+                PartiesJson = NULL, TagsJson = NULL, Summary = NULL, ErrorReason = NULL,
+                DurationMs = 0, ProcessedAt = NULL
+            WHERE Id = @id;
+            DELETE FROM documents_fts WHERE rowid = @id;
+            """,
+            new { id }
+        );
     }
 
     /// <summary>Filter facets (value + count) for the search UI, scoped to the user.</summary>

@@ -112,6 +112,26 @@ public class CategoryRepository(Database db)
         );
     }
 
+    /// <summary>Replace a document's entire category set in one go (used by the edit modal).
+    /// Only categories the user owns are assigned; everything else for the doc is cleared.</summary>
+    public async Task SetForDocumentAsync(long documentId, IEnumerable<long> categoryIds, long userId)
+    {
+        using var c = db.Open();
+        await c.ExecuteAsync(
+            "DELETE FROM document_categories WHERE DocumentId = @documentId",
+            new { documentId }
+        );
+        foreach (var cid in categoryIds.Distinct())
+            await c.ExecuteAsync(
+                """
+                INSERT OR IGNORE INTO document_categories (DocumentId, CategoryId)
+                SELECT @documentId, @cid
+                WHERE EXISTS (SELECT 1 FROM categories WHERE Id = @cid AND OwnerUserId = @userId);
+                """,
+                new { documentId, cid, userId }
+            );
+    }
+
     public async Task<IEnumerable<Category>> ForDocumentAsync(long documentId)
     {
         using var c = db.Open();

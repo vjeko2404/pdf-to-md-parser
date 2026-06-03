@@ -1,4 +1,4 @@
-import { Loader2, Search, Sparkles, Trash2, X } from 'lucide-react'
+import { Loader2, Pause, Play, Search, Sparkles, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
@@ -25,6 +25,9 @@ export interface LibraryToolbarProps {
   onEnrichSelected: () => void
   onDeleteSelected: () => void
   enriching: boolean
+  paused: boolean
+  onTogglePause: () => void
+  pauseBusy: boolean
 }
 
 export function LibraryToolbar(props: LibraryToolbarProps) {
@@ -44,6 +47,9 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
     onEnrichSelected,
     onDeleteSelected,
     enriching,
+    paused,
+    onTogglePause,
+    pauseBusy,
   } = props
 
   return (
@@ -108,6 +114,22 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
           </Button>
         </>
       )}
+      <Button
+        variant={paused ? 'button_yellow' : 'button_neutral'}
+        size="sm"
+        onClick={onTogglePause}
+        disabled={pauseBusy}
+        title={paused ? 'Resume processing' : 'Pause processing'}
+      >
+        {pauseBusy ? (
+          <Loader2 className="size-4 animate-spin" />
+        ) : paused ? (
+          <Play className="size-4" />
+        ) : (
+          <Pause className="size-4" />
+        )}
+        {paused ? 'Resume' : 'Pause'}
+      </Button>
       <ViewSwitcher mode={view} onChange={onView} />
     </div>
   )

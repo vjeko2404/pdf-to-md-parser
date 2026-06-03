@@ -2,31 +2,38 @@ import { useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Dropzone } from '@/components/library/Dropzone'
+import { MobileCapture } from '@/components/library/MobileCapture'
 import { LibraryToolbar } from '@/components/library/LibraryToolbar'
 import { DocumentGrid } from '@/components/library/DocumentGrid'
 import { DocumentTable } from '@/components/library/DocumentTable'
+import { EditDocumentModal } from '@/components/library/EditDocumentModal'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import {
   useDeleteBatch,
   useDeleteDocument,
   useDocuments,
   useEnrichBatch,
+  useReconvert,
   useReenrich,
   useRetry,
 } from '@/hooks/useDocuments'
 import type { EnrichResult } from '@/api/documents'
 import { useCategories } from '@/hooks/useCategories'
 import { useViewMode } from '@/hooks/useViewMode'
+import { useIsMobile } from '@/hooks/useIsMobile'
+import { useLibraryFilters } from '@/hooks/useLibraryFilters'
+import { usePipelineControl, usePipelineStatus } from '@/hooks/usePipeline'
 import { useSignalR } from '@/hooks/useSignalR'
+import type { DocumentDto } from '@/types/api'
 
 export function LibraryPage() {
-  const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('')
-  const [categoryId, setCategoryId] = useState('')
-  const [sort, setSort] = useState('') // '' = newest first (default)
+  const { search, setSearch, status, setStatus, categoryId, setCategoryId, sort, setSort } =
+    useLibraryFilters()
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
+  const [editTarget, setEditTarget] = useState<DocumentDto | null>(null)
   const [view, setView] = useViewMode()
+  const isMobile = useIsMobile()
   const qc = useQueryClient()
 
   const query = useMemo(
@@ -40,13 +47,28 @@ export function LibraryPage() {
   )
   const { data: docs = [], isLoading } = useDocuments(query)
   const { data: categories = [] } = useCategories()
+  const { data: pipeline } = usePipelineStatus()
+  const { pause, resume } = usePipelineControl()
   const reenrich = useReenrich()
   const retry = useRetry()
+  const reconvert = useReconvert()
   const enrichBatch = useEnrichBatch()
   const remove = useDeleteDocument()
   const removeBatch = useDeleteBatch()
 
-  useSignalR({ documentUpdated: () => qc.invalidateQueries({ queryKey: ['documents'] }) })
+  const paused = pipeline?.paused ?? false
+  const pauseBusy = pause.isPending || resume.isPending
+  const togglePause = () =>
+    (paused ? resume : pause).mutate(undefined, {
+      onSuccess: (s) => toast.success(s.paused ? 'Processing paused' : 'Processing resumed'),
+      onError: (e) => toast.error(e.message),
+    })
+
+  useSignalR({
+    documentUpdated: () => qc.invalidateQueries({ queryKey: ['documents'] }),
+    pipelineState: ((s: { paused: boolean }) =>
+      qc.setQueryData(['pipeline-status'], s)) as never,
+  })
 
   const toggle = (id: number) =>
     setSelected((s) => {
@@ -85,6 +107,11 @@ export function LibraryPage() {
       onError: (e) => toast.error(e.message),
     })
   const onRetry = (id: number) => retry.mutate(id, { onSuccess: () => toast.success('Re-queued') })
+  const onReconvert = (id: number) =>
+    reconvert.mutate(id, {
+      onSuccess: () => toast.success('Re-parsing queued'),
+      onError: (e) => toast.error(e.message),
+    })
 
   const deselect = (ids: number[]) =>
     setSelected((s) => {
@@ -126,6 +153,8 @@ export function LibraryPage() {
     onToggle: toggle,
     onEnrich,
     onRetry,
+    onReconvert,
+    onEdit: (doc: DocumentDto) => setEditTarget(doc),
     onDelete: (id: number) => setDeleteTarget({ kind: 'one', id }),
     onTagClick: setSearch,
   }
@@ -133,6 +162,7 @@ export function LibraryPage() {
   return (
     <div className="flex flex-col gap-4">
       <Dropzone />
+      {isMobile && <MobileCapture />}
       <LibraryToolbar
         search={search}
         onSearch={setSearch}
@@ -149,6 +179,9 @@ export function LibraryPage() {
         onEnrichSelected={enrichSelected}
         onDeleteSelected={() => setDeleteTarget({ kind: 'many', ids: [...selected] })}
         enriching={enrichBatch.isPending}
+        paused={paused}
+        onTogglePause={togglePause}
+        pauseBusy={pauseBusy}
       />
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
@@ -176,6 +209,12 @@ export function LibraryPage() {
         destructive
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <EditDocumentModal
+        doc={editTarget}
+        categories={categories}
+        onClose={() => setEditTarget(null)}
       />
     </div>
   )

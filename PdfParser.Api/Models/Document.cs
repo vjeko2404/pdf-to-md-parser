@@ -42,6 +42,10 @@ public class Document
     public long DurationMs { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? ProcessedAt { get; set; }
+
+    /// <summary>Categories assigned to this doc. Populated for list/detail HTTP responses
+    /// (not a DB column — Dapper leaves it empty on plain SELECTs and the pipeline ignores it).</summary>
+    public IReadOnlyList<Category> Categories { get; set; } = [];
 }
 
 /// <summary>Per-document timeline entry — drives the dashboard's live log.</summary>

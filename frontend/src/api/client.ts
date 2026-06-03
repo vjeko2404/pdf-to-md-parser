@@ -72,4 +72,5 @@ export const api = {
     fd.append('file', file)
     return request<T>(p, { method: 'POST', body: fd })
   },
+  postForm: <T>(p: string, fd: FormData) => request<T>(p, { method: 'POST', body: fd }),
 }

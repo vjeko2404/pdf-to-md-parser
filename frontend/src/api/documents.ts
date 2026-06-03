@@ -47,7 +47,17 @@ export const documentsApi = {
   },
   get: (id: number) => api.get<DocumentDto>(`/documents/${id}`),
   upload: (file: File) => api.upload<DocumentDto>('/documents/upload', file),
+  /** Mobile "scan": ordered (already-compressed) images → one multi-page PDF, built server-side. */
+  uploadPhotos: (blobs: Blob[]) => {
+    const fd = new FormData()
+    blobs.forEach((b, i) => fd.append('files', b, `page-${i + 1}.jpg`))
+    return api.postForm<DocumentDto>('/documents/upload-photos', fd)
+  },
   retry: (id: number) => api.post(`/documents/${id}/retry`),
+  reconvert: (id: number) => api.post(`/documents/${id}/reconvert`),
+  /** Rename (display name) and/or replace the category set in one call. */
+  update: (id: number, body: { originalName?: string; categoryIds?: number[] }) =>
+    api.patch<DocumentDto>(`/documents/${id}`, body),
   remove: (id: number) => api.del<void>(`/documents/${id}`),
   removeBatch: (ids: number[]) => api.post<{ deleted: number }>('/documents/delete', { ids }),
   reenrich: (id: number) => api.post<DocumentDto>(`/documents/${id}/reenrich`),
