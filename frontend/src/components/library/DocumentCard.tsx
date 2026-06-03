@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
-import { FileText, Sparkles, RotateCcw } from 'lucide-react'
+import { FileText, Sparkles, RotateCcw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { Checkbox } from '@/components/ui/Checkbox'
 import { StatusBadge } from './StatusBadge'
 import { cn } from '@/lib/utils'
+import { formatDate } from '@/lib/format'
 import { parseTags, type DocumentDto } from '@/types/api'
 
 export interface DocumentCardProps {
@@ -11,9 +13,19 @@ export interface DocumentCardProps {
   onToggle: (id: number) => void
   onEnrich: (id: number) => void
   onRetry: (id: number) => void
+  onDelete: (id: number) => void
+  onTagClick: (tag: string) => void
 }
 
-export function DocumentCard({ doc, selected, onToggle, onEnrich, onRetry }: DocumentCardProps) {
+export function DocumentCard({
+  doc,
+  selected,
+  onToggle,
+  onEnrich,
+  onRetry,
+  onDelete,
+  onTagClick,
+}: DocumentCardProps) {
   const tags = parseTags(doc.tagsJson)
 
   return (
@@ -24,11 +36,11 @@ export function DocumentCard({ doc, selected, onToggle, onEnrich, onRetry }: Doc
       )}
     >
       <div className="flex items-start gap-2">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={selected}
           onChange={() => onToggle(doc.id)}
-          className="mt-1 size-4 accent-primary"
+          aria-label="Select document"
+          className="mt-1"
         />
         <Link to={`/doc/${doc.id}`} className="flex min-w-0 flex-1 items-center gap-2">
           <FileText className="size-4 shrink-0 text-muted-foreground" />
@@ -47,16 +59,22 @@ export function DocumentCard({ doc, selected, onToggle, onEnrich, onRetry }: Doc
             </span>
           )}
           {tags.slice(0, 5).map((t) => (
-            <span key={t} className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+            <button
+              key={t}
+              type="button"
+              onClick={() => onTagClick(t)}
+              title={`Search “${t}”`}
+              className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+            >
               {t}
-            </span>
+            </button>
           ))}
         </div>
       )}
 
       <div className="mt-auto flex items-center justify-between pt-1">
         <span className="text-xs text-muted-foreground">
-          {doc.pages} pp · {new Date(doc.createdAt).toLocaleDateString()}
+          {doc.pages} pp · {formatDate(doc.createdAt)}
         </span>
         <div className="flex gap-1">
           <Button variant="ghost" size="sm" onClick={() => onEnrich(doc.id)} title="Enrich with Ollama">
@@ -67,6 +85,15 @@ export function DocumentCard({ doc, selected, onToggle, onEnrich, onRetry }: Doc
               <RotateCcw className="size-4" />
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onDelete(doc.id)}
+            title="Delete from vault"
+            className="text-muted-foreground hover:bg-destructive hover:text-destructive-foreground"
+          >
+            <Trash2 className="size-4" />
+          </Button>
         </div>
       </div>
     </div>

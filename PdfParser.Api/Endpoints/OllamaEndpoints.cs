@@ -8,10 +8,12 @@ public static class OllamaEndpoints
     {
         var g = app.MapGroup("/api/ollama").WithTags("Ollama");
 
-        // Online? version? — drives the UI's Ollama status indicator.
+        // Online? version? — drives the UI's status indicator. Optional ?url= tests
+        // an arbitrary (unsaved) server, powering the Settings "Test connection" button.
         g.MapGet(
             "/status",
-            async (OllamaAdmin o, CancellationToken ct) => Results.Ok(await o.StatusAsync(ct))
+            async (OllamaAdmin o, string? url, CancellationToken ct) =>
+                Results.Ok(await o.StatusAsync(ct, url))
         );
 
         // Installed models (for the model dropdown).

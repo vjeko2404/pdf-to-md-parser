@@ -5,14 +5,24 @@ import { Section } from '@/components/common/Section'
 import { Button } from '@/components/ui/Button'
 import { TextArea } from '@/components/common/inputs'
 
-export function PromptPanel({ value, onSave }: { value: string; onSave: (v: string) => void }) {
+export function PromptPanel({
+  value,
+  onSave,
+  title = 'Enrichment prompt',
+  description = 'System prompt for extracting tags, type & metadata',
+}: {
+  value: string
+  onSave: (v: string) => void
+  title?: string
+  description?: string
+}) {
   const [draft, setDraft] = useState(value)
   useEffect(() => setDraft(value), [value])
 
   return (
     <Section
-      title="Enrichment prompt"
-      description="System prompt sent to Ollama for tagging & summaries"
+      title={title}
+      description={description}
       action={
         <Button
           variant="button_primary"

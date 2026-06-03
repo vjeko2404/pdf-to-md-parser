@@ -48,6 +48,14 @@ export function DocumentPage() {
           )}
         </div>
         {Number.isFinite(docId) && <CategoryBar docId={docId} />}
+        {doc?.summary && (
+          <div className="rounded-xl border bg-card p-3 text-sm leading-relaxed text-muted-foreground">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-foreground/60">
+              Summary
+            </span>
+            {doc.summary}
+          </div>
+        )}
       </div>
       <div
         className={cn(

@@ -162,6 +162,28 @@ public static class DocumentsEndpoints
             )
             .DisableAntiforgery();
 
+        // Delete a document and all its artifacts (DB row, FTS, events, category
+        // links, markdown dir + images, blocks.json, archived PDF).
+        g.MapDelete(
+            "/{id:long}",
+            async (long id, DocumentRepository repo) =>
+                await repo.DeleteAsync(id) ? Results.NoContent() : Results.NotFound()
+        );
+
+        // Batch delete — the frontend selects N documents and removes them all.
+        // ("delete" can't collide with /{id:long}; that route only matches numbers.)
+        g.MapPost(
+            "/delete",
+            async (DeleteBatchRequest req, DocumentRepository repo) =>
+            {
+                var deleted = 0;
+                foreach (var id in req.Ids)
+                    if (await repo.DeleteAsync(id))
+                        deleted++;
+                return Results.Ok(new { deleted });
+            }
+        );
+
         // Requeue a failed (or any) document.
         g.MapPost(
             "/{id:long}/retry",
@@ -186,7 +208,8 @@ public static class DocumentsEndpoints
                 return await enrich.EnrichAsync(d)
                     ? Results.Ok(d)
                     : Results.Problem(
-                        detail: "Enrichment unavailable — is Ollama running with a model selected?",
+                        detail: "Enrichment failed — check the LLM provider in Settings "
+                            + "(Ollama running / API key valid / model set) and the api logs.",
                         statusCode: 503
                     );
             }
@@ -232,3 +255,6 @@ public static class DocumentsEndpoints
 
 /// <summary>Request body for POST /api/documents/enrich.</summary>
 public record EnrichBatchRequest(long[] Ids);
+
+/// <summary>Request body for POST /api/documents/delete.</summary>
+public record DeleteBatchRequest(long[] Ids);

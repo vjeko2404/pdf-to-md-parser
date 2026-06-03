@@ -22,3 +22,5 @@ export const useUploadDocument = () => useInvalidatingMutation((file: File) => d
 export const useReenrich = () => useInvalidatingMutation((id: number) => documentsApi.reenrich(id))
 export const useRetry = () => useInvalidatingMutation((id: number) => documentsApi.retry(id))
 export const useEnrichBatch = () => useInvalidatingMutation((ids: number[]) => documentsApi.enrichBatch(ids))
+export const useDeleteDocument = () => useInvalidatingMutation((id: number) => documentsApi.remove(id))
+export const useDeleteBatch = () => useInvalidatingMutation((ids: number[]) => documentsApi.removeBatch(ids))

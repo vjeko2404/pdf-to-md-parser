@@ -1,6 +1,8 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.SignalR;
 using PdfParser.Api.Clients;
 using PdfParser.Api.Data;
+using PdfParser.Api.Hubs;
 using PdfParser.Api.Models;
 using PdfParser.Api.Util;
 
@@ -13,9 +15,10 @@ namespace PdfParser.Api.Services;
 /// </summary>
 public class EnrichmentService(
     DocumentRepository repo,
-    OllamaClient ollama,
+    LlmService llm,
     SettingsService settings,
-    CategorizationService categorization
+    CategorizationService categorization,
+    IHubContext<LiveHub> hub
 )
 {
     /// <summary>
@@ -30,7 +33,7 @@ public class EnrichmentService(
             return false;
 
         var plain = Helpers.StripAnchors(await File.ReadAllTextAsync(d.MdPath, ct));
-        var enrich = await ollama.EnrichAsync(plain, ct);
+        var enrich = await llm.EnrichAsync(plain, ct);
         if (enrich is null)
             return false;
 
@@ -38,13 +41,33 @@ public class EnrichmentService(
         d.Language = enrich.Language;
         d.DocDate = enrich.DocDate;
         d.DocNumber = enrich.DocNumber;
-        d.Summary = enrich.Summary;
         d.TagsJson = JsonSerializer.Serialize(enrich.Tags);
         d.PartiesJson = JsonSerializer.Serialize(enrich.Parties);
+
+        // Dedicated summary pass with its own editable prompt — a fuller, prose
+        // summary than the terse one bundled in the metadata schema. Falls back to
+        // the inline summary if the dedicated call yields nothing.
+        var summary = await llm.SummarizeAsync(plain, ct);
+        d.Summary = !string.IsNullOrWhiteSpace(summary) ? summary : enrich.Summary;
+
         await repo.SaveResultAsync(d, plain);
 
         if (settings.AutoCategorize)
             await categorization.AutoCategorizeAsync(d, ct);
+
+        // Push a live update so the dashboard refreshes this row the instant its
+        // tags/summary land — crucial for batch enrich, where the HTTP call only
+        // returns once every doc is done.
+        await hub.Clients.All.SendAsync(
+            "documentUpdated",
+            new
+            {
+                id = d.Id,
+                status = d.Status.ToString(),
+                name = d.OriginalName,
+            },
+            ct
+        );
         return true;
     }
 }

@@ -23,11 +23,16 @@ public class OllamaAdmin(
 
     private string BaseUrl => settings.OllamaUrl.TrimEnd('/');
 
-    public async Task<OllamaStatus> StatusAsync(CancellationToken ct)
+    /// <summary>
+    /// Ping the server's /api/version. Pass <paramref name="urlOverride"/> to test an
+    /// arbitrary URL (e.g. an unsaved value typed in Settings) instead of the saved one.
+    /// </summary>
+    public async Task<OllamaStatus> StatusAsync(CancellationToken ct, string? urlOverride = null)
     {
+        var baseUrl = (string.IsNullOrWhiteSpace(urlOverride) ? settings.OllamaUrl : urlOverride).TrimEnd('/');
         try
         {
-            var v = await http.GetFromJsonAsync<VersionResponse>($"{BaseUrl}/api/version", Json, ct);
+            var v = await http.GetFromJsonAsync<VersionResponse>($"{baseUrl}/api/version", Json, ct);
             return new OllamaStatus(true, v?.Version, null);
         }
         catch (Exception ex)

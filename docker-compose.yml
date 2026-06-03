@@ -71,7 +71,7 @@ services:
     depends_on:
       - api
     ports:
-      - "${WEB_PORT:-6669}:80"   # localhost:6669  →  zlo i naopako  (the app)
+      - "${WEB_PORT:-16669}:80"  # localhost:16669 (the app). NOT 6669: IRC port, browser-blocked.
 
 volumes:
   model-cache:

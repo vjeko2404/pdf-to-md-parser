@@ -31,4 +31,12 @@ public class AppOptions
         + "specification, ticket, report, letter, other. language is an ISO 639-1 code. "
         + "doc_date is ISO yyyy-mm-dd if present, else empty. tags are 3-8 short lowercase "
         + "topical keywords. summary is 2-3 neutral sentences in the document's language.";
+
+    /// <summary>Default (separate) summary prompt — a longer, prose summary, editable live.</summary>
+    public string SummaryPrompt { get; set; } =
+        "You are a concise summarizer. Read the document (it may be in German, Croatian, "
+        + "or English) and write a clear summary of 3-5 sentences in the document's own "
+        + "language. Capture the purpose, the key parties or subjects, and the most "
+        + "important facts, dates or amounts. Output ONLY the summary text — no preamble, "
+        + "no markdown, no bullet points.";
 }

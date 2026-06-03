@@ -26,6 +26,9 @@ export interface LoadedModel {
 
 export const ollamaApi = {
   status: () => api.get<OllamaStatus>('/ollama/status'),
+  /** Ping a specific (possibly unsaved) URL — powers the Settings "Test connection" button. */
+  test: (url?: string) =>
+    api.get<OllamaStatus>(`/ollama/status${url ? `?url=${encodeURIComponent(url)}` : ''}`),
   models: () => api.get<OllamaModel[]>('/ollama/models'),
   loaded: () => api.get<LoadedModel[]>('/ollama/ps'),
   pull: (name: string) => api.post('/ollama/pull', { name }),

@@ -186,9 +186,16 @@ public class DocumentRepository(Database db)
         var hasQ = !string.IsNullOrWhiteSpace(query.Q);
         if (hasQ)
         {
-            joins.Add("JOIN documents_fts f ON f.rowid = d.Id");
-            filters.Add("documents_fts MATCH @q");
-            p.Add("q", query.Q);
+            // Match the full-text index (title/summary/tags/content) OR the tag/name
+            // columns directly, so typing a tag or a filename fragment always works —
+            // even as a prefix. FTS terms are quoted + suffixed with * to stay
+            // syntax-safe and search-as-you-type friendly.
+            filters.Add(
+                "(d.Id IN (SELECT rowid FROM documents_fts WHERE documents_fts MATCH @q) "
+                    + "OR d.TagsJson LIKE @qLike OR d.OriginalName LIKE @qLike)"
+            );
+            p.Add("q", ToFtsPrefixQuery(query.Q!));
+            p.Add("qLike", "%" + query.Q!.Trim() + "%");
         }
 
         var order = query.Sort switch
@@ -196,7 +203,6 @@ public class DocumentRepository(Database db)
             "name" => "d.OriginalName COLLATE NOCASE",
             "oldest" => "d.CreatedAt ASC",
             "status" => "d.Status",
-            _ when hasQ => "rank",
             _ => "d.CreatedAt DESC",
         };
 
@@ -282,5 +288,85 @@ public class DocumentRepository(Database db)
             "SELECT Status, COUNT(*) AS Count FROM documents GROUP BY Status"
         );
         return rows.ToDictionary(r => r.Status, r => r.Count);
+    }
+
+    /// <summary>
+    /// Delete a document and every trace of it: DB row, FTS entry, events,
+    /// category links, and all on-disk artifacts (the markdown dir incl. images,
+    /// the blocks.json, the archived PDF). Returns false if the id is unknown.
+    /// On-disk cleanup is best-effort — a missing/locked file never fails the delete.
+    /// </summary>
+    public async Task<bool> DeleteAsync(long id)
+    {
+        var doc = await GetByIdAsync(id);
+        if (doc is null)
+            return false;
+
+        using (var c = db.Open())
+        {
+            await c.ExecuteAsync(
+                """
+                DELETE FROM events WHERE DocumentId = @id;
+                DELETE FROM document_categories WHERE DocumentId = @id;
+                DELETE FROM documents_fts WHERE rowid = @id;
+                DELETE FROM documents WHERE Id = @id;
+                """,
+                new { id }
+            );
+        }
+
+        TryDeleteFile(doc.LayoutJsonPath);
+        TryDeleteFile(doc.ArchivedPdfPath);
+
+        // The markdown dir (…/markdown/{slug}/) holds the .md + the images/ folder.
+        var mdDir = doc.MdPath is null ? null : Path.GetDirectoryName(doc.MdPath);
+        if (mdDir is not null && Directory.Exists(mdDir))
+        {
+            try
+            {
+                Directory.Delete(mdDir, recursive: true);
+            }
+            catch
+            {
+                // leave orphaned files rather than fail the delete
+            }
+        }
+        else
+        {
+            TryDeleteFile(doc.MdPath);
+        }
+
+        return true;
+    }
+
+    static void TryDeleteFile(string? path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return;
+        try
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+        catch
+        {
+            // best-effort
+        }
+    }
+
+    /// <summary>
+    /// Turn raw user input into a safe FTS5 prefix query: each whitespace-separated
+    /// token is quoted (so punctuation can't break MATCH syntax) and suffixed with *
+    /// for search-as-you-type. e.g. "inv 2024" → "inv"* "2024"*.
+    /// </summary>
+    static string ToFtsPrefixQuery(string raw)
+    {
+        var tokens = raw.Split(
+            (char[]?)null,
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+        );
+        if (tokens.Length == 0)
+            return "\"\"";
+        return string.Join(' ', tokens.Select(t => "\"" + t.Replace("\"", "\"\"") + "\"*"));
     }
 }

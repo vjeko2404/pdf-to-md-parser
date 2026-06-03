@@ -10,7 +10,7 @@ namespace PdfParser.Api.Services;
 /// document and assign them. Only assigns categories that already exist (the model
 /// is constrained to the provided list).
 /// </summary>
-public class CategorizationService(CategoryRepository cats, OllamaClient ollama)
+public class CategorizationService(CategoryRepository cats, LlmService llm)
 {
     public async Task<string[]> AutoCategorizeAsync(Document d, CancellationToken ct = default)
     {
@@ -22,7 +22,7 @@ public class CategorizationService(CategoryRepository cats, OllamaClient ollama)
             return [];
 
         var text = Helpers.StripAnchors(await File.ReadAllTextAsync(d.MdPath, ct));
-        var chosen = await ollama.ClassifyAsync(text, categories.Select(c => c.Name).ToList(), ct);
+        var chosen = await llm.ClassifyAsync(text, categories.Select(c => c.Name).ToList(), ct);
         if (chosen is null)
             return [];
 

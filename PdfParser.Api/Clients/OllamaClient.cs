@@ -98,6 +98,39 @@ public class OllamaClient(HttpClient http, SettingsService settings, ILogger<Oll
         }
     }
 
+    /// <summary>
+    /// Generate a prose summary using the (separate, editable) summary prompt.
+    /// Plain text out — no JSON schema. Returns null on any failure.
+    /// </summary>
+    public async Task<string?> SummarizeAsync(string text, CancellationToken ct)
+    {
+        try
+        {
+            var baseUrl = settings.OllamaUrl.TrimEnd('/');
+            var excerpt = text.Length > 6000 ? text[..6000] : text;
+            var payload = new
+            {
+                model = settings.OllamaModel,
+                stream = false,
+                messages = new[]
+                {
+                    new { role = "system", content = settings.SummaryPrompt },
+                    new { role = "user", content = excerpt },
+                },
+            };
+
+            using var resp = await http.PostAsJsonAsync($"{baseUrl}/api/chat", payload, ct);
+            resp.EnsureSuccessStatusCode();
+            var chat = await resp.Content.ReadFromJsonAsync<OllamaChatResponse>(Json, ct);
+            return chat?.Message?.Content?.Trim();
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Ollama summarize failed");
+            return null;
+        }
+    }
+
     private static readonly object ClassifySchema = new
     {
         type = "object",

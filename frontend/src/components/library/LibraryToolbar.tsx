@@ -1,13 +1,13 @@
-import { Search, Sparkles } from 'lucide-react'
+import { Loader2, Search, Sparkles, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
 import { ViewSwitcher } from './ViewSwitcher'
 import type { ViewMode } from '@/hooks/useViewMode'
 import type { Category } from '@/api/categories'
 import type { DocumentStatus } from '@/types/api'
 
 const STATUSES: (DocumentStatus | 'All')[] = ['All', 'Queued', 'Processing', 'Done', 'Failed']
-const selectCls =
-  'h-9 rounded-md border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring'
 
 export interface LibraryToolbarProps {
   search: string
@@ -21,6 +21,8 @@ export interface LibraryToolbarProps {
   onView: (v: ViewMode) => void
   selectedCount: number
   onEnrichSelected: () => void
+  onDeleteSelected: () => void
+  enriching: boolean
 }
 
 export function LibraryToolbar(props: LibraryToolbarProps) {
@@ -36,38 +38,65 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
     onView,
     selectedCount,
     onEnrichSelected,
+    onDeleteSelected,
+    enriching,
   } = props
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       <div className="relative min-w-[12rem] flex-1">
-        <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <input
+        <Input
+          icon={<Search className="size-4" />}
           value={search}
           onChange={(e) => onSearch(e.target.value)}
-          placeholder="Search documents…"
-          className="h-9 w-full rounded-md border bg-background pl-8 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          placeholder="Search title, tags, content…"
+          className={search ? 'pr-8' : undefined}
         />
+        {search && (
+          <button
+            type="button"
+            onClick={() => onSearch('')}
+            title="Clear search"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
+        )}
       </div>
-      <select value={status} onChange={(e) => onStatus(e.target.value)} className={selectCls}>
+      <Select value={status} onChange={onStatus}>
         {STATUSES.map((s) => (
           <option key={s} value={s === 'All' ? '' : s}>
             {s}
           </option>
         ))}
-      </select>
-      <select value={categoryId} onChange={(e) => onCategory(e.target.value)} className={selectCls}>
+      </Select>
+      <Select value={categoryId} onChange={onCategory}>
         <option value="">All categories</option>
         {categories.map((c) => (
           <option key={c.id} value={String(c.id)}>
             {c.name}
           </option>
         ))}
-      </select>
+      </Select>
       {selectedCount > 0 && (
-        <Button variant="button_primary" size="sm" onClick={onEnrichSelected}>
-          <Sparkles className="size-4" /> Enrich {selectedCount}
-        </Button>
+        <>
+          <Button
+            variant="button_primary"
+            size="sm"
+            onClick={onEnrichSelected}
+            disabled={enriching}
+          >
+            {enriching ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Sparkles className="size-4" />
+            )}
+            {enriching ? 'Enriching…' : `Enrich ${selectedCount}`}
+          </Button>
+          <Button variant="destructive" size="sm" onClick={onDeleteSelected} disabled={enriching}>
+            <Trash2 className="size-4" /> Delete {selectedCount}
+          </Button>
+        </>
       )}
       <ViewSwitcher mode={view} onChange={onView} />
     </div>

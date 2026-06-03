@@ -29,7 +29,25 @@ public class SettingsService(Database db, IOptions<AppOptions> options)
     public string OllamaUrl => Get("ollamaUrl", _opt.OllamaUrl);
     public string OllamaModel => Get("ollamaModel", _opt.OllamaModel);
     public string EnrichPrompt => Get("enrichPrompt", _opt.EnrichPrompt);
+    public string SummaryPrompt => Get("summaryPrompt", _opt.SummaryPrompt);
     public bool AutoEnrich => Get("autoEnrich", "false") == "true";
+
+    // ── LLM provider selection ───────────────────────────────────────────────
+    /// <summary>"ollama" (local, default) or "openai" (any OpenAI-compatible API:
+    /// OpenRouter, Gemini, OpenAI, Groq, …).</summary>
+    public string LlmProvider => Get("llmProvider", "ollama");
+
+    /// <summary>Base URL of the OpenAI-compatible API, e.g. https://openrouter.ai/api/v1.</summary>
+    public string OpenAiBaseUrl => Get("openaiBaseUrl", "");
+    public string OpenAiModel => Get("openaiModel", "");
+
+    /// <summary>Name of the Secret holding the API key (value lives in the encrypted secrets store).</summary>
+    public string OpenAiApiKeyName => Get("openaiApiKeyName", "LLM_API_KEY");
+
+    /// <summary>True when the OpenAI-compatible provider is selected AND configured.</summary>
+    public bool UseOpenAi =>
+        LlmProvider.Equals("openai", StringComparison.OrdinalIgnoreCase)
+        && !string.IsNullOrWhiteSpace(OpenAiBaseUrl);
 
     /// <summary>Master switch — when off, the app never calls Ollama at all.</summary>
     public bool EnrichmentEnabled => Get("enrichmentEnabled", "true") == "true";
@@ -55,10 +73,15 @@ public class SettingsService(Database db, IOptions<AppOptions> options)
             ["ollamaUrl"] = _opt.OllamaUrl,
             ["ollamaModel"] = _opt.OllamaModel,
             ["enrichPrompt"] = _opt.EnrichPrompt,
+            ["summaryPrompt"] = _opt.SummaryPrompt,
             ["debounceSeconds"] = _opt.DebounceSeconds.ToString(),
             ["autoEnrich"] = "false",
             ["enrichmentEnabled"] = "true",
             ["autoCategorize"] = "false",
+            ["llmProvider"] = "ollama",
+            ["openaiBaseUrl"] = "",
+            ["openaiModel"] = "",
+            ["openaiApiKeyName"] = "LLM_API_KEY",
         };
         foreach (var (k, v) in defaults)
         {

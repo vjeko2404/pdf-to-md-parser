@@ -24,6 +24,7 @@ builder.Services.AddSingleton<SecretsService>();
 builder.Services.AddSingleton<ProcessingQueue>();
 builder.Services.AddTransient<EnrichmentService>();
 builder.Services.AddTransient<CategorizationService>();
+builder.Services.AddTransient<LlmService>();
 
 // Conversion can be slow on CPU; give marker a generous ceiling.
 builder.Services.AddHttpClient<MarkerClient>(c => c.Timeout = TimeSpan.FromMinutes(30));
@@ -32,6 +33,10 @@ builder.Services.AddHttpClient<MarkerClient>(c => c.Timeout = TimeSpan.FromMinut
 // slow/broken Ollama degrades gracefully instead of hanging each doc for minutes.
 builder.Services.AddHttpClient<OllamaClient>(c => c.Timeout = TimeSpan.FromSeconds(90));
 builder.Services.AddHttpClient<OllamaAdmin>(c => c.Timeout = TimeSpan.FromSeconds(30));
+
+// OpenAI-compatible provider (OpenRouter/Gemini/OpenAI/…) — slightly longer ceiling
+// for remote latency. Best-effort like Ollama; never blocks the queue.
+builder.Services.AddHttpClient<OpenAiClient>(c => c.Timeout = TimeSpan.FromSeconds(120));
 
 builder.Services.AddHostedService<DownloadWatcher>();
 builder.Services.AddHostedService<PipelineWorker>();
@@ -50,7 +55,15 @@ var app = builder.Build();
 
 // Build the schema (incl. FTS5), then load settings (seeding env defaults on first run).
 app.Services.GetRequiredService<Database>().Initialize();
-app.Services.GetRequiredService<SettingsService>().Load();
+var settingsService = app.Services.GetRequiredService<SettingsService>();
+settingsService.Load();
+
+// Seed a starter set of categories once (guarded by a flag so user deletions stick).
+if (settingsService.Get("categoriesSeeded", "false") != "true")
+{
+    await app.Services.GetRequiredService<CategoryRepository>().SeedDefaultsAsync();
+    settingsService.Update(new Dictionary<string, string> { ["categoriesSeeded"] = "true" });
+}
 
 app.UseCors();
 app.MapOpenApi();

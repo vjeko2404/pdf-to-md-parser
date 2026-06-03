@@ -6,7 +6,8 @@ Markdown with [marker](https://github.com/datalab-to/marker) +
 via your local **Ollama** (Vulkan), archives the originals, and serves a
 searchable dashboard with **PDF ↔ Markdown side-by-side** view.
 
-Runs at **http://localhost:6669** (*zlo i naopako*).
+Runs at **http://localhost:16669**. (RIP 6669 — *zlo i naopako*, but it's an IRC
+port browsers block as unsafe, so it can never load in a browser.)
 
 ## Architecture
 
@@ -16,7 +17,7 @@ HOST          Ollama (Vulkan, gfx1201)              :11434  ← already on your 
 
 CONTAINER 1   marker-server   Python/FastAPI, the torch/ML "swamp"   (internal)
 CONTAINER 2   pdfparser-api   .NET 10 — watcher, SQLite(FTS5) ledger,
-                              Ollama client, REST + SignalR, serves the SPA  :6669
+                              Ollama client, REST + SignalR, serves the SPA  :16669
 CONTAINER 3   dashboard       React (added after the backend) — served by #2
 ```
 
@@ -62,7 +63,7 @@ cp .env.example .env          # adjust WATCH_DIR etc.
 docker compose up --build     # first run downloads marker model weights (~GBs)
 ```
 
-Then open **http://localhost:6669** → Scalar API explorer (dashboard lands later).
+Then open **http://localhost:16669** → Scalar API explorer (dashboard lands later).
 Drop a PDF into `$WATCH_DIR` and watch it flow through `/api/events`.
 
 ### Backend dev loop (no Docker)

@@ -72,6 +72,12 @@ export function OllamaPage() {
         value={settings?.enrichPrompt ?? ''}
         onSave={(p) => patch.mutate({ enrichPrompt: p })}
       />
+      <PromptPanel
+        title="Summary prompt"
+        description="Separate system prompt for the document's prose summary"
+        value={settings?.summaryPrompt ?? ''}
+        onSave={(p) => patch.mutate({ summaryPrompt: p })}
+      />
     </div>
   )
 }

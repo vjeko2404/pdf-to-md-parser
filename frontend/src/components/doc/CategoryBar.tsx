@@ -1,6 +1,7 @@
 import { Sparkles, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
+import { Select } from '@/components/ui/Select'
 import {
   useAssignCategory,
   useAutoCategorize,
@@ -40,10 +41,10 @@ export function CategoryBar({ docId }: { docId: number }) {
         </span>
       ))}
       {available.length > 0 && (
-        <select
+        <Select
           value=""
-          onChange={(e) => e.target.value && assign.mutate(Number(e.target.value))}
-          className="h-7 rounded-md border bg-background px-2 text-xs outline-none"
+          onChange={(v) => v && assign.mutate(Number(v))}
+          className="h-7 pl-2 pr-7 text-xs"
         >
           <option value="">+ category</option>
           {available.map((c) => (
@@ -51,7 +52,7 @@ export function CategoryBar({ docId }: { docId: number }) {
               {c.name}
             </option>
           ))}
-        </select>
+        </Select>
       )}
       <Button
         variant="ghost"

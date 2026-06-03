@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Section } from '@/components/common/Section'
 import { api } from '@/api/client'
 import { cn } from '@/lib/utils'
+import { formatTime } from '@/lib/format'
 import { useSignalR } from '@/hooks/useSignalR'
 import type { EventDto } from '@/types/api'
 
@@ -23,7 +24,7 @@ export function LogsPage() {
         {(events ?? []).map((e) => (
           <div key={e.id} className="flex gap-2">
             <span className="shrink-0 text-muted-foreground">
-              {new Date(e.ts).toLocaleTimeString()}
+              {formatTime(e.ts)}
             </span>
             <span className={cn('w-12 shrink-0 uppercase', levelColor(e.level))}>{e.level}</span>
             <span className="w-16 shrink-0 text-muted-foreground">{e.stage}</span>

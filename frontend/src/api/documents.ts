@@ -31,6 +31,12 @@ export interface Facets {
   tags: Facet[]
 }
 
+export interface EnrichResult {
+  id: number
+  ok: boolean
+  error?: string | null
+}
+
 export const documentsApi = {
   list: (query: DocumentQuery = {}) => {
     const entries = Object.entries(query)
@@ -42,8 +48,10 @@ export const documentsApi = {
   get: (id: number) => api.get<DocumentDto>(`/documents/${id}`),
   upload: (file: File) => api.upload<DocumentDto>('/documents/upload', file),
   retry: (id: number) => api.post(`/documents/${id}/retry`),
+  remove: (id: number) => api.del<void>(`/documents/${id}`),
+  removeBatch: (ids: number[]) => api.post<{ deleted: number }>('/documents/delete', { ids }),
   reenrich: (id: number) => api.post<DocumentDto>(`/documents/${id}/reenrich`),
-  enrichBatch: (ids: number[]) => api.post('/documents/enrich', { ids }),
+  enrichBatch: (ids: number[]) => api.post<EnrichResult[]>('/documents/enrich', { ids }),
   events: (id: number) => api.get<EventDto[]>(`/documents/${id}/events`),
   markdown: (id: number) => api.get<string>(`/documents/${id}/markdown`),
   blocks: (id: number) => api.get<MarkerBlock[]>(`/documents/${id}/blocks`),

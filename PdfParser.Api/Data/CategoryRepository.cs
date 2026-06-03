@@ -31,6 +31,33 @@ public class CategoryRepository(Database db)
         );
     }
 
+    /// <summary>
+    /// A starter set of categories. INSERT OR IGNORE keys off the UNIQUE Name, so this
+    /// is idempotent at the row level; the caller additionally guards it behind a
+    /// "seeded once" flag so user-deleted defaults don't reappear on restart.
+    /// </summary>
+    private static readonly (string Name, string Color)[] Defaults =
+    [
+        ("Invoices", "#a855f7"),
+        ("Contracts", "#6366f1"),
+        ("Receipts", "#ec4899"),
+        ("Reports", "#0ea5e9"),
+        ("Letters", "#14b8a6"),
+        ("Manuals", "#f59e0b"),
+        ("Legal", "#ef4444"),
+        ("Personal", "#22c55e"),
+    ];
+
+    public async Task SeedDefaultsAsync()
+    {
+        using var c = db.Open();
+        foreach (var (name, color) in Defaults)
+            await c.ExecuteAsync(
+                "INSERT OR IGNORE INTO categories (Name, Color, CreatedAt) VALUES (@name, @color, @ts);",
+                new { name, color, ts = DateTime.UtcNow }
+            );
+    }
+
     public async Task UpdateAsync(long id, string name, string? color)
     {
         using var c = db.Open();
