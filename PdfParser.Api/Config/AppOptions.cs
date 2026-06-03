@@ -19,6 +19,15 @@ public class AppOptions
     public string OllamaModel { get; set; } = "qwen2.5:7b-instruct";
     public int DebounceSeconds { get; set; } = 2;
 
+    /// <summary>Default conversion engine seeded on first run. One of: off | marker-host |
+    /// marker-remote | pdfplumber. Defaults to OFF so a fresh deployment never pays marker's
+    /// ~5GB model load until the user explicitly picks an engine in Settings.</summary>
+    public string ConversionEngine { get; set; } = "off";
+
+    /// <summary>Seed for the off-VPS marker URL (used when ConversionEngine = marker-remote).
+    /// Empty by default; the user fills it in (with a Test button) from Settings.</summary>
+    public string MarkerRemoteUrl { get; set; } = "";
+
     /// <summary>Master key for secret encryption. If empty, a random keyfile is
     /// generated under the vault (vault/.secretkey).</summary>
     public string SecretKey { get; set; } = "";

@@ -23,14 +23,22 @@ public class PipelineWorker(
     ProcessingQueue queue,
     DocumentRepository repo,
     MarkerClient marker,
+    MarkerHealthMonitor health,
     SettingsService settings,
     EnrichmentService enrichment,
     IHubContext<LiveHub> hub,
     ILogger<PipelineWorker> logger
 ) : BackgroundService
 {
+    // How long a doc waits before we re-check an unavailable marker. The health probe is
+    // TTL-cached, so many waiting docs don't translate into a probe storm.
+    private static readonly TimeSpan RequeueDelay = TimeSpan.FromSeconds(15);
+
+    private CancellationToken _stopping;
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        _stopping = stoppingToken;
         await foreach (var id in queue.ReadAllAsync(stoppingToken))
         {
             try
@@ -51,9 +59,34 @@ public class PipelineWorker(
             return;
 
         var owner = doc.OwnerUserId ?? 0;
+        var us = settings.For(owner);
         // A fresh ingest sits in the OWNER's watched folder.
-        var watchDir = settings.For(owner).WatchDir;
+        var watchDir = us.WatchDir;
         var vaultDir = settings.VaultDir;
+
+        // ── Engine gate ────────────────────────────────────────────────────
+        // OFF: defensive only — ingest is rejected upstream, but a setting flipped to OFF
+        // after a doc was already queued lands here. Mark Failed (retryable once re-enabled).
+        if (us.ConversionOff)
+        {
+            await repo.SetStatusAsync(id, DocumentStatus.Failed, "No conversion engine selected");
+            await repo.AddEventAsync(id, "error", "convert", "Conversion is disabled — pick an engine in Settings.");
+            await Broadcast(owner, id, DocumentStatus.Failed, doc.OriginalName, ct);
+            return;
+        }
+
+        var markerUrl = us.ResolvedMarkerUrl;
+
+        // Health-gate the marker engines: if the server is unreachable, DON'T fail — leave the
+        // doc Queued, re-enqueue after a delay, and it converts automatically once marker returns.
+        if (us.UsesMarker && !await health.IsHealthyAsync(markerUrl, ct))
+        {
+            await repo.SetStatusAsync(id, DocumentStatus.Queued);
+            await repo.AddEventAsync(id, "warn", "convert", $"Marker unavailable ({markerUrl}) — waiting…");
+            await Broadcast(owner, id, DocumentStatus.Queued, doc.OriginalName, ct);
+            ScheduleRequeue(id);
+            return;
+        }
 
         // On a fresh ingest the file is in the watch dir; on a retry it's the archive.
         var watchPath = Path.Combine(watchDir, doc.OriginalName);
@@ -63,7 +96,7 @@ public class PipelineWorker(
 
         var sw = Stopwatch.StartNew();
         await repo.SetStatusAsync(id, DocumentStatus.Processing);
-        await repo.AddEventAsync(id, "info", "convert", $"Processing {doc.OriginalName}");
+        await repo.AddEventAsync(id, "info", "convert", $"Processing {doc.OriginalName} ({us.ConversionEngine})");
         await Broadcast(owner, id, DocumentStatus.Processing, doc.OriginalName, ct);
 
         try
@@ -74,7 +107,10 @@ public class PipelineWorker(
             var bytes = await File.ReadAllBytesAsync(sourcePath, ct);
 
             // 1. Convert ----------------------------------------------------
-            var result = await marker.ConvertAsync(bytes, doc.OriginalName, ct);
+            // pdfplumber → lightweight /extract; marker-host / marker-remote → full /convert.
+            var result = us.ConversionEngine == "pdfplumber"
+                ? await marker.ExtractAsync(markerUrl, bytes, doc.OriginalName, ct)
+                : await marker.ConvertAsync(markerUrl, bytes, doc.OriginalName, ct);
 
             var mdDir = Path.Combine(vaultDir, "markdown", doc.Slug);
             Directory.CreateDirectory(mdDir);
@@ -171,6 +207,20 @@ public class PipelineWorker(
             }
         }
     }
+
+    /// <summary>Re-enqueue a doc after a delay (used when its marker engine is offline) so it
+    /// retries — and auto-resumes — without burning the worker on a hot loop. Uses the worker's
+    /// stop token so pending re-queues drain cleanly on shutdown.</summary>
+    private void ScheduleRequeue(long id) =>
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(RequeueDelay, _stopping);
+                await queue.EnqueueAsync(id, _stopping);
+            }
+            catch (OperationCanceledException) { /* shutting down */ }
+        });
 
     private Task Broadcast(long ownerUserId, long id, DocumentStatus status, string name, CancellationToken ct) =>
         hub.Clients.User(ownerUserId.ToString()).SendAsync(

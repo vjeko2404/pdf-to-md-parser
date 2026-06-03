@@ -125,6 +125,12 @@ public static class DocumentsEndpoints
                 ) =>
                 {
                     var userId = user.GetUserId();
+                    // Reject ingest when no conversion engine is selected (the default).
+                    if (settings.For(userId).ConversionOff)
+                        return Results.Problem(
+                            detail: "No conversion engine selected — enable one in Settings.",
+                            statusCode: StatusCodes.Status409Conflict
+                        );
                     if (file is null || file.Length == 0)
                         return Results.BadRequest("empty file");
                     if (!file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))

@@ -5,6 +5,7 @@ import { Section } from '@/components/common/Section'
 import { Field } from '@/components/common/Field'
 import { TextInput } from '@/components/common/inputs'
 import { Button } from '@/components/ui/Button'
+import { ConversionEnginePanel } from '@/components/settings/ConversionEnginePanel'
 import { SecretsPanel } from '@/components/settings/SecretsPanel'
 import { ChangePasswordPanel } from '@/components/settings/ChangePasswordPanel'
 import { AdminPanel } from '@/components/settings/AdminPanel'
@@ -74,6 +75,7 @@ export function SettingsPage() {
         </div>
       </Section>
 
+      <ConversionEnginePanel />
       <SecretsPanel />
       <ChangePasswordPanel />
       {isAdmin && <AdminPanel />}

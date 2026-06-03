@@ -49,6 +49,8 @@ public class SettingsService(Database db, IOptions<AppOptions> options)
             ["openaiBaseUrl"] = "",
             ["openaiModel"] = "",
             ["openaiApiKeyName"] = "LLM_API_KEY",
+            ["conversionEngine"] = _opt.ConversionEngine,
+            ["markerRemoteUrl"] = _opt.MarkerRemoteUrl,
         };
 
     /// <summary>Load the whole table into cache and ensure global defaults exist.</summary>
@@ -180,6 +182,33 @@ public sealed class UserSettings(SettingsService s, long userId, AppOptions opt)
 
     public bool EnrichmentEnabled => s.Get(userId, "enrichmentEnabled", "true") == "true";
     public bool AutoCategorize => s.Get(userId, "autoCategorize", "false") == "true";
+
+    // ── Conversion engine ─────────────────────────────────────────────────────
+    /// <summary>off | marker-host | marker-remote | pdfplumber. Default OFF.</summary>
+    public string ConversionEngine => s.Get(userId, "conversionEngine", opt.ConversionEngine);
+
+    /// <summary>The off-VPS marker base URL (only meaningful for marker-remote).</summary>
+    public string MarkerRemoteUrl => s.Get(userId, "markerRemoteUrl", opt.MarkerRemoteUrl);
+
+    /// <summary>True when no conversion engine is selected — ingest is rejected.</summary>
+    public bool ConversionOff =>
+        ConversionEngine.Equals("off", StringComparison.OrdinalIgnoreCase)
+        || string.IsNullOrWhiteSpace(ConversionEngine);
+
+    /// <summary>True for the two marker modes (need a reachable marker server).</summary>
+    public bool UsesMarker =>
+        ConversionEngine is "marker-host" or "marker-remote";
+
+    /// <summary>The marker base URL this user's engine targets: the local container for
+    /// marker-host and pdfplumber (its /extract lives there), the user URL for marker-remote.
+    /// Empty when conversion is OFF.</summary>
+    public string ResolvedMarkerUrl =>
+        ConversionEngine switch
+        {
+            "marker-remote" => MarkerRemoteUrl.Trim(),
+            "marker-host" or "pdfplumber" => opt.MarkerUrl,
+            _ => "",
+        };
 
     public int DebounceSeconds =>
         int.TryParse(s.Get(userId, "debounceSeconds", opt.DebounceSeconds.ToString()), out var n)

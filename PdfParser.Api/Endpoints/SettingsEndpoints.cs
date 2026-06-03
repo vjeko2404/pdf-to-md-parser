@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using PdfParser.Api.Auth;
+using PdfParser.Api.Clients;
 using PdfParser.Api.Data;
 using PdfParser.Api.Services;
 
@@ -37,6 +38,21 @@ public static class SettingsEndpoints
             )
             .WithTags("Settings");
 
+        // Probe a marker server's /health (DRAFT url from the field, like the Ollama test) —
+        // powers the "Test connection" button for the off-VPS marker engine.
+        app.MapGet(
+                "/api/settings/marker-test",
+                async (string? url, MarkerClient marker, CancellationToken ct) =>
+                {
+                    var target = (url ?? "").Trim();
+                    if (string.IsNullOrEmpty(target))
+                        return Results.Ok(new MarkerTestResult(false, "no URL provided"));
+                    var ok = await marker.IsHealthyAsync(target, ct);
+                    return Results.Ok(new MarkerTestResult(ok, ok ? "reachable" : "unreachable"));
+                }
+            )
+            .WithTags("Settings");
+
         // Partial update — body is a {key: value} map. Triggers a live reload (e.g. the
         // watcher repoints if watchSubdir/watchEnabled changed). Reserved keys are dropped.
         app.MapPatch(
@@ -55,3 +71,6 @@ public static class SettingsEndpoints
             .WithTags("Settings");
     }
 }
+
+/// <summary>Result of GET /api/settings/marker-test.</summary>
+public record MarkerTestResult(bool Ok, string Detail);

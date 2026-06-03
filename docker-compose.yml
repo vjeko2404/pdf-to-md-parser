@@ -15,11 +15,6 @@ services:
     cpus: ${MARKER_CPUS:-3.0}
     environment:
       - TORCH_DEVICE=${TORCH_DEVICE:-cpu}
-      # Thread caps for torch/BLAS — without these torch spawns one thread per
-      # core and thrashes against the cpus quota. Match these to MARKER_CPUS.
-      - OMP_NUM_THREADS=${MARKER_THREADS:-3}
-      - MKL_NUM_THREADS=${MARKER_THREADS:-3}
-      - OPENBLAS_NUM_THREADS=${MARKER_THREADS:-3}
       # Override the image's HF_HOME into the persisted cache (surya/datalab
       # weights already go to /root/.cache/datalab). One volume covers both.
       - HF_HOME=/root/.cache/huggingface
@@ -28,9 +23,10 @@ services:
     expose:
       - "8000"
     healthcheck:
-      # /health only answers once models are loaded (lifespan blocks serving),
-      # so a 200 here is a real readiness signal. Generous start_period for the
-      # first-run model download.
+      # Liveness, NOT readiness: marker models now load LAZILY on the first /convert, so
+      # /health answers 200 the moment the server is up. This is what lets the api boot in
+      # seconds (instead of waiting ~10 min for weights) and keeps a default-OFF / pdfplumber
+      # deployment from ever paying the model cost.
       test:
         [
           "CMD",
@@ -40,8 +36,8 @@ services:
         ]
       interval: 10s
       timeout: 5s
-      retries: 30
-      start_period: 600s
+      retries: 10
+      start_period: 30s
 
   # ── The control plane: .NET orchestrator, SQLite ledger, REST + SignalR.
   #    Serves the dashboard later. The only port published to the host.
@@ -53,7 +49,10 @@ services:
     user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
     depends_on:
       marker-server:
-        condition: service_healthy   # don't start the watcher until marker is ready
+        # Now resolves in seconds (liveness, not model-readiness). marker weights load
+        # lazily on first use, and unavailability is handled gracefully by the health-gated
+        # queue, so the api no longer blocks on the heavy container.
+        condition: service_healthy
     environment:
       - ASPNETCORE_URLS=http://0.0.0.0:8080
       - App__WatchRoot=/host
@@ -63,6 +62,9 @@ services:
       - App__OllamaUrl=${OLLAMA_URL:-http://host.docker.internal:11434}
       - App__OllamaModel=${OLLAMA_MODEL:-qwen2.5:7b-instruct}
       - App__DebounceSeconds=${DEBOUNCE_SECONDS:-2}
+      # Conversion engine seed (first-run default; live-editable per user in Settings after).
+      - App__ConversionEngine=${CONVERSION_ENGINE:-off}
+      - App__MarkerRemoteUrl=${MARKER_REMOTE_URL:-}
       # Auth: JWT signing key + at-rest secret encryption key. Empty → vault keyfiles
       # (fine for local dev). Set strong random values on a public VPS — see .env.example.
       - App__JwtKey=${JWT_KEY:-}

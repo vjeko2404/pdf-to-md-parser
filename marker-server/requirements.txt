@@ -13,3 +13,8 @@ python-multipart==0.0.20
 
 # html -> markdown for the block-anchored output (also a marker dep, pinned here)
 markdownify==1.1.0
+
+# Lightweight engine: pure-Python text+bbox extraction for born-digital PDFs, served
+# at /extract. MIT-licensed, no ML models — never touches the heavy marker stack, so
+# the "pdfplumber" conversion engine costs ~nothing at idle. Pulls pdfminer.six + Pillow.
+pdfplumber==0.11.4

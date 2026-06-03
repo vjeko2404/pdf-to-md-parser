@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Copy, Download, Printer } from 'lucide-react'
@@ -43,6 +43,17 @@ export function DocumentPage() {
     queryFn: () => documentsApi.markdown(docId),
     enabled: Boolean(doc?.mdPath),
   })
+
+  // The PDF endpoint is auth-protected, so we fetch it as a blob (bearer token attached)
+  // and hand an object URL to the viewer / download / print — a bare URL would 401.
+  const { data: pdfBlob } = useQuery({
+    queryKey: ['document-pdf', docId],
+    queryFn: () => documentsApi.pdfBlob(docId),
+    enabled: Boolean(doc?.archivedPdfPath),
+    staleTime: Infinity,
+  })
+  const pdfUrl = useMemo(() => (pdfBlob ? URL.createObjectURL(pdfBlob) : null), [pdfBlob])
+  useEffect(() => () => { if (pdfUrl) URL.revokeObjectURL(pdfUrl) }, [pdfUrl])
 
   useSyncScroll(leftRef, rightRef, layout === 'split' && !isMobile)
 
@@ -94,17 +105,21 @@ export function DocumentPage() {
     w.setTimeout(() => w.print(), 300)
   }
 
-  // Print the original PDF via a hidden same-origin iframe.
+  // Print the original PDF via a hidden iframe pointed at the (auth-fetched) blob object URL.
   const printPdf = () => {
+    if (!pdfUrl) {
+      toast.error('PDF still loading')
+      return
+    }
     const frame = document.createElement('iframe')
     frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;'
-    frame.src = documentsApi.pdfUrl(docId)
+    frame.src = pdfUrl
     frame.onload = () => {
       try {
         frame.contentWindow?.focus()
         frame.contentWindow?.print()
       } catch {
-        window.open(documentsApi.pdfUrl(docId), '_blank')
+        window.open(pdfUrl, '_blank')
       }
     }
     document.body.appendChild(frame)
@@ -151,8 +166,8 @@ export function DocumentPage() {
         {showPdf && (
           <div className="group relative overflow-hidden rounded-xl border">
             <div className={overlayCls}>
-              <Button asChild variant="ghost" size="icon" title="Download PDF">
-                <a href={documentsApi.pdfUrl(docId)} download={doc?.originalName}>
+              <Button asChild variant="ghost" size="icon" title="Download PDF" disabled={!pdfUrl}>
+                <a href={pdfUrl ?? undefined} download={doc?.originalName}>
                   <Download className="size-4" />
                 </a>
               </Button>
@@ -160,7 +175,7 @@ export function DocumentPage() {
                 <Printer className="size-4" />
               </Button>
             </div>
-            {Number.isFinite(docId) && <PdfPane id={docId} containerRef={leftRef} />}
+            {Number.isFinite(docId) && <PdfPane url={pdfUrl} containerRef={leftRef} />}
           </div>
         )}
         {showMd && (

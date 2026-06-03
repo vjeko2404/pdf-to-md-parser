@@ -36,8 +36,27 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (ct.includes('json') ? res.json() : res.text()) as Promise<T>
 }
 
+/** Fetch a binary asset (e.g. the archived PDF) WITH the bearer token, returning a Blob.
+ *  Browser-native loaders (react-pdf/PDF.js, <iframe>, <a download>) can't attach the auth
+ *  header themselves, so we fetch here and hand them an object URL instead. */
+async function blob(path: string): Promise<Blob> {
+  const token = getToken()
+  const res = await fetch(BASE + path, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+  if (!res.ok) {
+    if (res.status === 401 && token) {
+      setToken(null)
+      if (!window.location.pathname.startsWith('/login')) window.location.assign('/login')
+    }
+    throw new Error(res.statusText)
+  }
+  return res.blob()
+}
+
 export const api = {
   get: <T>(p: string) => request<T>(p),
+  blob,
   post: <T>(p: string, body?: unknown) =>
     request<T>(p, {
       method: 'POST',

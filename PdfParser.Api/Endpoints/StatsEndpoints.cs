@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using PdfParser.Api.Auth;
 using PdfParser.Api.Data;
+using PdfParser.Api.Services;
 
 namespace PdfParser.Api.Endpoints;
 
@@ -26,6 +27,25 @@ public static class StatsEndpoints
                 "/api/facets",
                 async (ClaimsPrincipal user, DocumentRepository repo) =>
                     Results.Ok(await repo.FacetsAsync(user.GetUserId()))
+            )
+            .WithTags("Dashboard");
+
+        // Current conversion engine + live marker reachability for the caller — drives the
+        // Settings panel's status line and any "marker offline" UI.
+        app.MapGet(
+                "/api/conversion/status",
+                async (ClaimsPrincipal user, SettingsService settings, MarkerHealthMonitor health, CancellationToken ct) =>
+                {
+                    var s = settings.For(user.GetUserId());
+                    var url = s.ResolvedMarkerUrl;
+                    bool? healthy = string.IsNullOrEmpty(url) ? null : await health.IsHealthyAsync(url, ct);
+                    return Results.Ok(new
+                    {
+                        engine = s.ConversionEngine,
+                        markerUrl = url,
+                        healthy,
+                    });
+                }
             )
             .WithTags("Dashboard");
 

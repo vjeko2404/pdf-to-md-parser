@@ -33,6 +33,11 @@ builder.Services.AddTransient<LlmService>();
 // Conversion can be slow on CPU; give marker a generous ceiling.
 builder.Services.AddHttpClient<MarkerClient>(c => c.Timeout = TimeSpan.FromMinutes(30));
 
+// Short-timeout client for marker /health probes + the singleton that TTL-caches results
+// (used to pause/resume processing when an off-VPS marker is down).
+builder.Services.AddHttpClient("marker-health", c => c.Timeout = TimeSpan.FromSeconds(5));
+builder.Services.AddSingleton<MarkerHealthMonitor>();
+
 // Enrichment is best-effort and must never stall the queue — cap it tight so a
 // slow/broken Ollama degrades gracefully instead of hanging each doc for minutes.
 builder.Services.AddHttpClient<OllamaClient>(c => c.Timeout = TimeSpan.FromSeconds(90));

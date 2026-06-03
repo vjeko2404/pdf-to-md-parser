@@ -1,22 +1,29 @@
 import { useState } from 'react'
 import type { RefObject } from 'react'
 import { Document, Page } from 'react-pdf'
-import { documentsApi } from '@/api/documents'
 import '@/lib/pdfWorker'
 
 export function PdfPane({
-  id,
+  url,
   containerRef,
 }: {
-  id: number
+  /** Object URL of the auth-fetched PDF blob (null while loading). */
+  url: string | null
   containerRef: RefObject<HTMLDivElement | null>
 }) {
   const [pages, setPages] = useState(0)
 
+  if (!url)
+    return (
+      <div ref={containerRef} className="h-full overflow-auto bg-muted/30 p-4">
+        <p className="p-4 text-sm text-muted-foreground">Loading PDF…</p>
+      </div>
+    )
+
   return (
     <div ref={containerRef} className="h-full overflow-auto bg-muted/30 p-4">
       <Document
-        file={documentsApi.pdfUrl(id)}
+        file={url}
         onLoadSuccess={({ numPages }) => setPages(numPages)}
         loading={<p className="p-4 text-sm text-muted-foreground">Loading PDF…</p>}
         error={<p className="p-4 text-sm text-destructive">Failed to load PDF.</p>}

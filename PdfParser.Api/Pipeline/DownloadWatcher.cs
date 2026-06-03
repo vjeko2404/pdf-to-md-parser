@@ -132,6 +132,15 @@ public class DownloadWatcher(
         if (name.StartsWith('.'))
             return;
 
+        // No conversion engine selected → don't ingest watched files (matches the upload
+        // rejection). The file is left in place; it gets picked up once an engine is enabled
+        // and the folder is re-scanned (re-save the setting, or it backfills on reconcile).
+        if (settings.For(userId).ConversionOff)
+        {
+            logger.LogDebug("Conversion OFF for user {UserId}; ignoring {Name}", userId, name);
+            return;
+        }
+
         if (!await WaitForStableAsync(path, userId, ct))
         {
             logger.LogWarning("File never stabilised, skipping: {Path}", path);

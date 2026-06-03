@@ -1,11 +1,16 @@
 import { useDropzone } from 'react-dropzone'
-import { UploadCloud } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { UploadCloud, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useUploadDocument } from '@/hooks/useDocuments'
+import { useSettings } from '@/hooks/useSettings'
 
 export function Dropzone() {
   const upload = useUploadDocument()
+  const { data: settings } = useSettings()
+  const engine = settings?.conversionEngine ?? 'off'
+  const off = engine === 'off' || engine === ''
 
   const onDrop = (files: File[]) => {
     for (const file of files) {
@@ -19,7 +24,24 @@ export function Dropzone() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'application/pdf': ['.pdf'] },
+    disabled: off,
   })
+
+  // No conversion engine selected → uploads are rejected by the server. Make that obvious
+  // and point at Settings instead of letting the user hit a 409.
+  if (off)
+    return (
+      <Link
+        to="/settings"
+        className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border p-8 text-center transition-colors hover:border-primary/50 hover:bg-accent/50"
+      >
+        <Settings className="size-8 text-muted-foreground" />
+        <p className="text-sm font-medium">No conversion engine selected</p>
+        <p className="text-xs text-muted-foreground">
+          Pick a conversion engine in Settings before uploading PDFs.
+        </p>
+      </Link>
+    )
 
   return (
     <div

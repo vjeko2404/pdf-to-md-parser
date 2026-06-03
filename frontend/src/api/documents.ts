@@ -58,5 +58,7 @@ export const documentsApi = {
   markdown: (id: number) => api.get<string>(`/documents/${id}/markdown`),
   blocks: (id: number) => api.get<MarkerBlock[]>(`/documents/${id}/blocks`),
   facets: () => api.get<Facets>('/facets'),
-  pdfUrl: (id: number) => `/api/documents/${id}/pdf`,
+  /** Fetch the archived PDF as a Blob WITH auth — callers wrap it in an object URL.
+   *  (A bare URL can't be used: PDF.js/iframe/anchor send no Authorization header → 401.) */
+  pdfBlob: (id: number) => api.blob(`/documents/${id}/pdf`),
 }
