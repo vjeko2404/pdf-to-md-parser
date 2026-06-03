@@ -1,0 +1,61 @@
+# EXPERIMENTAL standalone marker on the AMD GPU (gfx1201 / RDNA4) via ROCm.
+#
+# Shares the compose project name + model-cache volume with the CPU file (docker-compose.yml.marker),
+# so this is a clean in-place SWAP, not a second stack — weights download only once, and you can
+# bounce between GPU and CPU at will:
+#
+#   docker compose -f docker-compose.yml.marker.gpu up -d --build      # switch to GPU
+#   docker compose -f docker-compose.yml.marker.gpu logs -f            # watch for ROCm/HIP errors
+#   docker compose -f docker-compose.yml.marker     up -d --build      # fall back to CPU (always works)
+#
+# The container runs as root, so it can reach the root:render-owned /dev/kfd and /dev/dri render
+# nodes without group juggling. (If you ever run it non-root, add the host's `render` GID via
+# group_add — find it with `getent group render`.)
+name: marker-standalone
+
+services:
+  marker-server:
+    build:
+      context: ./marker-server
+      dockerfile: Dockerfile.rocm
+    restart: unless-stopped
+    environment:
+      - TORCH_DEVICE=cuda            # ROCm masquerades as "cuda" in PyTorch
+      - HF_HOME=/root/.cache/huggingface
+      # gfx1201 works, but the fused flash / mem-efficient attention kernels (AOTriton) are
+      # gated behind this flag on RDNA4 — without it torch falls back to the slow "math" SDPA
+      # path (the "…still experimental. Enable it with…" warnings). Turning it on uses the fast
+      # kernels: quicker converts, less VRAM. "Experimental" — if you ever see crashes or
+      # garbage output, drop this line to go back to the safe math path.
+      - TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1
+      # If marker errors that gfx1201 is unsupported / has no kernels, try spoofing a nearby
+      # arch. RDNA4 has no perfect override; gfx1100 (RDNA3) is the usual experiment — it may
+      # work, may produce garbage, may crash. Leave commented to try NATIVE gfx1201 first.
+      # - HSA_OVERRIDE_GFX_VERSION=11.0.0
+    devices:
+      - /dev/kfd                     # AMD compute (KFD) interface
+      - /dev/dri                     # GPU render nodes
+    security_opt:
+      - seccomp:unconfined           # ROCm needs broader syscalls than the default profile
+    ipc: host                        # ROCm prefers host IPC for shared-memory buffers
+    volumes:
+      - model-cache:/root/.cache
+    ports:
+      # Same as the CPU file: publish 8000 for the VPS over Tailscale. Set MARKER_BIND to your
+      # tailnet IP (100.x.y.z) to expose it ONLY on the tailnet.
+      - "${MARKER_BIND:-0.0.0.0}:8000:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=3).status==200 else 1)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  model-cache:

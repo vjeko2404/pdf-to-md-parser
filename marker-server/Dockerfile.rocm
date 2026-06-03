@@ -1,0 +1,36 @@
+# EXPERIMENTAL — marker-server built against ROCm torch for AMD GPUs (gfx1201 / RDNA4).
+#
+# The stock Dockerfile ships CPU-ONLY torch; this swaps in the ROCm wheel so marker can run on
+# the GPU. UNTESTED on gfx1201 — ROCm support for RDNA4 is brand new and may lack kernels.
+# Build/run via docker-compose.yml.marker.gpu. If it misbehaves, fall back to the CPU stack
+# (docker-compose.yml.marker) — the two share nothing but the model-cache volume.
+#
+# Pins are deliberately the SAME as the CPU image (marker-pdf 1.10.2 / transformers 4.57.3 /
+# torch 2.7.1) so the classic-surya stack stays known-good. torch 2.7.1 → ROCm 6.3 wheels.
+# That ROCm version is early for RDNA4, which is the main reason this is "experimental".
+FROM python:3.12-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PIP_NO_CACHE_DIR=1 \
+    HF_HOME=/models \
+    TORCH_DEVICE=cuda \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# ROCm torch instead of the CPU wheel. The rocm wheel bundles the ROCm runtime libraries, so
+# the slim base is enough — the GPU itself is reached via /dev/kfd + /dev/dri (see the compose).
+# Bump the rocmX.Y suffix only alongside a torch bump (and re-validate the surya pins).
+RUN pip install "torch==2.7.1" --index-url https://download.pytorch.org/whl/rocm6.3
+
+COPY requirements.txt .
+# transformers pin installed AFTER marker to win resolution (same as the CPU image).
+RUN pip install -r requirements.txt && pip install "transformers==4.57.3"
+
+COPY app.py .
+
+EXPOSE 8000
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
