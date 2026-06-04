@@ -9,7 +9,7 @@ export function AppLayout() {
   const [drawer, setDrawer] = useState(false)
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground">
+    <div className="flex h-dvh flex-col bg-background text-foreground">
       <TopBar isMobile={isMobile} onMenu={() => setDrawer((o) => !o)} />
       <div className="flex flex-1 overflow-hidden">
         {!isMobile && <Sidebar />}

@@ -4,8 +4,15 @@ import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '@/lib/utils';
 
+// Shared look for the themed "chameleon" + legacy color variants. Geometry (height/padding/
+// text-size) is intentionally left to the `size` prop so these stay consistent with the
+// standard variants and don't blow up into oversized pills on small screens.
+const themed = 'border font-semibold uppercase tracking-wider'
+
 const ButtonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-normal text-center min-w-0 wrap-break-word rounded-md text-sm font-medium ' +
+  // whitespace-nowrap keeps labels on one line (whole buttons wrap in flex-wrap toolbars,
+  // rather than a single label breaking mid-word). The `keyword` variants opt back into wrapping.
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap text-center rounded-md text-sm font-medium ' +
     'transition-[background-color,color,border-color,box-shadow,transform,opacity] duration-200 ease-out ' +
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ' +
     'disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed ' +
@@ -27,9 +34,9 @@ const ButtonVariants = cva(
         // Use these when you want the button to match the user's selected theme (Rose, Gold, etc.)
 
         button_primary:
-          'min-h-10 px-6 py-2 font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border ' +
+          themed + ' ' +
           'bg-primary/10 text-primary border-primary/20 ' +
-          'hover:bg-primary/20 hover:border-primary/30 hover:shadow-lg ' +
+          'hover:bg-primary/20 hover:border-primary/30 hover:shadow-sm ' +
           'dark:bg-primary/10 dark:text-primary dark:border-primary/20 dark:hover:bg-primary/20',
 
         hero_login:
@@ -47,32 +54,32 @@ const ButtonVariants = cva(
           'dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 dark:hover:bg-blue-500/20',
 
         button_blue:
-          'min-h-10 px-6 py-2 font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border ' +
+          themed + ' ' +
           'bg-blue-600/15 text-blue-700 border-blue-600/20 hover:bg-blue-600/25 ' +
           'dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 dark:hover:bg-blue-500/20',
 
         button_red:
-          'min-h-10 px-6 py-2 font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border ' +
+          themed + ' ' +
           'bg-red-600/15 text-red-700 border-red-600/20 hover:bg-red-600/25 ' +
           'dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 dark:hover:bg-red-500/20',
 
         button_green:
-          'min-h-10 px-6 py-2 font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border ' +
+          themed + ' ' +
           'bg-emerald-600/15 text-emerald-700 border-emerald-600/20 hover:bg-emerald-600/25 ' +
           'dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 dark:hover:bg-emerald-500/20',
 
         button_yellow:
-          'min-h-10 px-6 py-2 font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border ' +
+          themed + ' ' +
           'bg-amber-600/15 text-amber-700 border-amber-600/20 hover:bg-amber-600/25 ' +
           'dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 dark:hover:bg-amber-500/20',
 
         button_neutral:
-          'min-h-10 px-6 py-2 font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border ' +
+          themed + ' ' +
           'bg-neutral-900/10 text-neutral-800 border-neutral-900/15 hover:bg-neutral-900/20 ' +
           'dark:bg-white/5 dark:text-foreground/80 dark:border-white/10 dark:hover:bg-white/10',
 
         button_gray:
-          'min-h-10 px-6 py-2 font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border ' +
+          themed + ' ' +
           'bg-slate-600/15 text-slate-700 border-slate-600/20 hover:bg-slate-600/25 ' +
           'dark:bg-slate-500/10 dark:text-slate-400 dark:border-slate-500/20 dark:hover:bg-slate-500/20',
 
