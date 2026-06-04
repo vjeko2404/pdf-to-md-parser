@@ -1,4 +1,5 @@
 import { Menu } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { ThemeToggle } from './ThemeToggle'
 import { LlmStatusPill } from './LlmStatusPill'
@@ -12,11 +13,22 @@ export function TopBar({ isMobile, onMenu }: { isMobile: boolean; onMenu: () => 
           <Menu className="size-5" />
         </Button>
       )}
-      <span className="min-w-0 truncate font-semibold tracking-tight">
-        PDF <span className="text-primary">→</span>{' '}
-        <span className="sm:hidden">MD</span>
-        <span className="hidden sm:inline">Markdown</span>
-      </span>
+      <Link
+        to="/"
+        className="flex min-w-0 items-center gap-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label="PDF → Markdown — Library"
+      >
+        <img
+          src="/pdftomd.png"
+          alt="PDF → Markdown"
+          className="hidden size-8 shrink-0 rounded-lg sm:block"
+        />
+        <span className="min-w-0 truncate font-semibold tracking-tight">
+          PDF <span className="text-primary">→</span>{' '}
+          <span className="sm:hidden">MD</span>
+          <span className="hidden sm:inline">Markdown</span>
+        </span>
+      </Link>
       <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
         <LlmStatusPill />
         <ThemeToggle />

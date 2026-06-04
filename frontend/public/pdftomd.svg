@@ -1,9 +1,46 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#9d5cff"/>
-      <stop offset="1" stop-color="#6d18f0"/>
+    <!-- near-dark base: purple only hinted, deepening to near-black -->
+    <linearGradient id="bg" x1="48" y1="32" x2="464" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2a1d44"/>
+      <stop offset="0.55" stop-color="#160e2a"/>
+      <stop offset="1" stop-color="#070410"/>
     </linearGradient>
+    <!-- big specular highlight: light entering the glass from upper-left -->
+    <radialGradient id="spec" cx="0.32" cy="0.2" r="0.85" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="0.35" stop-color="#e9deff" stop-opacity="0.18"/>
+      <stop offset="0.7" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <!-- refraction glow pooling at the bottom edge -->
+    <radialGradient id="refract" cx="0.7" cy="1.02" r="0.7" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#c9b6ff" stop-opacity="0.4"/>
+      <stop offset="0.6" stop-color="#9d7bff" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#9d7bff" stop-opacity="0"/>
+    </radialGradient>
+    <!-- edge vignette so the rim reads as light bending around the glass -->
+    <radialGradient id="vignette" cx="0.5" cy="0.42" r="0.72" gradientUnits="objectBoundingBox">
+      <stop offset="0.6" stop-color="#1c0a3d" stop-opacity="0"/>
+      <stop offset="1" stop-color="#120527" stop-opacity="0.45"/>
+    </radialGradient>
+    <!-- diagonal gloss sweep across the upper third (wet-glass reflection) -->
+    <linearGradient id="sweep" x1="0" y1="0" x2="512" y2="280" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <!-- glossy rim: bright highlight top, dim sides, soft reflection bottom -->
+    <linearGradient id="ring" x1="256" y1="0" x2="256" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="0.12" stop-color="#ddd0ff" stop-opacity="0.55"/>
+      <stop offset="0.45" stop-color="#a78bfa" stop-opacity="0.12"/>
+      <stop offset="0.7" stop-color="#7c3aed" stop-opacity="0.18"/>
+      <stop offset="0.92" stop-color="#c4b5fd" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.8"/>
+    </linearGradient>
+    <clipPath id="tile">
+      <rect width="512" height="512" rx="112"/>
+    </clipPath>
     <linearGradient id="arrow" x1="224" y1="256" x2="320" y2="256" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#ffffff"/>
       <stop offset="1" stop-color="#ece1ff"/>
@@ -16,8 +53,17 @@
     </filter>
   </defs>
 
-  <!-- maskable-safe background fills the whole canvas -->
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- frosted glass tile: tint + layered light, all clipped to the squircle -->
+  <g clip-path="url(#tile)">
+    <rect width="512" height="512" fill="url(#bg)"/>
+    <rect width="512" height="512" fill="url(#refract)"/>
+    <rect width="512" height="512" fill="url(#spec)"/>
+    <rect width="512" height="512" fill="url(#sweep)"/>
+    <rect width="512" height="512" fill="url(#vignette)"/>
+  </g>
+
+  <!-- thin glossy rim at the very edge -->
+  <rect x="2" y="2" width="508" height="508" rx="110" fill="none" stroke="url(#ring)" stroke-width="3.5"/>
 
   <!-- back ghost sheet, tilted -->
   <g filter="url(#soft)" transform="rotate(-9 168 256)">
