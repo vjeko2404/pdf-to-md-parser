@@ -18,10 +18,15 @@ export function useSignalR(handlers: Record<string, Handler>) {
       .build()
 
     for (const [name, fn] of Object.entries(handlers)) conn.on(name, fn)
-    conn.start().catch(() => {})
+
+    // Chain stop() onto start() rather than calling it directly: StrictMode's
+    // dev mount→unmount→mount double-invoke would otherwise call stop() while the
+    // first connection is still negotiating ("stopped during negotiation"). Waiting
+    // for start() to settle first makes teardown a clean no-op.
+    const started = conn.start().catch(() => {})
 
     return () => {
-      conn.stop().catch(() => {})
+      started.then(() => conn.stop()).catch(() => {})
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
