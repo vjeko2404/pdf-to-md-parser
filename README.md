@@ -11,7 +11,9 @@ and serves a searchable dashboard with a **PDF to Markdown sync-scroll** viewer.
 
 The whole stack runs with a single `docker compose up -d`. It supports multiple
 users with per-user data isolation and JWT authentication, so it can run on
-localhost for personal use or behind a reverse proxy on a VPS.
+localhost for personal use or behind a reverse proxy on a VPS. The interface is
+fully localized in **English, German and Croatian** (see
+[Internationalization](#internationalization-i18n)).
 
 ---
 
@@ -128,6 +130,30 @@ openssl rand -base64 48
 
 ---
 
+## Internationalization (i18n)
+
+The UI ships in **English, German and Croatian**, switchable live. Translations
+use [i18next](https://www.i18next.com/) + react-i18next, with one JSON file per
+domain (namespace) under `frontend/src/locales/<lang>/` and an index barrel per
+language. `en` is the canonical base, and any missing key falls back to it.
+
+- **Per-user default.** The chosen language is saved to the user's profile
+  (`users.DefaultLanguage`, default `en`) via `PATCH /api/auth/language`, so it
+  follows the account across logins and devices. Set it in **Settings -> Language**.
+- **Pre-auth switch.** The login and register screens carry a top-right language
+  selector that persists to `localStorage` only (no account needed yet).
+- **Plurals.** Count-based strings use CLDR plural rules — Croatian gets the full
+  one/few/other forms; English and German use one/other.
+- **Adding a language.** Copy `locales/en/` to `locales/<code>/`, translate the
+  values (keys stay identical), register the folder in `locales/resources.ts`, and
+  add the code to `SUPPORTED` in `locales/languages.ts`.
+
+API error messages are currently returned in English; the frontend has a
+codes-to-keys scaffold (`api/apiErrors.ts` plus an `apiErrors` namespace) ready to
+localize them once the backend attaches stable error codes.
+
+---
+
 ## LLM providers
 
 Enrichment, summarization and auto-categorization route through a single
@@ -220,9 +246,12 @@ standalone marker.
   `@radix-ui/react-slot`.
 - **@tanstack/react-query** (data), **@microsoft/signalr** (live updates),
   **react-router 7** (routing), **sonner** (toasts),
+  **i18next + react-i18next** (internationalization),
   **react-pdf + react-markdown + remark-gfm + rehype-raw** (document viewer).
 - Authenticated SPA: login and register pages, an `AuthProvider`, route guards,
   a user menu, password change, and an admin panel.
+- Fully localized (English, German, Croatian) — see
+  [Internationalization](#internationalization-i18n).
 - The document viewer fetches the protected `/pdf` endpoint as an **authenticated
   blob** and renders it from an object URL — a bare URL can't carry the bearer
   token, so PDF.js/iframe/download would otherwise hit `401`.
@@ -265,9 +294,12 @@ PdfParser.Api/
   Models/                   Document, Category, User, Contracts (marker/LLM DTOs)
 
 frontend/src/
-  api/                      typed client per domain over client.ts (auth-aware fetch)
+  api/                      typed client per domain over client.ts (auth-aware fetch);
+                            apiErrors.ts (error code -> i18n key scaffold)
   providers/                ThemeProvider, AuthProvider
   hooks/                    react-query + useSignalR, useIsMobile, useViewMode, useSyncScroll
+  locales/                  i18next setup: i18n.ts, resources.ts, languages.ts +
+                            en/ de/ hr/ (one JSON per namespace + index barrel)
   components/{auth,layout,library,ollama,settings,doc,common,ui}/
   pages/                    Login, Register, Library, Document (sync-scroll),
                             AI, Settings, Folders, Categories, Logs
@@ -291,6 +323,7 @@ add their own policy.
 | GET | `/registration` | whether self-registration is currently open |
 | GET | `/me` | current user info |
 | POST | `/change-password` | change your own password |
+| PATCH | `/language` | set your preferred UI language (persisted to your profile) |
 | PATCH | `/registration` | toggle self-registration (admin) |
 | GET | `/users` | list users (admin) |
 | PATCH | `/users/{id}/active` | enable or disable an account (admin) |
