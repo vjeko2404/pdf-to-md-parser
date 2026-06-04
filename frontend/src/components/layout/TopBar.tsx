@@ -6,14 +6,16 @@ import { UserMenu } from './UserMenu'
 
 export function TopBar({ isMobile, onMenu }: { isMobile: boolean; onMenu: () => void }) {
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-card px-3 sm:gap-3 sm:px-4">
+    <header className="flex h-[calc(3.5rem+env(safe-area-inset-top))] shrink-0 items-center gap-2 border-b bg-card px-3 pt-[env(safe-area-inset-top)] sm:gap-3 sm:px-4">
       {isMobile && (
         <Button variant="ghost" size="icon" onClick={onMenu} className="shrink-0">
           <Menu className="size-5" />
         </Button>
       )}
       <span className="min-w-0 truncate font-semibold tracking-tight">
-        PDF <span className="text-primary">→</span> Markdown
+        PDF <span className="text-primary">→</span>{' '}
+        <span className="sm:hidden">MD</span>
+        <span className="hidden sm:inline">Markdown</span>
       </span>
       <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
         <LlmStatusPill />

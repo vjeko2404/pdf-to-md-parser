@@ -16,7 +16,7 @@ export function AppLayout() {
         {isMobile && drawer && (
           <>
             <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setDrawer(false)} />
-            <div className="fixed bottom-0 left-0 top-14 z-50">
+            <div className="fixed bottom-0 left-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-50">
               <Sidebar onNavigate={() => setDrawer(false)} />
             </div>
           </>

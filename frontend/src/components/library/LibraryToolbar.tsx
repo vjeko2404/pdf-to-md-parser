@@ -1,34 +1,34 @@
-import { Loader2, Pause, Play, Search, Sparkles, Trash2, X } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Select } from '@/components/ui/Select'
-import { ViewSwitcher } from './ViewSwitcher'
-import type { ViewMode } from '@/hooks/useViewMode'
-import type { Category } from '@/api/categories'
-import type { DocumentStatus } from '@/types/api'
+import { Loader2, Pause, Play, Search, Sparkles, Trash2, X } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { ViewSwitcher } from "./ViewSwitcher";
+import type { ViewMode } from "@/hooks/useViewMode";
+import type { Category } from "@/api/categories";
+import type { DocumentStatus } from "@/types/api";
 
-const STATUSES: (DocumentStatus | 'All')[] = ['All', 'Queued', 'Processing', 'Done', 'Failed']
+const STATUSES: (DocumentStatus | "All")[] = ["All", "Queued", "Processing", "Done", "Failed"];
 
 export interface LibraryToolbarProps {
-  search: string
-  onSearch: (v: string) => void
-  status: string
-  onStatus: (v: string) => void
-  categories: Category[]
-  categoryId: string
-  onCategory: (v: string) => void
-  sort: string
-  onSort: (v: string) => void
-  view: ViewMode
-  onView: (v: ViewMode) => void
-  showViewSwitcher?: boolean
-  selectedCount: number
-  onEnrichSelected: () => void
-  onDeleteSelected: () => void
-  enriching: boolean
-  paused: boolean
-  onTogglePause: () => void
-  pauseBusy: boolean
+  search: string;
+  onSearch: (v: string) => void;
+  status: string;
+  onStatus: (v: string) => void;
+  categories: Category[];
+  categoryId: string;
+  onCategory: (v: string) => void;
+  sort: string;
+  onSort: (v: string) => void;
+  view: ViewMode;
+  onView: (v: ViewMode) => void;
+  showViewSwitcher?: boolean;
+  selectedCount: number;
+  onEnrichSelected: () => void;
+  onDeleteSelected: () => void;
+  enriching: boolean;
+  paused: boolean;
+  onTogglePause: () => void;
+  pauseBusy: boolean;
 }
 
 export function LibraryToolbar(props: LibraryToolbarProps) {
@@ -52,32 +52,31 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
     paused,
     onTogglePause,
     pauseBusy,
-  } = props
+  } = props;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="relative min-w-[12rem] flex-1">
+      <div className="relative min-w-48 flex-1">
         <Input
           icon={<Search className="size-4" />}
           value={search}
           onChange={(e) => onSearch(e.target.value)}
           placeholder="Search title, tags, content…"
-          className={search ? 'pr-8' : undefined}
+          className={search ? "pr-8" : undefined}
         />
         {search && (
           <button
             type="button"
-            onClick={() => onSearch('')}
+            onClick={() => onSearch("")}
             title="Clear search"
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-          >
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground">
             <X className="size-4" />
           </button>
         )}
       </div>
       <Select value={status} onChange={onStatus}>
         {STATUSES.map((s) => (
-          <option key={s} value={s === 'All' ? '' : s}>
+          <option key={s} value={s === "All" ? "" : s}>
             {s}
           </option>
         ))}
@@ -102,14 +101,13 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
             variant="button_primary"
             size="sm"
             onClick={onEnrichSelected}
-            disabled={enriching}
-          >
+            disabled={enriching}>
             {enriching ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
               <Sparkles className="size-4" />
             )}
-            {enriching ? 'Enriching…' : `Enrich ${selectedCount}`}
+            {enriching ? "Enriching…" : `Enrich ${selectedCount}`}
           </Button>
           <Button variant="button_red" size="sm" onClick={onDeleteSelected} disabled={enriching}>
             <Trash2 className="size-4" /> Delete {selectedCount}
@@ -117,12 +115,11 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
         </>
       )}
       <Button
-        variant={paused ? 'button_yellow' : 'button_neutral'}
+        variant={paused ? "button_yellow" : "button_neutral"}
         size="sm"
         onClick={onTogglePause}
         disabled={pauseBusy}
-        title={paused ? 'Resume processing' : 'Pause processing'}
-      >
+        title={paused ? "Resume processing" : "Pause processing"}>
         {pauseBusy ? (
           <Loader2 className="size-4 animate-spin" />
         ) : paused ? (
@@ -130,9 +127,9 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
         ) : (
           <Pause className="size-4" />
         )}
-        {paused ? 'Resume' : 'Pause'}
+        {paused ? "Resume" : "Pause"}
       </Button>
       {showViewSwitcher && <ViewSwitcher mode={view} onChange={onView} />}
     </div>
-  )
+  );
 }

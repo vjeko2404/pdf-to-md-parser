@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Plus, Tag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Section } from "@/components/common/Section";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
 import { Link } from "@/components/ui/Link";
 import { TextInput } from "@/components/common/inputs";
@@ -13,6 +14,17 @@ export function CategoriesPage() {
   const del = useDeleteCategory();
   const [name, setName] = useState("");
   const [color, setColor] = useState("#aa3bff");
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const deleteTarget = cats?.find((c) => c.id === deleteId);
+
+  const confirmDelete = () => {
+    if (deleteId == null) return;
+    del.mutate(deleteId, {
+      onSuccess: () => toast.success("Category deleted"),
+    });
+    setDeleteId(null);
+  };
 
   const add = () => {
     if (!name.trim()) return;
@@ -40,12 +52,11 @@ export function CategoriesPage() {
               <Link
                 to={`/?categoryId=${c.id}`}
                 className="flex-1 font-medium text-foreground no-underline hover:text-primary hover:underline"
-                title={`View documents in ${c.name}`}
-              >
+                title={`View documents in ${c.name}`}>
                 {c.name}
               </Link>
               <span className="text-xs text-muted-foreground">{c.count ?? 0} docs</span>
-              <Button variant="ghost" size="sm" onClick={() => del.mutate(c.id)} title="Delete">
+              <Button variant="ghost" size="sm" onClick={() => setDeleteId(c.id)} title="Delete">
                 <Trash2 className="size-4" />
               </Button>
             </div>
@@ -74,6 +85,20 @@ export function CategoriesPage() {
           </Button>
         </div>
       </Section>
+
+      <ConfirmDialog
+        open={deleteId != null}
+        title="Delete category?"
+        description={
+          deleteTarget
+            ? `“${deleteTarget.name}” will be removed and unassigned from ${deleteTarget.count ?? 0} document(s). This cannot be undone.`
+            : undefined
+        }
+        confirmLabel="Delete"
+        destructive
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   );
 }
