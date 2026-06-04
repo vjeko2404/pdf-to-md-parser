@@ -208,3 +208,17 @@
 .prose-doc th { background: var(--muted); font-weight: 600; }
 .prose-doc img { max-width: 100%; }
 
+/* ── Stop iOS Safari's auto-zoom on input focus ──
+   Mobile Safari zooms the page in whenever you focus a form control whose text is
+   < 16px (our inputs use text-sm = 14px), and never zooms back out — which is why
+   tapping the search bar kept zooming in. Forcing 16px on touch-sized screens removes
+   the trigger entirely. Unlayered (outside @layer) so it wins over Tailwind's `text-sm`.
+   Pinch-to-zoom is left untouched. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
