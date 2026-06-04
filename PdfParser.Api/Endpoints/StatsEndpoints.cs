@@ -34,17 +34,26 @@ public static class StatsEndpoints
         // Settings panel's status line and any "marker offline" UI.
         app.MapGet(
                 "/api/conversion/status",
-                async (ClaimsPrincipal user, SettingsService settings, MarkerHealthMonitor health, CancellationToken ct) =>
+                async (
+                    ClaimsPrincipal user,
+                    SettingsService settings,
+                    MarkerHealthMonitor health,
+                    CancellationToken ct
+                ) =>
                 {
                     var s = settings.For(user.GetUserId());
                     var url = s.ResolvedMarkerUrl;
-                    bool? healthy = string.IsNullOrEmpty(url) ? null : await health.IsHealthyAsync(url, ct);
-                    return Results.Ok(new
-                    {
-                        engine = s.ConversionEngine,
-                        markerUrl = url,
-                        healthy,
-                    });
+                    bool? healthy = string.IsNullOrEmpty(url)
+                        ? null
+                        : await health.IsHealthyAsync(url, ct);
+                    return Results.Ok(
+                        new
+                        {
+                            engine = s.ConversionEngine,
+                            markerUrl = url,
+                            healthy,
+                        }
+                    );
                 }
             )
             .WithTags("Dashboard");

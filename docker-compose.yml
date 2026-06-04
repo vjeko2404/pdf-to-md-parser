@@ -1,7 +1,7 @@
 # Production / VPS compose — carries resource safeguards so CPU-mode marker
 # (torch grabs every core by default) can't peg a small box and freeze the
 # shell. Tuned for a 4-core VPS; override the MARKER_* vars in .env to retune.
-# For an UNRESTRICTED local run use:  docker compose -f docker-compose.yml.dev up -d
+# For local DEV (hot reload, no caps) use:  docker compose -f docker-compose.dev.yml up --build
 name: pdf-md-parser
 
 services:

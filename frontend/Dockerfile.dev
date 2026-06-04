@@ -1,0 +1,24 @@
+# ── Vite dev server (hot reload) ─────────────────────────────────────────────
+# Used ONLY by docker-compose.dev.yml. There is NO build/COPY/npm-install here on
+# purpose: the whole ./frontend dir (including node_modules) is bind-mounted from
+# the host, so `npm install` run on the host is picked up live — no rebuild, no
+# docker shell. Vite + HMR detect host file changes through the bind mount.
+#
+# Debian-based node (glibc), NOT alpine (musl): the host is glibc (Arch), and the
+# native prebuilt binaries in the bind-mounted node_modules (esbuild, rolldown,
+# @tailwindcss/oxide) are libc-specific — an alpine/musl runtime would fail to
+# load the host's glibc binaries. Matching libc is what makes the shared
+# node_modules work.
+FROM node:22
+
+WORKDIR /app
+
+# HOME is writable for any stray npm/cache writes (we run as the host UID, whose
+# home doesn't exist in the image). Vite's own cache lives in the mounted
+# node_modules/.vite, owned by the host user.
+ENV HOME=/tmp
+
+EXPOSE 5173
+
+# --host binds 0.0.0.0 so the dev server is reachable from the host browser.
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

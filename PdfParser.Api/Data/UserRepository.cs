@@ -18,7 +18,10 @@ public class UserRepository(Database db)
     public async Task<User?> GetByIdAsync(long id)
     {
         using var c = db.Open();
-        return await c.QuerySingleOrDefaultAsync<User>("SELECT * FROM users WHERE Id = @id", new { id });
+        return await c.QuerySingleOrDefaultAsync<User>(
+            "SELECT * FROM users WHERE Id = @id",
+            new { id }
+        );
     }
 
     public async Task<int> CountAsync()

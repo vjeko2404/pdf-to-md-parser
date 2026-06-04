@@ -72,7 +72,12 @@ public class PipelineWorker(
         if (us.ConversionOff)
         {
             await repo.SetStatusAsync(id, DocumentStatus.Failed, "No conversion engine selected");
-            await repo.AddEventAsync(id, "error", "convert", "Conversion is disabled — pick an engine in Settings.");
+            await repo.AddEventAsync(
+                id,
+                "error",
+                "convert",
+                "Conversion is disabled — pick an engine in Settings."
+            );
             await Broadcast(owner, id, DocumentStatus.Failed, doc.OriginalName, ct);
             return;
         }
@@ -84,7 +89,12 @@ public class PipelineWorker(
         if (us.UsesMarker && !await health.IsHealthyAsync(markerUrl, ct))
         {
             await repo.SetStatusAsync(id, DocumentStatus.Queued);
-            await repo.AddEventAsync(id, "warn", "convert", $"Marker unavailable ({markerUrl}) — waiting…");
+            await repo.AddEventAsync(
+                id,
+                "warn",
+                "convert",
+                $"Marker unavailable ({markerUrl}) — waiting…"
+            );
             await Broadcast(owner, id, DocumentStatus.Queued, doc.OriginalName, ct);
             ScheduleRequeue(id);
             return;
@@ -92,13 +102,19 @@ public class PipelineWorker(
 
         // On a fresh ingest the file is in the watch dir; on a retry it's the archive.
         var watchPath = Path.Combine(watchDir, doc.OriginalName);
-        var sourcePath = File.Exists(watchPath)
-            ? watchPath
-            : doc.ArchivedPdfPath is { } a && File.Exists(a) ? a : watchPath;
+        var sourcePath =
+            File.Exists(watchPath) ? watchPath
+            : doc.ArchivedPdfPath is { } a && File.Exists(a) ? a
+            : watchPath;
 
         var sw = Stopwatch.StartNew();
         await repo.SetStatusAsync(id, DocumentStatus.Processing);
-        await repo.AddEventAsync(id, "info", "convert", $"Processing {doc.OriginalName} ({us.ConversionEngine})");
+        await repo.AddEventAsync(
+            id,
+            "info",
+            "convert",
+            $"Processing {doc.OriginalName} ({us.ConversionEngine})"
+        );
         await Broadcast(owner, id, DocumentStatus.Processing, doc.OriginalName, ct);
 
         try
@@ -110,9 +126,10 @@ public class PipelineWorker(
 
             // 1. Convert ----------------------------------------------------
             // pdfplumber → lightweight /extract; marker-host / marker-remote → full /convert.
-            var result = us.ConversionEngine == "pdfplumber"
-                ? await marker.ExtractAsync(markerUrl, bytes, doc.OriginalName, ct)
-                : await marker.ConvertAsync(markerUrl, bytes, doc.OriginalName, ct);
+            var result =
+                us.ConversionEngine == "pdfplumber"
+                    ? await marker.ExtractAsync(markerUrl, bytes, doc.OriginalName, ct)
+                    : await marker.ConvertAsync(markerUrl, bytes, doc.OriginalName, ct);
 
             var mdDir = Path.Combine(vaultDir, "markdown", doc.Slug);
             Directory.CreateDirectory(mdDir);
@@ -221,18 +238,28 @@ public class PipelineWorker(
                 await Task.Delay(RequeueDelay, _stopping);
                 await queue.EnqueueAsync(id, _stopping);
             }
-            catch (OperationCanceledException) { /* shutting down */ }
+            catch (OperationCanceledException)
+            { /* shutting down */
+            }
         });
 
-    private Task Broadcast(long ownerUserId, long id, DocumentStatus status, string name, CancellationToken ct) =>
-        hub.Clients.User(ownerUserId.ToString()).SendAsync(
-            "documentUpdated",
-            new
-            {
-                id,
-                status = status.ToString(),
-                name,
-            },
-            ct
-        );
+    private Task Broadcast(
+        long ownerUserId,
+        long id,
+        DocumentStatus status,
+        string name,
+        CancellationToken ct
+    ) =>
+        hub
+            .Clients.User(ownerUserId.ToString())
+            .SendAsync(
+                "documentUpdated",
+                new
+                {
+                    id,
+                    status = status.ToString(),
+                    name,
+                },
+                ct
+            );
 }

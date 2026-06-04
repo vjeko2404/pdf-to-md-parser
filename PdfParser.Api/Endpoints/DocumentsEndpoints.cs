@@ -61,7 +61,9 @@ public static class DocumentsEndpoints
         g.MapGet(
             "/{id:long}",
             async (long id, ClaimsPrincipal user, DocumentRepository repo) =>
-                await repo.GetByIdAsync(id, user.GetUserId()) is { } d ? Results.Ok(d) : Results.NotFound()
+                await repo.GetByIdAsync(id, user.GetUserId()) is { } d
+                    ? Results.Ok(d)
+                    : Results.NotFound()
         );
 
         g.MapGet(
@@ -179,7 +181,12 @@ public static class DocumentsEndpoints
                     {
                         if (f.Length == 0)
                             continue;
-                        if (!(f.ContentType ?? "").StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                        if (
+                            !(f.ContentType ?? "").StartsWith(
+                                "image/",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
                             return Results.BadRequest($"not an image: {f.FileName}");
                         using var ms = new MemoryStream();
                         await f.CopyToAsync(ms);
@@ -211,7 +218,9 @@ public static class DocumentsEndpoints
         g.MapDelete(
             "/{id:long}",
             async (long id, ClaimsPrincipal user, DocumentRepository repo) =>
-                await repo.DeleteAsync(id, user.GetUserId()) ? Results.NoContent() : Results.NotFound()
+                await repo.DeleteAsync(id, user.GetUserId())
+                    ? Results.NoContent()
+                    : Results.NotFound()
         );
 
         // Batch delete — only the caller's own documents are removed.
@@ -252,7 +261,12 @@ public static class DocumentsEndpoints
         // We rewrite the file and refresh the FTS search content with the anchor-stripped text.
         g.MapPatch(
             "/{id:long}/markdown",
-            async (long id, UpdateMarkdownRequest req, ClaimsPrincipal user, DocumentRepository repo) =>
+            async (
+                long id,
+                UpdateMarkdownRequest req,
+                ClaimsPrincipal user,
+                DocumentRepository repo
+            ) =>
             {
                 var userId = user.GetUserId();
                 var d = await repo.GetByIdAsync(id, userId);
@@ -300,14 +314,18 @@ public static class DocumentsEndpoints
                     if (d.LayoutJsonPath is { } lp && File.Exists(lp))
                         File.Delete(lp);
                 }
-                catch { /* leave orphan rather than fail */ }
+                catch
+                { /* leave orphan rather than fail */
+                }
                 var mdDir = d.MdPath is { } mp ? Path.GetDirectoryName(mp) : null;
                 try
                 {
                     if (mdDir is not null && Directory.Exists(mdDir))
                         Directory.Delete(mdDir, recursive: true);
                 }
-                catch { /* leave orphan rather than fail */ }
+                catch
+                { /* leave orphan rather than fail */
+                }
 
                 await repo.ResetForReconvertAsync(id);
                 await repo.AddEventAsync(id, "info", "convert", "Re-parsing requested");
@@ -344,7 +362,12 @@ public static class DocumentsEndpoints
         // Enrich ONE document (re-reads saved Markdown, no reconvert). Frontend-triggered.
         g.MapPost(
             "/{id:long}/reenrich",
-            async (long id, ClaimsPrincipal user, DocumentRepository repo, EnrichmentService enrich) =>
+            async (
+                long id,
+                ClaimsPrincipal user,
+                DocumentRepository repo,
+                EnrichmentService enrich
+            ) =>
             {
                 var d = await repo.GetByIdAsync(id, user.GetUserId());
                 if (d is null)
@@ -363,7 +386,12 @@ public static class DocumentsEndpoints
         // Sequential on purpose: enrichment shares one LLM, no point fanning out.
         g.MapPost(
             "/enrich",
-            async (EnrichBatchRequest req, ClaimsPrincipal user, DocumentRepository repo, EnrichmentService enrich) =>
+            async (
+                EnrichBatchRequest req,
+                ClaimsPrincipal user,
+                DocumentRepository repo,
+                EnrichmentService enrich
+            ) =>
             {
                 var userId = user.GetUserId();
                 var results = new List<object>();

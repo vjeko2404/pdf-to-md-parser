@@ -1,12 +1,12 @@
 # EXPERIMENTAL standalone marker on the AMD GPU (gfx1201 / RDNA4) via ROCm.
 #
-# Shares the compose project name + model-cache volume with the CPU file (docker-compose.yml.marker),
+# Shares the compose project name + model-cache volume with the CPU file (docker-compose.marker.yml),
 # so this is a clean in-place SWAP, not a second stack — weights download only once, and you can
 # bounce between GPU and CPU at will:
 #
-#   docker compose -f docker-compose.yml.marker.gpu up -d --build      # switch to GPU
-#   docker compose -f docker-compose.yml.marker.gpu logs -f            # watch for ROCm/HIP errors
-#   docker compose -f docker-compose.yml.marker     up -d --build      # fall back to CPU (always works)
+#   docker compose -f docker-compose.marker.gpu.yml up -d --build      # switch to GPU
+#   docker compose -f docker-compose.marker.gpu.yml logs -f            # watch for ROCm/HIP errors
+#   docker compose -f docker-compose.marker.yml     up -d --build      # fall back to CPU (always works)
 #
 # The container runs as root, so it can reach the root:render-owned /dev/kfd and /dev/dri render
 # nodes without group juggling. (If you ever run it non-root, add the host's `render` GID via

@@ -166,8 +166,14 @@ public class DocumentRepository(Database db)
     {
         var json = System.Text.Json.JsonSerializer.Serialize(tags);
         using var c = db.Open();
-        await c.ExecuteAsync("UPDATE documents SET TagsJson = @json WHERE Id = @id", new { id, json });
-        await c.ExecuteAsync("UPDATE documents_fts SET tags = @json WHERE rowid = @id", new { id, json });
+        await c.ExecuteAsync(
+            "UPDATE documents SET TagsJson = @json WHERE Id = @id",
+            new { id, json }
+        );
+        await c.ExecuteAsync(
+            "UPDATE documents_fts SET tags = @json WHERE rowid = @id",
+            new { id, json }
+        );
     }
 
     /// <summary>
@@ -225,7 +231,9 @@ public class DocumentRepository(Database db)
         }
         if (query.CategoryId is { } cat)
         {
-            joins.Add("JOIN document_categories dc ON dc.DocumentId = d.Id AND dc.CategoryId = @cat");
+            joins.Add(
+                "JOIN document_categories dc ON dc.DocumentId = d.Id AND dc.CategoryId = @cat"
+            );
             p.Add("cat", cat);
         }
         if (query.Tags is { Length: > 0 } tags)
@@ -300,15 +308,16 @@ public class DocumentRepository(Database db)
         var byDoc = rows.GroupBy(r => r.DocumentId)
             .ToDictionary(
                 g => g.Key,
-                g => (IReadOnlyList<Category>)
-                    g.Select(r => new Category
-                        {
-                            Id = r.Id,
-                            Name = r.Name,
-                            Color = r.Color,
-                            CreatedAt = r.CreatedAt,
-                        })
-                        .ToList()
+                g =>
+                    (IReadOnlyList<Category>)
+                        g.Select(r => new Category
+                            {
+                                Id = r.Id,
+                                Name = r.Name,
+                                Color = r.Color,
+                                CreatedAt = r.CreatedAt,
+                            })
+                            .ToList()
             );
         foreach (var d in docs)
             if (byDoc.TryGetValue(d.Id, out var cs))
@@ -390,7 +399,12 @@ public class DocumentRepository(Database db)
             .Take(40)
             .Select(kv => new FacetRow { Value = kv.Key, Count = kv.Value });
 
-        return new { docTypes, languages, tags };
+        return new
+        {
+            docTypes,
+            languages,
+            tags,
+        };
     }
 
     public async Task AddEventAsync(long documentId, string level, string stage, string message)

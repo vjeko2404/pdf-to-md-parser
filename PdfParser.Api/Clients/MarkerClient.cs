@@ -15,12 +15,20 @@ public class MarkerClient(HttpClient http)
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     /// <summary>Run the full marker conversion at <paramref name="baseUrl"/>.</summary>
-    public Task<MarkerResult> ConvertAsync(string baseUrl, byte[] pdf, string fileName, CancellationToken ct)
-        => PostAsync(baseUrl, "/convert", pdf, fileName, ct);
+    public Task<MarkerResult> ConvertAsync(
+        string baseUrl,
+        byte[] pdf,
+        string fileName,
+        CancellationToken ct
+    ) => PostAsync(baseUrl, "/convert", pdf, fileName, ct);
 
     /// <summary>Run the lightweight pdfplumber extraction at <paramref name="baseUrl"/>.</summary>
-    public Task<MarkerResult> ExtractAsync(string baseUrl, byte[] pdf, string fileName, CancellationToken ct)
-        => PostAsync(baseUrl, "/extract", pdf, fileName, ct);
+    public Task<MarkerResult> ExtractAsync(
+        string baseUrl,
+        byte[] pdf,
+        string fileName,
+        CancellationToken ct
+    ) => PostAsync(baseUrl, "/extract", pdf, fileName, ct);
 
     /// <summary>Quick liveness probe of a marker-server's /health. Never throws.</summary>
     public async Task<bool> IsHealthyAsync(string baseUrl, CancellationToken ct)

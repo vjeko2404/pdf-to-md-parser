@@ -5,8 +5,8 @@ namespace PdfParser.Api.Util;
 
 public static partial class Helpers
 {
-    public static string Sha256Hex(byte[] data)
-        => Convert.ToHexString(SHA256.HashData(data)).ToLowerInvariant();
+    public static string Sha256Hex(byte[] data) =>
+        Convert.ToHexString(SHA256.HashData(data)).ToLowerInvariant();
 
     public static string Slugify(string name)
     {
@@ -16,8 +16,7 @@ public static partial class Helpers
     }
 
     /// <summary>Drop the invisible sync-scroll anchors so FTS/LLM see clean text.</summary>
-    public static string StripAnchors(string markdown)
-        => AnchorTag().Replace(markdown, "");
+    public static string StripAnchors(string markdown) => AnchorTag().Replace(markdown, "");
 
     /// <summary>Collision-safe path: foo.pdf → foo-2.pdf → foo-3.pdf …</summary>
     public static string UniquePath(string path)
@@ -39,7 +38,9 @@ public static partial class Helpers
     public static bool IsInside(string path, string dir)
     {
         var full = Path.GetFullPath(path);
-        var root = Path.GetFullPath(dir).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        var root =
+            Path.GetFullPath(dir).TrimEnd(Path.DirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
         return full.StartsWith(root, StringComparison.Ordinal);
     }
 

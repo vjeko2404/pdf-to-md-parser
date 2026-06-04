@@ -24,10 +24,13 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    // Forward API + SignalR hub to the .NET backend during dev (api host port 6670).
+    // Forward API + SignalR hub to the .NET backend during dev. Default target is
+    // the api's host port (6670) for a bare `npm run dev` on the host. Inside the
+    // dev compose the api isn't on localhost, so VITE_PROXY_TARGET is set to the
+    // compose service URL (http://api:8080) — see docker-compose.dev.yml.
     proxy: {
-      '/api': 'http://localhost:6670',
-      '/hub': { target: 'http://localhost:6670', ws: true },
+      '/api': process.env.VITE_PROXY_TARGET ?? 'http://localhost:6670',
+      '/hub': { target: process.env.VITE_PROXY_TARGET ?? 'http://localhost:6670', ws: true },
     },
   },
 })

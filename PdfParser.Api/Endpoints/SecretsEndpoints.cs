@@ -11,7 +11,10 @@ public static class SecretsEndpoints
         var g = app.MapGroup("/api/secrets").WithTags("Secrets");
 
         // Masked list (never returns plaintext) — only the caller's own secrets.
-        g.MapGet("/", (ClaimsPrincipal user, SecretsService s) => Results.Ok(s.List(user.GetUserId())));
+        g.MapGet(
+            "/",
+            (ClaimsPrincipal user, SecretsService s) => Results.Ok(s.List(user.GetUserId()))
+        );
 
         // Explicit reveal of a single secret.
         g.MapGet(

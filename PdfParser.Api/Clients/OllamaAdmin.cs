@@ -27,12 +27,22 @@ public class OllamaAdmin(
     /// Ping the server's /api/version. Pass <paramref name="urlOverride"/> to test an
     /// arbitrary URL (e.g. an unsaved value typed in Settings) instead of the saved one.
     /// </summary>
-    public async Task<OllamaStatus> StatusAsync(long userId, CancellationToken ct, string? urlOverride = null)
+    public async Task<OllamaStatus> StatusAsync(
+        long userId,
+        CancellationToken ct,
+        string? urlOverride = null
+    )
     {
-        var baseUrl = (string.IsNullOrWhiteSpace(urlOverride) ? settings.For(userId).OllamaUrl : urlOverride).TrimEnd('/');
+        var baseUrl = (
+            string.IsNullOrWhiteSpace(urlOverride) ? settings.For(userId).OllamaUrl : urlOverride
+        ).TrimEnd('/');
         try
         {
-            var v = await http.GetFromJsonAsync<VersionResponse>($"{baseUrl}/api/version", Json, ct);
+            var v = await http.GetFromJsonAsync<VersionResponse>(
+                $"{baseUrl}/api/version",
+                Json,
+                ct
+            );
             return new OllamaStatus(true, v?.Version, null);
         }
         catch (Exception ex)
@@ -43,7 +53,11 @@ public class OllamaAdmin(
 
     public async Task<IReadOnlyList<OllamaModel>> ListModelsAsync(long userId, CancellationToken ct)
     {
-        var tags = await http.GetFromJsonAsync<TagsResponse>($"{BaseUrl(userId)}/api/tags", Json, ct);
+        var tags = await http.GetFromJsonAsync<TagsResponse>(
+            $"{BaseUrl(userId)}/api/tags",
+            Json,
+            ct
+        );
         return tags?.Models ?? [];
     }
 
@@ -75,7 +89,11 @@ public class OllamaAdmin(
                 Content = JsonContent.Create(new { name, stream = true }),
             };
             // ResponseHeadersRead so HttpClient.Timeout doesn't bound the long download.
-            using var resp = await http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
+            using var resp = await http.SendAsync(
+                req,
+                HttpCompletionOption.ResponseHeadersRead,
+                ct
+            );
             resp.EnsureSuccessStatusCode();
 
             await using var stream = await resp.Content.ReadAsStreamAsync(ct);
@@ -105,17 +123,26 @@ public class OllamaAdmin(
             logger.LogWarning(ex, "Ollama pull failed for {Name}", name);
             await client.SendAsync(
                 "ollamaPull",
-                new { name, status = "error", error = ex.Message },
+                new
+                {
+                    name,
+                    status = "error",
+                    error = ex.Message,
+                },
                 CancellationToken.None
             );
         }
     }
 
     private static string? Str(JsonElement e, string prop) =>
-        e.TryGetProperty(prop, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+        e.TryGetProperty(prop, out var v) && v.ValueKind == JsonValueKind.String
+            ? v.GetString()
+            : null;
 
     private static long? Num(JsonElement e, string prop) =>
-        e.TryGetProperty(prop, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetInt64() : null;
+        e.TryGetProperty(prop, out var v) && v.ValueKind == JsonValueKind.Number
+            ? v.GetInt64()
+            : null;
 
     private sealed record VersionResponse([property: JsonPropertyName("version")] string? Version);
 

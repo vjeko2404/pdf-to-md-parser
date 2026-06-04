@@ -1,6 +1,5 @@
 # Secrets / local config
 .env
-docker-compose.yml.dev
 
 # Vault output (generated)
 vault/

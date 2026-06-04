@@ -46,7 +46,8 @@ public class SecretsService
             "SELECT Key, ValueEnc, UpdatedAt FROM secrets WHERE UserId = @userId ORDER BY Key",
             new { userId }
         );
-        return rows.Select(r => new SecretInfo(r.Key, Mask(Decrypt(r.ValueEnc)), r.UpdatedAt)).ToList();
+        return rows.Select(r => new SecretInfo(r.Key, Mask(Decrypt(r.ValueEnc)), r.UpdatedAt))
+            .ToList();
     }
 
     public string? Reveal(long userId, string key)
@@ -67,7 +68,13 @@ public class SecretsService
             INSERT INTO secrets (UserId, Key, ValueEnc, UpdatedAt) VALUES (@userId, @key, @enc, @ts)
             ON CONFLICT(UserId, Key) DO UPDATE SET ValueEnc = @enc, UpdatedAt = @ts;
             """,
-            new { userId, key, enc = Encrypt(value), ts = DateTime.UtcNow.ToString("o") }
+            new
+            {
+                userId,
+                key,
+                enc = Encrypt(value),
+                ts = DateTime.UtcNow.ToString("o"),
+            }
         );
     }
 

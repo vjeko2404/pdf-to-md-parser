@@ -21,7 +21,9 @@ public class LlmService(
     private bool UseOpenAi(long userId) => settings.For(userId).UseOpenAi;
 
     public Task<EnrichResult?> EnrichAsync(long userId, string text, CancellationToken ct) =>
-        UseOpenAi(userId) ? openai.EnrichAsync(userId, text, ct) : ollama.EnrichAsync(userId, text, ct);
+        UseOpenAi(userId)
+            ? openai.EnrichAsync(userId, text, ct)
+            : ollama.EnrichAsync(userId, text, ct);
 
     public Task<string[]?> ClassifyAsync(
         long userId,
@@ -34,7 +36,9 @@ public class LlmService(
             : ollama.ClassifyAsync(userId, text, categories, ct);
 
     public Task<string?> SummarizeAsync(long userId, string text, CancellationToken ct) =>
-        UseOpenAi(userId) ? openai.SummarizeAsync(userId, text, ct) : ollama.SummarizeAsync(userId, text, ct);
+        UseOpenAi(userId)
+            ? openai.SummarizeAsync(userId, text, ct)
+            : ollama.SummarizeAsync(userId, text, ct);
 
     /// <summary>Test the user's currently-selected provider (for the Settings "Test" button).</summary>
     public async Task<LlmTestResult> TestAsync(long userId, CancellationToken ct)

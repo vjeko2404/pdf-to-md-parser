@@ -56,8 +56,7 @@ builder.Services.AddOpenApi();
 // ── Authentication / authorization ───────────────────────────────────────────
 // JWT bearer. The signing key (App:JwtKey, or a generated vault keyfile) is resolved the
 // same way here for validation and inside AuthService for issuance, so both agree.
-var appOptions =
-    builder.Configuration.GetSection("App").Get<AppOptions>() ?? new AppOptions();
+var appOptions = builder.Configuration.GetSection("App").Get<AppOptions>() ?? new AppOptions();
 var signingKey = AuthService.ResolveSigningKey(appOptions);
 
 builder
@@ -84,7 +83,10 @@ builder
             OnMessageReceived = ctx =>
             {
                 var token = ctx.Request.Query["access_token"];
-                if (!string.IsNullOrEmpty(token) && ctx.HttpContext.Request.Path.StartsWithSegments("/hub"))
+                if (
+                    !string.IsNullOrEmpty(token)
+                    && ctx.HttpContext.Request.Path.StartsWithSegments("/hub")
+                )
                     ctx.Token = token;
                 return Task.CompletedTask;
             },

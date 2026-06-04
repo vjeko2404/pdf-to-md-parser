@@ -32,7 +32,13 @@ public static class PasswordHasher
             var iterations = int.Parse(parts[1]);
             var salt = Convert.FromBase64String(parts[2]);
             var expected = Convert.FromBase64String(parts[3]);
-            var actual = Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, Algo, expected.Length);
+            var actual = Rfc2898DeriveBytes.Pbkdf2(
+                password,
+                salt,
+                iterations,
+                Algo,
+                expected.Length
+            );
             return CryptographicOperations.FixedTimeEquals(actual, expected);
         }
         catch

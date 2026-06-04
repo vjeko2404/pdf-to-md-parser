@@ -31,7 +31,13 @@ public class CategoryRepository(Database db)
             INSERT INTO categories (OwnerUserId, Name, Color, CreatedAt) VALUES (@userId, @name, @color, @ts);
             SELECT last_insert_rowid();
             """,
-            new { userId, name, color, ts = DateTime.UtcNow }
+            new
+            {
+                userId,
+                name,
+                color,
+                ts = DateTime.UtcNow,
+            }
         );
     }
 
@@ -58,7 +64,13 @@ public class CategoryRepository(Database db)
         foreach (var (name, color) in Defaults)
             await c.ExecuteAsync(
                 "INSERT OR IGNORE INTO categories (OwnerUserId, Name, Color, CreatedAt) VALUES (@userId, @name, @color, @ts);",
-                new { userId, name, color, ts = DateTime.UtcNow }
+                new
+                {
+                    userId,
+                    name,
+                    color,
+                    ts = DateTime.UtcNow,
+                }
             );
     }
 
@@ -67,7 +79,13 @@ public class CategoryRepository(Database db)
         using var c = db.Open();
         await c.ExecuteAsync(
             "UPDATE categories SET Name = @name, Color = @color WHERE Id = @id AND OwnerUserId = @userId",
-            new { userId, id, name, color }
+            new
+            {
+                userId,
+                id,
+                name,
+                color,
+            }
         );
     }
 
@@ -89,9 +107,9 @@ public class CategoryRepository(Database db)
     {
         using var c = db.Open();
         return await c.ExecuteScalarAsync<long>(
-            "SELECT COUNT(*) FROM categories WHERE Id = @categoryId AND OwnerUserId = @userId",
-            new { userId, categoryId }
-        ) > 0;
+                "SELECT COUNT(*) FROM categories WHERE Id = @categoryId AND OwnerUserId = @userId",
+                new { userId, categoryId }
+            ) > 0;
     }
 
     public async Task AssignAsync(long documentId, long categoryId)
@@ -114,7 +132,11 @@ public class CategoryRepository(Database db)
 
     /// <summary>Replace a document's entire category set in one go (used by the edit modal).
     /// Only categories the user owns are assigned; everything else for the doc is cleared.</summary>
-    public async Task SetForDocumentAsync(long documentId, IEnumerable<long> categoryIds, long userId)
+    public async Task SetForDocumentAsync(
+        long documentId,
+        IEnumerable<long> categoryIds,
+        long userId
+    )
     {
         using var c = db.Open();
         await c.ExecuteAsync(
@@ -128,7 +150,12 @@ public class CategoryRepository(Database db)
                 SELECT @documentId, @cid
                 WHERE EXISTS (SELECT 1 FROM categories WHERE Id = @cid AND OwnerUserId = @userId);
                 """,
-                new { documentId, cid, userId }
+                new
+                {
+                    documentId,
+                    cid,
+                    userId,
+                }
             );
     }
 

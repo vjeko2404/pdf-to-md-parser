@@ -1,0 +1,126 @@
+# Local development compose — hot reload for BOTH the frontend and backend, and
+# NO resource limits (full CPU/RAM, e.g. 9950X3D).
+#
+#   docker compose -f docker-compose.dev.yml up --build      # foreground, follow logs
+#   (drop --build after the first run; add -d only if you don't want the logs)
+#
+#   open http://localhost:5173        # Vite dev server (HMR) — the app in dev
+#
+# How it differs from the committed docker-compose.yml (prod/VPS):
+#   • frontend → Vite dev server (`npm run dev`, HMR) instead of the nginx-served
+#     static build. ./frontend is bind-mounted (incl. node_modules), so packages you
+#     `npm install` on the HOST are picked up live — no rebuild, no docker shell.
+#   • api → `dotnet watch run` (hot reload on save) instead of a published build.
+#     ./PdfParser.Api is bind-mounted; edits rebuild/reload in place.
+#   • no CPU/thread caps (the committed file carries VPS safeguards).
+name: pdf-md-parser
+
+services:
+  # ── The "swamp": Python + torch + marker, sealed behind one HTTP endpoint.
+  #    Internal only — never exposed to the host network. Unchanged from prod:
+  #    marker isn't what you iterate on, so it's a normal built image here too.
+  marker-server:
+    build: ./marker-server
+    restart: unless-stopped
+    environment:
+      - TORCH_DEVICE=${TORCH_DEVICE:-cpu}
+      # Override the image's HF_HOME into the persisted cache (surya/datalab
+      # weights already go to /root/.cache/datalab). One volume covers both.
+      - HF_HOME=/root/.cache/huggingface
+    volumes:
+      - model-cache:/root/.cache
+    expose:
+      - "8000"
+    healthcheck:
+      # Liveness, NOT readiness: marker models load LAZILY on first /convert, so /health
+      # answers 200 as soon as the server is up — the api boots in seconds instead of waiting
+      # for weights.
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=3).status==200 else 1)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── The control plane: .NET orchestrator, SQLite ledger, REST + SignalR.
+  #    DEV: `dotnet watch run` (hot reload) off the bind-mounted source.
+  api:
+    build:
+      context: ./PdfParser.Api
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    # Run as the invoking host user so written files (vault, watched folder) stay
+    # theirs, not root's. `make up` injects DOCKER_UID/GID; falls back to 1000.
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
+    depends_on:
+      marker-server:
+        condition: service_healthy   # don't start the watcher until marker is ready
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - App__WatchRoot=/host
+      - App__WatchSubdir=${WATCH_SUBDIR:-Downloads}
+      - App__VaultDir=/vault
+      - App__MarkerUrl=${MARKER_URL:-http://marker-server:8000}
+      - App__OllamaUrl=${OLLAMA_URL:-http://host.docker.internal:11434}
+      - App__OllamaModel=${OLLAMA_MODEL:-qwen2.5:7b-instruct}
+      - App__DebounceSeconds=${DEBOUNCE_SECONDS:-2}
+      # Conversion engine seed (first-run default; live-editable per user in Settings after).
+      - App__ConversionEngine=${CONVERSION_ENGINE:-off}
+      - App__MarkerRemoteUrl=${MARKER_REMOTE_URL:-}
+      # Auth: JWT signing key + at-rest secret encryption key. Empty → vault keyfiles
+      # (fine for local dev). Set strong random values on a public VPS — see .env.example.
+      - App__JwtKey=${JWT_KEY:-}
+      - App__SecretKey=${APP_SECRET_KEY:-}
+    ports:
+      - "${API_PORT:-6670}:8080"   # direct API + Scalar; also the Vite proxy target below
+    volumes:
+      # Live source mount → `dotnet watch` rebuilds/reloads on save. (Native Linux
+      # bind mounts propagate inotify, so the watcher sees host edits without polling.)
+      - ./PdfParser.Api:/src
+      # NuGet restore cache. We run as a host UID with no home in the image, and a
+      # named volume would be created root-owned (→ "Access to /nuget denied" on
+      # restore). Bind-mount the HOST's nuget cache instead: host-owned (writable)
+      # and already populated by host `dotnet` runs, so restore is near-instant.
+      # The Dockerfile points NUGET_PACKAGES at /nuget.
+      - ${NUGET_PACKAGES_DIR:-${HOME}/.nuget/packages}:/nuget
+      # Whole home mounted so the watched folder can be ANY subfolder, switchable
+      # from the frontend (the watchSubdir setting). /host/<watchSubdir> is watched.
+      - ${WATCH_ROOT:-${HOME}}:/host
+      - ${VAULT_DIR:-./vault}:/vault
+    extra_hosts:
+      # Lets the bridged container reach host Ollama. Ollama must listen
+      # beyond 127.0.0.1 — see README "The one host tweak".
+      - "host.docker.internal:host-gateway"
+
+  # ── The dashboard: DEV serves it via the Vite dev server (HMR) instead of the
+  #    nginx static build. Bind-mounts ./frontend (incl. node_modules) so host
+  #    `npm install`s are picked up live; Vite proxies /api + /hub to the api.
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    # Host UID so Vite's caches (node_modules/.vite) stay host-owned, matching the
+    # node_modules you installed on the host.
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
+    depends_on:
+      - api
+    environment:
+      # The api isn't on localhost inside compose — point Vite's dev proxy at the
+      # api service (consumed by vite.config.ts). /hub uses the same target.
+      - VITE_PROXY_TARGET=http://api:8080
+    ports:
+      - "${DEV_WEB_PORT:-5173}:5173"   # http://localhost:5173 — the app in dev
+    volumes:
+      # Bind the whole frontend dir — INCLUDING node_modules — straight from the host.
+      # No anonymous volume masking it: `npm install` on the host is what the
+      # container uses (host is glibc, image is glibc node:22, so native binaries match).
+      - ./frontend:/app
+
+volumes:
+  model-cache:

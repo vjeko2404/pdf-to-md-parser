@@ -60,16 +60,18 @@ public class EnrichmentService(
         // Push a live update so the dashboard refreshes this row the instant its
         // tags/summary land — crucial for batch enrich, where the HTTP call only
         // returns once every doc is done.
-        await hub.Clients.User(uid.ToString()).SendAsync(
-            "documentUpdated",
-            new
-            {
-                id = d.Id,
-                status = d.Status.ToString(),
-                name = d.OriginalName,
-            },
-            ct
-        );
+        await hub
+            .Clients.User(uid.ToString())
+            .SendAsync(
+                "documentUpdated",
+                new
+                {
+                    id = d.Id,
+                    status = d.Status.ToString(),
+                    name = d.OriginalName,
+                },
+                ct
+            );
         return true;
     }
 }

@@ -23,7 +23,12 @@ public class CategorizationService(CategoryRepository cats, LlmService llm)
             return [];
 
         var text = Helpers.StripAnchors(await File.ReadAllTextAsync(d.MdPath, ct));
-        var chosen = await llm.ClassifyAsync(uid, text, categories.Select(c => c.Name).ToList(), ct);
+        var chosen = await llm.ClassifyAsync(
+            uid,
+            text,
+            categories.Select(c => c.Name).ToList(),
+            ct
+        );
         if (chosen is null)
             return [];
 

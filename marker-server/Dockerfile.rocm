@@ -2,8 +2,8 @@
 #
 # The stock Dockerfile ships CPU-ONLY torch; this swaps in the ROCm wheel so marker can run on
 # the GPU. UNTESTED on gfx1201 — ROCm support for RDNA4 is brand new and may lack kernels.
-# Build/run via docker-compose.yml.marker.gpu. If it misbehaves, fall back to the CPU stack
-# (docker-compose.yml.marker) — the two share nothing but the model-cache volume.
+# Build/run via docker-compose.marker.gpu.yml. If it misbehaves, fall back to the CPU stack
+# (docker-compose.marker.yml) — the two share nothing but the model-cache volume.
 #
 # Pins are deliberately the SAME as the CPU image (marker-pdf 1.10.2 / transformers 4.57.3 /
 # torch 2.7.1) so the classic-surya stack stays known-good. torch 2.7.1 → ROCm 6.3 wheels.

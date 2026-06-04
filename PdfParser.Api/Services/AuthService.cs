@@ -12,10 +12,17 @@ namespace PdfParser.Api.Services;
 
 /// <summary>Outcome of an auth operation. <c>Ok</c> carries the token+user; otherwise
 /// <c>Error</c> + <c>Status</c> describe the failure for the endpoint to return.</summary>
-public record AuthOutcome(bool Ok, AuthResponse? Response = null, string? Error = null, int Status = 400)
+public record AuthOutcome(
+    bool Ok,
+    AuthResponse? Response = null,
+    string? Error = null,
+    int Status = 400
+)
 {
     public static AuthOutcome Success(AuthResponse r) => new(true, r);
-    public static AuthOutcome Fail(string error, int status = 400) => new(false, Error: error, Status: status);
+
+    public static AuthOutcome Fail(string error, int status = 400) =>
+        new(false, Error: error, Status: status);
 }
 
 /// <summary>
@@ -48,8 +55,7 @@ public class AuthService
     /// Shared by issuance (here) and validation (Program.cs) so both use one key.</summary>
     public SymmetricSecurityKey SigningKey => _signingKey;
 
-    public static SymmetricSecurityKey ResolveSigningKey(AppOptions opt) =>
-        new(ResolveKey(opt));
+    public static SymmetricSecurityKey ResolveSigningKey(AppOptions opt) => new(ResolveKey(opt));
 
     private static byte[] ResolveKey(AppOptions opt)
     {

@@ -56,7 +56,9 @@ public class ProcessingQueue
     {
         lock (_lock)
             if (_gate.Task.IsCompleted)
-                _gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                _gate = new TaskCompletionSource(
+                    TaskCreationOptions.RunContinuationsAsynchronously
+                );
     }
 
     public void Resume()

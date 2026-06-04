@@ -1,0 +1,23 @@
+# ── .NET dev server (dotnet watch / hot reload) ──────────────────────────────
+# Used ONLY by docker-compose.dev.yml. No COPY/publish: the ./PdfParser.Api dir is
+# bind-mounted from the host and `dotnet watch run` rebuilds + hot-reloads on every
+# saved change. The full SDK image (not the slim aspnet runtime) is required so the
+# compiler/watcher are present.
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+
+WORKDIR /src
+
+# We run as the host UID (so vault files stay host-owned) whose home doesn't exist
+# in the image — point the .NET CLI + NuGet at writable locations. NUGET_PACKAGES
+# is a named volume in compose so restores persist across container restarts.
+ENV DOTNET_CLI_HOME=/tmp \
+    NUGET_PACKAGES=/nuget \
+    DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+    DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER=1 \
+    ASPNETCORE_ENVIRONMENT=Development
+
+EXPOSE 8080
+
+# ASPNETCORE_URLS (set in compose) controls the bind address. --no-launch-profile
+# skips launchSettings so the URL/env come from the environment, not the profile.
+CMD ["dotnet", "watch", "run", "--no-launch-profile"]

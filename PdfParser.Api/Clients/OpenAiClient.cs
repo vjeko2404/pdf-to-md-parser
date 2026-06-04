@@ -32,7 +32,12 @@ public class OpenAiClient(
 
     public async Task<EnrichResult?> EnrichAsync(long userId, string text, CancellationToken ct)
     {
-        var content = await ChatAsync(userId, settings.For(userId).EnrichPrompt + EnrichSchemaHint, text, ct);
+        var content = await ChatAsync(
+            userId,
+            settings.For(userId).EnrichPrompt + EnrichSchemaHint,
+            text,
+            ct
+        );
         if (string.IsNullOrWhiteSpace(content))
             return null;
         try
@@ -133,7 +138,12 @@ public class OpenAiClient(
     }
 
     /// <summary>One chat completion. Returns the assistant message content, or null.</summary>
-    private async Task<string?> ChatAsync(long userId, string system, string text, CancellationToken ct)
+    private async Task<string?> ChatAsync(
+        long userId,
+        string system,
+        string text,
+        CancellationToken ct
+    )
     {
         var s = settings.For(userId);
         var baseUrl = s.OpenAiBaseUrl.TrimEnd('/');

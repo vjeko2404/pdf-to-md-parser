@@ -21,7 +21,11 @@ public static class FoldersEndpoints
 
                 var dirs = Directory
                     .EnumerateDirectories(target)
-                    .Select(d => new { name = Path.GetFileName(d), sub = Path.GetRelativePath(root, d) })
+                    .Select(d => new
+                    {
+                        name = Path.GetFileName(d),
+                        sub = Path.GetRelativePath(root, d),
+                    })
                     .Where(x => !x.name.StartsWith('.'))
                     .OrderBy(x => x.name, StringComparer.OrdinalIgnoreCase)
                     .ToList();
@@ -31,7 +35,9 @@ public static class FoldersEndpoints
                     {
                         root,
                         current = Path.GetRelativePath(root, target),
-                        parent = target == root ? null : Path.GetRelativePath(root, Path.GetDirectoryName(target)!),
+                        parent = target == root
+                            ? null
+                            : Path.GetRelativePath(root, Path.GetDirectoryName(target)!),
                         dirs,
                     }
                 );

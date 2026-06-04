@@ -20,7 +20,8 @@ public class User
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
 
-    public bool IsAdmin => string.Equals(Role, nameof(UserRole.Admin), StringComparison.OrdinalIgnoreCase);
+    public bool IsAdmin =>
+        string.Equals(Role, nameof(UserRole.Admin), StringComparison.OrdinalIgnoreCase);
 }
 
 // ── Request / response DTOs ──────────────────────────────────────────────────

@@ -186,8 +186,18 @@ public class DownloadWatcher(
         var id = await repo.InsertQueuedAsync(doc);
         await repo.AddEventAsync(id, "info", "queue", $"Queued {name}");
         await queue.EnqueueAsync(id, ct);
-        await hub.Clients.User(userId.ToString())
-            .SendAsync("documentUpdated", new { id, status = "Queued", name }, ct);
+        await hub
+            .Clients.User(userId.ToString())
+            .SendAsync(
+                "documentUpdated",
+                new
+                {
+                    id,
+                    status = "Queued",
+                    name,
+                },
+                ct
+            );
         logger.LogInformation("Queued {Name} (#{Id}) for user {UserId}", name, id, userId);
     }
 

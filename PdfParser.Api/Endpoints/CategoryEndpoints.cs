@@ -51,7 +51,12 @@ public static class CategoryEndpoints
 
         d.MapGet(
             "/",
-            async (long id, ClaimsPrincipal user, DocumentRepository docs, CategoryRepository repo) =>
+            async (
+                long id,
+                ClaimsPrincipal user,
+                DocumentRepository docs,
+                CategoryRepository repo
+            ) =>
             {
                 if (await docs.GetByIdAsync(id, user.GetUserId()) is null)
                     return Results.NotFound();
@@ -61,7 +66,13 @@ public static class CategoryEndpoints
 
         d.MapPost(
             "/",
-            async (long id, AssignCategory body, ClaimsPrincipal user, DocumentRepository docs, CategoryRepository repo) =>
+            async (
+                long id,
+                AssignCategory body,
+                ClaimsPrincipal user,
+                DocumentRepository docs,
+                CategoryRepository repo
+            ) =>
             {
                 var userId = user.GetUserId();
                 if (await docs.GetByIdAsync(id, userId) is null)
@@ -75,7 +86,13 @@ public static class CategoryEndpoints
 
         d.MapDelete(
             "/{categoryId:long}",
-            async (long id, long categoryId, ClaimsPrincipal user, DocumentRepository docs, CategoryRepository repo) =>
+            async (
+                long id,
+                long categoryId,
+                ClaimsPrincipal user,
+                DocumentRepository docs,
+                CategoryRepository repo
+            ) =>
             {
                 if (await docs.GetByIdAsync(id, user.GetUserId()) is null)
                     return Results.NotFound();
@@ -87,7 +104,12 @@ public static class CategoryEndpoints
         // LLM auto-categorize — assign existing categories the model deems matching.
         d.MapPost(
             "/auto",
-            async (long id, ClaimsPrincipal user, DocumentRepository docs, CategorizationService svc) =>
+            async (
+                long id,
+                ClaimsPrincipal user,
+                DocumentRepository docs,
+                CategorizationService svc
+            ) =>
             {
                 var doc = await docs.GetByIdAsync(id, user.GetUserId());
                 if (doc is null)

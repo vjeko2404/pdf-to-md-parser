@@ -37,10 +37,18 @@ first user exists).
   so generated files stay owned by the host user and the watched folder lives
   under your home directory. Plain `docker compose up -d` also works, but pins
   the UID to 1000 and only resolves `WATCH_ROOT` to `$HOME` if it is exported.
-- **Frontend dev loop:** `cd frontend && npm run dev` serves the SPA at
+- **Dockerized dev loop (recommended):**
+  `docker compose -f docker-compose.dev.yml up --build` brings up the whole stack
+  with **hot reload on both ends** — Vite (HMR) for the frontend and `dotnet watch`
+  for the backend — and no resource caps. Open http://localhost:5173. The
+  `./frontend` and `./PdfParser.Api` dirs are bind-mounted, so edits reload in
+  place; **`npm install` run on the host** (in `frontend/`) is picked up live
+  because `node_modules` is bind-mounted too — no docker shell needed. Run in the
+  foreground (no `-d`) to follow logs. This compose file is gitignored (local-only).
+- **Host-only frontend loop:** `cd frontend && npm run dev` serves the SPA at
   http://localhost:5173 and proxies `/api` and `/hub` to the api at `:6670`.
   Requires the backend running (`make up`, or just the `api` service).
-- **Backend dev loop:** the host has .NET 10 — `cd PdfParser.Api && dotnet run`
+- **Host-only backend loop:** the host has .NET 10 — `cd PdfParser.Api && dotnet run`
   uses `appsettings.Development.json` with host paths. `marker-server` must be
   reachable (run it via compose).
 
@@ -161,7 +169,7 @@ point the VPS at it. The repo ships standalone compose files that run **only**
 
 ```bash
 # On the powerful machine (CPU):
-docker compose -f docker-compose.yml.marker up -d --build
+docker compose -f docker-compose.marker.yml up -d --build
 tailscale ip -4    # the address to enter on the VPS as http://<ip>:8000
 ```
 
@@ -228,9 +236,9 @@ standalone marker.
 
 ```
 docker-compose.yml          marker-server + api + web (+ model-cache volume); VPS-safe (CPU caps)
-docker-compose.yml.dev      same stack, NO resource caps — for a roomy dev workstation
-docker-compose.yml.marker   standalone marker only (offload target; publishes :8000)
-docker-compose.yml.marker.gpu  standalone marker on an AMD GPU via ROCm (experimental)
+docker-compose.dev.yml      dev stack: Vite HMR + `dotnet watch` hot reload, no caps (gitignored)
+docker-compose.marker.yml   standalone marker only (offload target; publishes :8000)
+docker-compose.marker.gpu.yml  standalone marker on an AMD GPU via ROCm (experimental)
 Makefile                    make up/down/rebuild/logs/ps (injects UID/GID/HOME)
 .env.example                WATCH_ROOT, WATCH_SUBDIR, WEB_PORT, API_PORT, OLLAMA_*,
                             MARKER_CPUS/THREADS, CONVERSION_ENGINE, MARKER_REMOTE_URL,
@@ -421,7 +429,7 @@ realistic options:
 - **marker — on this server** — only if the box has the headroom. The committed
   `docker-compose.yml` caps the marker container at `MARKER_CPUS` cores /
   `MARKER_THREADS` threads (defaults suit a 4-core VPS); a roomy workstation can
-  run `docker-compose.yml.dev` (no caps) instead.
+  run `docker-compose.dev.yml` (no caps) instead.
 
 > **Swap matters for on-server marker.** Loading the surya models spikes to
 > several GB. On a small VPS with little or no swap the kernel can OOM-kill
@@ -460,7 +468,7 @@ realistic options:
 
 3. **GPU for marker on AMD (gfx1201 / RDNA4) works via ROCm — experimental.** CPU
    is the default and reliable. The standalone GPU stack
-   (`docker-compose.yml.marker.gpu` + `marker-server/Dockerfile.rocm`) runs marker
+   (`docker-compose.marker.gpu.yml` + `marker-server/Dockerfile.rocm`) runs marker
    on the GPU and is **verified working on gfx1201**. It installs the ROCm build of
    torch (rocm6.3, matching the `torch 2.7.1` pin), passes `/dev/kfd` + `/dev/dri`,
    runs `TORCH_DEVICE=cuda` (ROCm masquerades as CUDA in PyTorch), and sets
@@ -470,7 +478,7 @@ realistic options:
    stack pins torch 2.7.1), those AOTriton kernels are flagged experimental, and
    `HSA_OVERRIDE_GFX_VERSION` is provided (commented) as a fallback if a card or
    driver lacks native kernels. If anything misbehaves,
-   `docker compose -f docker-compose.yml.marker up` returns to the proven CPU build.
+   `docker compose -f docker-compose.marker.yml up` returns to the proven CPU build.
    (This is distinct from gotcha 1: the *VLM* path needs vLLM, which still has no
    RDNA4 kernels — classic surya on ROCm torch is what runs here.)
 
@@ -508,6 +516,6 @@ realistic options:
 - Conversion engine: `GET /api/conversion/status` reports the active engine and
   marker reachability. For a standalone/offload marker, confirm it from the api
   host with `curl http://<marker-host>:8000/health`.
-- GPU marker: `docker compose -f docker-compose.yml.marker.gpu logs -f` during a
+- GPU marker: `docker compose -f docker-compose.marker.gpu.yml logs -f` during a
   convert — the surya steps run on the GPU and the "experimental attention"
   warnings disappear once `TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1` is active.

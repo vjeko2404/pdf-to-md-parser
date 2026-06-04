@@ -125,7 +125,10 @@ public class SettingsService(Database db, IOptions<AppOptions> options)
     public bool RegistrationEnabled => Get(GlobalUserId, "registrationEnabled", "true") == "true";
 
     public void SetRegistrationEnabled(bool enabled) =>
-        Update(GlobalUserId, new Dictionary<string, string> { ["registrationEnabled"] = enabled ? "true" : "false" });
+        Update(
+            GlobalUserId,
+            new Dictionary<string, string> { ["registrationEnabled"] = enabled ? "true" : "false" }
+        );
 
     /// <summary>Per-user category-seed guard (so user-deleted defaults don't reappear).</summary>
     public bool CategoriesSeeded(long userId) => Get(userId, "categoriesSeeded", "false") == "true";
@@ -196,8 +199,7 @@ public sealed class UserSettings(SettingsService s, long userId, AppOptions opt)
         || string.IsNullOrWhiteSpace(ConversionEngine);
 
     /// <summary>True for the two marker modes (need a reachable marker server).</summary>
-    public bool UsesMarker =>
-        ConversionEngine is "marker-host" or "marker-remote";
+    public bool UsesMarker => ConversionEngine is "marker-host" or "marker-remote";
 
     /// <summary>The marker base URL this user's engine targets: the local container for
     /// marker-host and pdfplumber (its /extract lives there), the user URL for marker-remote.

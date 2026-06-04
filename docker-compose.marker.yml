@@ -5,7 +5,7 @@
 # Fully separate from the main app stack: own compose project name, no api/web, no home bind
 # mount. Reuses the SAME image (./marker-server) so there's one source of truth for the build.
 #
-#   docker compose -f docker-compose.yml.marker up -d --build
+#   docker compose -f docker-compose.marker.yml up -d --build
 #   tailscale ip -4            # → the IP to enter on the VPS as http://<that-ip>:8000
 #
 # Then on the VPS: Settings → Conversion engine → "Marker — off this server" → that URL → Test.

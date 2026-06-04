@@ -18,8 +18,10 @@ public static class SettingsEndpoints
 
     public static void MapSettingsEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/settings", (ClaimsPrincipal user, SettingsService s) =>
-                Results.Ok(s.All(user.GetUserId())))
+        app.MapGet(
+                "/api/settings",
+                (ClaimsPrincipal user, SettingsService s) => Results.Ok(s.All(user.GetUserId()))
+            )
             .WithTags("Settings");
 
         // Test the caller's currently-selected LLM provider (Ollama or OpenAI-compatible API).

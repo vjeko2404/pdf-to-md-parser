@@ -18,7 +18,9 @@ public static class AuthEndpoints
                 async (RegisterRequest req, AuthService auth) =>
                 {
                     var r = await auth.RegisterAsync(req);
-                    return r.Ok ? Results.Ok(r.Response) : Results.Problem(r.Error, statusCode: r.Status);
+                    return r.Ok
+                        ? Results.Ok(r.Response)
+                        : Results.Problem(r.Error, statusCode: r.Status);
                 }
             )
             .AllowAnonymous();
@@ -28,7 +30,9 @@ public static class AuthEndpoints
                 async (LoginRequest req, AuthService auth) =>
                 {
                     var r = await auth.LoginAsync(req);
-                    return r.Ok ? Results.Ok(r.Response) : Results.Problem(r.Error, statusCode: r.Status);
+                    return r.Ok
+                        ? Results.Ok(r.Response)
+                        : Results.Problem(r.Error, statusCode: r.Status);
                 }
             )
             .AllowAnonymous();
@@ -39,7 +43,9 @@ public static class AuthEndpoints
                 "/registration",
                 async (SettingsService s, UserRepository users) =>
                     // Always open before the first user exists (bootstraps the admin).
-                    Results.Ok(new { enabled = s.RegistrationEnabled || await users.CountAsync() == 0 })
+                    Results.Ok(
+                        new { enabled = s.RegistrationEnabled || await users.CountAsync() == 0 }
+                    )
             )
             .AllowAnonymous();
 
@@ -58,7 +64,9 @@ public static class AuthEndpoints
             async (ChangePasswordRequest req, ClaimsPrincipal user, AuthService auth) =>
             {
                 var r = await auth.ChangePasswordAsync(user.GetUserId(), req);
-                return r.Ok ? Results.Ok(r.Response) : Results.Problem(r.Error, statusCode: r.Status);
+                return r.Ok
+                    ? Results.Ok(r.Response)
+                    : Results.Problem(r.Error, statusCode: r.Status);
             }
         );
 

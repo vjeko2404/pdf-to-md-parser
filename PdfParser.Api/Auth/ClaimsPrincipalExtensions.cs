@@ -13,5 +13,6 @@ public static class ClaimsPrincipalExtensions
         return long.TryParse(raw, out var id) ? id : 0;
     }
 
-    public static bool IsAdmin(this ClaimsPrincipal user) => user.IsInRole(nameof(Models.UserRole.Admin));
+    public static bool IsAdmin(this ClaimsPrincipal user) =>
+        user.IsInRole(nameof(Models.UserRole.Admin));
 }
