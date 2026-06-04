@@ -4,6 +4,12 @@
 [![Built with Claude](https://img.shields.io/badge/built%20with-Claude%20Opus%204.8-8A63D2.svg)](https://claude.com/claude-code)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-00457C.svg?logo=paypal)](https://www.paypal.com/donate/?business=paypal@v-direkt.de)
 
+> **Where this came from.** This whole project was sparked by a single post on
+> the Croatian [pcekspert](https://forum.pcekspert.com) forum, by one brilliant
+> (and pleasantly cocky 😄) member writing about self-hosted LLMs. That one post
+> was all the inspiration I needed to build this. Thank you — credit where it's
+> due: [the post that started it all](https://forum.pcekspert.com/threads/self-hosted-llm-ovi.325076/post-3854024).
+
 A self-hosted app that **watches a folder for new PDFs** (or accepts
 drag-and-drop uploads), converts them to **clean Markdown**, optionally enriches
 them with **AI tags, summaries and categories**, archives the originals, and
