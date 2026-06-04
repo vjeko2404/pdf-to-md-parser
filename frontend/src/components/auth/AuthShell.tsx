@@ -12,9 +12,11 @@ export function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
-      {/* Pre-auth language switch — persists to localStorage only (no account yet). */}
-      <div className="absolute right-4 top-4">
+    <div className="relative flex min-h-dvh items-center justify-center bg-background p-4 text-foreground">
+      {/* Pre-auth language switch — persists to localStorage only (no account yet).
+          Offset by the safe-area insets so it clears the phone status bar / notch and
+          stays tappable (viewport-fit=cover lets the page draw under the status bar). */}
+      <div className="absolute right-[calc(1rem+env(safe-area-inset-right))] top-[calc(1rem+env(safe-area-inset-top))] z-10">
         <LanguageSelect persist="local" align="end" />
       </div>
       <div className="w-full max-w-sm rounded-2xl border bg-card p-8 shadow-lg">
