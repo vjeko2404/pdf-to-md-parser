@@ -15,7 +15,12 @@ public static class ImagePdf
         using var doc = new PdfDocument();
         foreach (var bytes in images)
         {
-            using var ms = new MemoryStream(bytes);
+            // PdfSharp's JPEG importer calls GetBuffer() on the stream. A MemoryStream built
+            // from a byte[] (new MemoryStream(bytes)) is non-exposable and throws there, so we
+            // copy into a capacity-exact, buffer-exposable stream (GetBuffer == the data).
+            using var ms = new MemoryStream(bytes.Length);
+            ms.Write(bytes, 0, bytes.Length);
+            ms.Position = 0;
             using var img = XImage.FromStream(ms);
 
             var page = doc.AddPage();
