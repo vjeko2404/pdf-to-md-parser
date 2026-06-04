@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plug, Save } from 'lucide-react'
 import { toast } from 'sonner'
@@ -25,6 +26,7 @@ const KEYS = [
 const MODELS_LIST_ID = 'llm-models'
 
 export function LlmProviderPanel() {
+  const { t } = useTranslation('ai')
   const { data: settings } = useSettings()
   const { data: secrets = [] } = useSecrets()
   const patch = usePatchSettings()
@@ -49,7 +51,7 @@ export function LlmProviderPanel() {
   const save = () =>
     patch.mutate(Object.fromEntries(KEYS.map((k) => [k, draft[k] ?? ''])), {
       onSuccess: () => {
-        toast.success('Provider settings saved')
+        toast.success(t('provider.saved'))
         qc.invalidateQueries({ queryKey: ['llm-models'] })
         qc.invalidateQueries({ queryKey: ['llm-test'] })
       },
@@ -61,8 +63,8 @@ export function LlmProviderPanel() {
     setTesting(true)
     try {
       const r = await ollamaApi.test(draft.ollamaUrl)
-      if (r.online) toast.success(`Ollama online · ${r.version ?? ''}`)
-      else toast.error(`Offline — ${r.error ?? 'unreachable'}`)
+      if (r.online) toast.success(t('provider.ollamaOnline', { version: r.version ?? '' }))
+      else toast.error(t('provider.ollamaOffline', { error: r.error ?? t('provider.ollamaUnreachable') }))
     } catch (e) {
       toast.error((e as Error).message)
     } finally {
@@ -75,8 +77,8 @@ export function LlmProviderPanel() {
     setTesting(true)
     try {
       const r = await settingsApi.llmTest()
-      if (r.ok) toast.success(`Connected · ${r.detail ?? ''}`)
-      else toast.error(`Failed — ${r.detail ?? 'unreachable'}`)
+      if (r.ok) toast.success(t('provider.connected', { detail: r.detail ?? '' }))
+      else toast.error(t('provider.connectFailed', { detail: r.detail ?? t('provider.ollamaUnreachable') }))
     } catch (e) {
       toast.error((e as Error).message)
     } finally {
@@ -92,11 +94,11 @@ export function LlmProviderPanel() {
 
   return (
     <Section
-      title="LLM provider"
-      description="Use local Ollama or any OpenAI-compatible API (OpenRouter, Gemini, …)"
+      title={t('provider.title')}
+      description={t('provider.description')}
       action={
         <Button variant="button_primary" size="sm" onClick={save}>
-          <Save className="size-4" /> Save
+          <Save className="size-4" /> {t('common:save')}
         </Button>
       }
     >
@@ -107,22 +109,22 @@ export function LlmProviderPanel() {
       </datalist>
 
       <div className="flex flex-col gap-3">
-        <Field label="Provider">
+        <Field label={t('provider.providerLabel')}>
           <Select value={provider} onChange={(v) => set('llmProvider', v)}>
-            <option value="ollama">Local — Ollama</option>
-            <option value="openai">API — OpenAI-compatible</option>
+            <option value="ollama">{t('provider.ollamaOption')}</option>
+            <option value="openai">{t('provider.openaiOption')}</option>
           </Select>
         </Field>
 
         {provider === 'ollama' ? (
           <>
-            <Field label="Ollama URL">
+            <Field label={t('provider.ollamaUrl')}>
               <Input
                 value={draft.ollamaUrl ?? ''}
                 onChange={(e) => set('ollamaUrl', e.target.value)}
               />
             </Field>
-            <Field label="Ollama model">
+            <Field label={t('provider.ollamaModel')}>
               <Input
                 list={MODELS_LIST_ID}
                 value={draft.ollamaModel ?? ''}
@@ -131,15 +133,15 @@ export function LlmProviderPanel() {
             </Field>
             <div>
               <Button variant="outline" size="sm" onClick={testOllama} disabled={testing}>
-                <Plug className="size-4" /> Test connection
+                <Plug className="size-4" /> {t('provider.test')}
               </Button>
             </div>
           </>
         ) : (
           <>
             <Field
-              label="API base URL"
-              hint="e.g. https://openrouter.ai/api/v1 — or Gemini's https://generativelanguage.googleapis.com/v1beta/openai"
+              label={t('provider.apiBaseUrl')}
+              hint={t('provider.apiBaseUrlHint')}
             >
               <Input
                 value={draft.openaiBaseUrl ?? ''}
@@ -148,11 +150,11 @@ export function LlmProviderPanel() {
               />
             </Field>
             <Field
-              label="Model"
+              label={t('provider.modelLabel')}
               hint={
                 models.length
-                  ? 'Pick from the list or type any model id.'
-                  : 'Type a model id (e.g. google/gemini-2.5-flash-lite). Save + test to load the list.'
+                  ? t('provider.modelHintLoaded')
+                  : t('provider.modelHintEmpty')
               }
             >
               <Combobox
@@ -160,16 +162,16 @@ export function LlmProviderPanel() {
                 onChange={(v) => set('openaiModel', v)}
                 items={models}
                 placeholder="google/gemini-2.5-flash-lite"
-                emptyMessage="No models loaded — Save + Test connection to fetch the list"
+                emptyMessage={t('provider.modelEmptyMessage')}
               />
             </Field>
             <Field
-              label="API key secret"
-              hint="The encrypted secret holding the key — add it in Settings → Secrets."
+              label={t('provider.apiKeyLabel')}
+              hint={t('provider.apiKeyHint')}
             >
               {secretOptions.length ? (
                 <Select value={keyName} onChange={(v) => set('openaiApiKeyName', v)}>
-                  <option value="">— select a secret —</option>
+                  <option value="">{t('provider.selectSecret')}</option>
                   {secretOptions.map((n) => (
                     <option key={n} value={n}>
                       {n}
@@ -180,16 +182,16 @@ export function LlmProviderPanel() {
                 <Input
                   value={keyName}
                   onChange={(e) => set('openaiApiKeyName', e.target.value)}
-                  placeholder="LLM_API_KEY (add it under Settings → Secrets)"
+                  placeholder={t('provider.apiKeyPlaceholder')}
                 />
               )}
             </Field>
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" size="sm" onClick={testProvider} disabled={testing}>
-                <Plug className="size-4" /> Test connection
+                <Plug className="size-4" /> {t('provider.test')}
               </Button>
               <span className="text-xs text-muted-foreground">
-                Save first — the test uses the stored settings + secret.
+                {t('provider.saveFirst')}
               </span>
             </div>
           </>

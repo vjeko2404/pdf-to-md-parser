@@ -1,0 +1,63 @@
+{
+  "enrichment": {
+    "title": "Enrichment",
+    "description": "Tagging, summary & auto-categorize behaviour",
+    "enabledLabel": "Enrichment enabled",
+    "enabledHint": "Master switch — when off, the app never calls the LLM.",
+    "autoEnrichLabel": "Auto-enrich on convert",
+    "autoEnrichHint": "Run enrichment automatically after each conversion.",
+    "autoCategorizeLabel": "Auto-categorize (LLM)",
+    "autoCategorizeHint": "After enrichment, let the model assign matching existing categories."
+  },
+  "models": {
+    "title": "Models",
+    "description": "Installed models — click to set as the enrichment model",
+    "unreachable": "Ollama unreachable.",
+    "none": "No models installed.",
+    "loaded": "loaded",
+    "deleteTooltip": "Delete model",
+    "removed": "Removed {{name}}"
+  },
+  "pull": {
+    "title": "Pull a model",
+    "description": "Download from the Ollama registry",
+    "placeholder": "e.g. qwen2.5:7b-instruct",
+    "pull": "Pull",
+    "pulled": "Pulled {{name}}",
+    "failed": "Pull failed: {{error}}"
+  },
+  "prompt": {
+    "enrichTitle": "Enrichment prompt",
+    "enrichDescription": "System prompt for extracting tags, type & metadata",
+    "summaryTitle": "Summary prompt",
+    "summaryDescription": "Separate system prompt for the document's prose summary",
+    "saved": "Prompt saved"
+  },
+  "provider": {
+    "title": "LLM provider",
+    "description": "Use local Ollama or any OpenAI-compatible API (OpenRouter, Gemini, …)",
+    "saved": "Provider settings saved",
+    "providerLabel": "Provider",
+    "ollamaOption": "Local — Ollama",
+    "openaiOption": "API — OpenAI-compatible",
+    "ollamaUrl": "Ollama URL",
+    "ollamaModel": "Ollama model",
+    "test": "Test connection",
+    "ollamaOnline": "Ollama online · {{version}}",
+    "ollamaOffline": "Offline — {{error}}",
+    "ollamaUnreachable": "unreachable",
+    "connected": "Connected · {{detail}}",
+    "connectFailed": "Failed — {{detail}}",
+    "apiBaseUrl": "API base URL",
+    "apiBaseUrlHint": "e.g. https://openrouter.ai/api/v1 — or Gemini's https://generativelanguage.googleapis.com/v1beta/openai",
+    "modelLabel": "Model",
+    "modelHintLoaded": "Pick from the list or type any model id.",
+    "modelHintEmpty": "Type a model id (e.g. google/gemini-2.5-flash-lite). Save + test to load the list.",
+    "modelEmptyMessage": "No models loaded — Save + Test connection to fetch the list",
+    "apiKeyLabel": "API key secret",
+    "apiKeyHint": "The encrypted secret holding the key — add it in Settings → Secrets.",
+    "selectSecret": "— select a secret —",
+    "apiKeyPlaceholder": "LLM_API_KEY (add it under Settings → Secrets)",
+    "saveFirst": "Save first — the test uses the stored settings + secret."
+  }
+}

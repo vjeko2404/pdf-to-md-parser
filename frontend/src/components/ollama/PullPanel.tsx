@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import { Download } from 'lucide-react'
 import { toast } from 'sonner'
@@ -17,6 +18,7 @@ interface PullProgress {
 }
 
 export function PullPanel() {
+  const { t } = useTranslation('ai')
   const [name, setName] = useState('')
   const [progress, setProgress] = useState<PullProgress | null>(null)
   const pull = usePullModel()
@@ -26,12 +28,12 @@ export function PullPanel() {
     ollamaPull: (p: PullProgress) => {
       setProgress(p)
       if (p.status === 'done') {
-        toast.success(`Pulled ${p.name}`)
+        toast.success(t('pull.pulled', { name: p.name }))
         qc.invalidateQueries({ queryKey: ['ollama-models'] })
         setProgress(null)
       }
       if (p.status === 'error') {
-        toast.error(`Pull failed: ${p.error ?? ''}`)
+        toast.error(t('pull.failed', { error: p.error ?? '' }))
         setProgress(null)
       }
     },
@@ -49,16 +51,16 @@ export function PullPanel() {
   }
 
   return (
-    <Section title="Pull a model" description="Download from the Ollama registry">
+    <Section title={t('pull.title')} description={t('pull.description')}>
       <div className="flex gap-2">
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. qwen2.5:7b-instruct"
+          placeholder={t('pull.placeholder')}
           onKeyDown={(e) => e.key === 'Enter' && start()}
         />
         <Button variant="button_primary" size="sm" onClick={start}>
-          <Download className="size-4" /> Pull
+          <Download className="size-4" /> {t('pull.pull')}
         </Button>
       </div>
       {progress && (

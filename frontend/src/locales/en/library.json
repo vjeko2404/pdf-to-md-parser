@@ -1,0 +1,117 @@
+{
+  "toolbar": {
+    "searchPlaceholder": "Search title, tags, content…",
+    "clearSearch": "Clear search",
+    "allCategories": "All categories",
+    "sort": "Sort",
+    "sortNewest": "Newest",
+    "sortOldest": "Oldest",
+    "sortName": "Name A–Z",
+    "sortStatus": "Status",
+    "enriching": "Enriching…",
+    "enrich": "Enrich {{count}}",
+    "delete": "Delete {{count}}",
+    "resumeProcessing": "Resume processing",
+    "pauseProcessing": "Pause processing",
+    "resume": "Resume",
+    "pause": "Pause"
+  },
+  "status": {
+    "all": "All",
+    "queued": "Queued",
+    "processing": "Processing",
+    "done": "Done",
+    "failed": "Failed"
+  },
+  "table": {
+    "selectAll": "Select all",
+    "selectDocument": "Select document",
+    "name": "Name",
+    "summary": "Summary",
+    "type": "Type",
+    "categories": "Categories",
+    "tags": "Tags",
+    "status": "Status",
+    "pages": "Pages",
+    "date": "Date",
+    "actions": "Actions",
+    "searchTag": "Search “{{tag}}”",
+    "enrich": "Enrich",
+    "editNameCategories": "Edit name & categories",
+    "recreateParsing": "Re-create parsing",
+    "retry": "Retry",
+    "deleteFromVault": "Delete from vault"
+  },
+  "card": {
+    "selectDocument": "Select document",
+    "searchTag": "Search “{{tag}}”",
+    "pagesMeta": "{{pages}} pp · {{date}}",
+    "enrichWithOllama": "Enrich with Ollama",
+    "editNameCategories": "Edit name & categories",
+    "recreateParsing": "Re-create parsing",
+    "retry": "Retry",
+    "deleteFromVault": "Delete from vault"
+  },
+  "dropzone": {
+    "noEngineTitle": "No conversion engine selected",
+    "noEngineHint": "Pick a conversion engine in Settings before uploading PDFs.",
+    "dropHere": "Drop the PDF here",
+    "dragDrop": "Drag & drop PDFs here, or click to browse",
+    "uploading": "Uploading…",
+    "autoConvertHint": "They’ll be converted to Markdown automatically"
+  },
+  "capture": {
+    "title": "Scan a document with the camera",
+    "page": "page {{n}}",
+    "remove": "Remove",
+    "moveEarlier": "Move earlier",
+    "moveLater": "Move later",
+    "addPage": "Add page",
+    "takePhoto": "Take photo",
+    "uploading": "Uploading…",
+    "createPdf": "Create PDF ({{count}})",
+    "processError": "Could not process the photos",
+    "scanned": "Scanned {{count}} page(s) → PDF queued",
+    "uploadFailed": "Upload failed"
+  },
+  "categoryChips": {
+    "filterBy": "Filter by {{name}}"
+  },
+  "edit": {
+    "ariaLabel": "Edit document",
+    "title": "Edit document",
+    "filename": "Filename",
+    "namePlaceholder": "Document name",
+    "categories": "Categories",
+    "noCategories": "No categories yet.",
+    "nameEmpty": "Name cannot be empty"
+  },
+  "empty": {
+    "loading": "Loading…",
+    "noDocuments": "No documents yet. Drop a PDF above to get started."
+  },
+  "toast": {
+    "processingPaused": "Processing paused",
+    "processingResumed": "Processing resumed",
+    "enrichingBatch": "Enriching {{count}} document(s)…",
+    "enrichedFailed": "Enriched {{count}}, {{failed}} failed",
+    "enrichedMany": "Enriched {{count}} document(s)",
+    "enriched": "Enriched",
+    "requeued": "Re-queued",
+    "reparseQueued": "Re-parsing queued",
+    "deletedFromVault": "Deleted from vault",
+    "deletedMany": "Deleted {{count}} document(s)",
+    "uploaded": "Uploaded {{name}}",
+    "uploadFailed": "Failed: {{name}}"
+  },
+  "delete": {
+    "confirmManyTitle_one": "Delete {{count}} document?",
+    "confirmManyTitle_other": "Delete {{count}} documents?",
+    "confirmOneTitle": "Delete document?",
+    "confirmManyDescription_one": "{{count}} document and all its artifacts (Markdown, images, archived PDF) will be permanently removed from the vault. This cannot be undone.",
+    "confirmManyDescription_other": "{{count}} documents and all their artifacts (Markdown, images, archived PDF) will be permanently removed from the vault. This cannot be undone.",
+    "confirmOneDescription": "“{{name}}” and all its artifacts (Markdown, images, archived PDF) will be permanently removed from the vault. This cannot be undone.",
+    "confirmMany": "Delete {{count}}",
+    "confirmOne": "Delete"
+  }
+}

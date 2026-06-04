@@ -1,0 +1,63 @@
+{
+  "enrichment": {
+    "title": "Obogaćivanje",
+    "description": "Ponašanje označavanja, sažetka i automatske kategorizacije",
+    "enabledLabel": "Obogaćivanje omogućeno",
+    "enabledHint": "Glavni prekidač — kada je isključeno, aplikacija nikada ne poziva LLM.",
+    "autoEnrichLabel": "Automatski obogati pri konverziji",
+    "autoEnrichHint": "Automatski pokreni obogaćivanje nakon svake konverzije.",
+    "autoCategorizeLabel": "Automatski kategoriziraj (LLM)",
+    "autoCategorizeHint": "Nakon obogaćivanja, neka model dodijeli odgovarajuće postojeće kategorije."
+  },
+  "models": {
+    "title": "Modeli",
+    "description": "Instalirani modeli — kliknite za postavljanje kao model za obogaćivanje",
+    "unreachable": "Ollama nije dostupan.",
+    "none": "Nema instaliranih modela.",
+    "loaded": "učitano",
+    "deleteTooltip": "Izbriši model",
+    "removed": "Uklonjeno {{name}}"
+  },
+  "pull": {
+    "title": "Preuzmi model",
+    "description": "Preuzmi iz Ollama registra",
+    "placeholder": "npr. qwen2.5:7b-instruct",
+    "pull": "Preuzmi",
+    "pulled": "Preuzeto {{name}}",
+    "failed": "Preuzimanje neuspjelo: {{error}}"
+  },
+  "prompt": {
+    "enrichTitle": "Prompt za obogaćivanje",
+    "enrichDescription": "Sustavski prompt za izdvajanje oznaka, tipa i metapodataka",
+    "summaryTitle": "Prompt za sažetak",
+    "summaryDescription": "Zasebni sustavski prompt za tekstualni sažetak dokumenta",
+    "saved": "Prompt spremljen"
+  },
+  "provider": {
+    "title": "LLM davatelj",
+    "description": "Koristite lokalni Ollama ili bilo koji OpenAI-kompatibilni API (OpenRouter, Gemini, …)",
+    "saved": "Postavke davatelja spremljene",
+    "providerLabel": "Davatelj",
+    "ollamaOption": "Lokalno — Ollama",
+    "openaiOption": "API — OpenAI-kompatibilno",
+    "ollamaUrl": "Ollama URL",
+    "ollamaModel": "Ollama model",
+    "test": "Testiraj vezu",
+    "ollamaOnline": "Ollama na mreži · {{version}}",
+    "ollamaOffline": "Izvan mreže — {{error}}",
+    "ollamaUnreachable": "nedostupan",
+    "connected": "Povezano · {{detail}}",
+    "connectFailed": "Neuspjelo — {{detail}}",
+    "apiBaseUrl": "Osnovni API URL",
+    "apiBaseUrlHint": "npr. https://openrouter.ai/api/v1 — ili Geminijev https://generativelanguage.googleapis.com/v1beta/openai",
+    "modelLabel": "Model",
+    "modelHintLoaded": "Odaberite s popisa ili upišite bilo koji ID modela.",
+    "modelHintEmpty": "Upišite ID modela (npr. google/gemini-2.5-flash-lite). Spremite + testirajte za učitavanje popisa.",
+    "modelEmptyMessage": "Nema učitanih modela — Spremite + Testirajte vezu za dohvaćanje popisa",
+    "apiKeyLabel": "Tajna API ključa",
+    "apiKeyHint": "Šifrirana tajna koja sadrži ključ — dodajte je u Postavke → Tajne.",
+    "selectSecret": "— odaberite tajnu —",
+    "apiKeyPlaceholder": "LLM_API_KEY (dodajte je u Postavke → Tajne)",
+    "saveFirst": "Prvo spremite — test koristi spremljene postavke + tajnu."
+  }
+}

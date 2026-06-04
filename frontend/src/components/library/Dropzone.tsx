@@ -1,5 +1,6 @@
 import { memo, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { UploadCloud, Settings } from 'lucide-react'
 import { toast } from 'sonner'
@@ -12,6 +13,7 @@ import { useSettings } from '@/hooks/useSettings'
 // reach the dropzone mid-drag and drop its drag-hover state, so drag-and-drop appeared dead
 // while click-to-browse still worked. Isolating it here keeps drag working during processing.
 function DropzoneImpl() {
+  const { t } = useTranslation('library')
   const upload = useUploadDocument()
   const { data: settings } = useSettings()
   const engine = settings?.conversionEngine ?? 'off'
@@ -23,12 +25,13 @@ function DropzoneImpl() {
     (files: File[]) => {
       for (const file of files) {
         upload.mutate(file, {
-          onSuccess: () => toast.success(`Uploaded ${file.name}`),
-          onError: (e) => toast.error(`Failed: ${file.name}`, { description: String(e) }),
+          onSuccess: () => toast.success(t('toast.uploaded', { name: file.name })),
+          onError: (e) =>
+            toast.error(t('toast.uploadFailed', { name: file.name }), { description: String(e) }),
         })
       }
     },
-    [upload.mutate],
+    [upload.mutate, t],
   )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -46,10 +49,8 @@ function DropzoneImpl() {
         className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border p-8 text-center transition-colors hover:border-primary/50 hover:bg-accent/50"
       >
         <Settings className="size-8 text-muted-foreground" />
-        <p className="text-sm font-medium">No conversion engine selected</p>
-        <p className="text-xs text-muted-foreground">
-          Pick a conversion engine in Settings before uploading PDFs.
-        </p>
+        <p className="text-sm font-medium">{t('dropzone.noEngineTitle')}</p>
+        <p className="text-xs text-muted-foreground">{t('dropzone.noEngineHint')}</p>
       </Link>
     )
 
@@ -66,10 +67,10 @@ function DropzoneImpl() {
       <input {...getInputProps()} />
       <UploadCloud className={cn('size-8', isDragActive ? 'text-primary' : 'text-muted-foreground')} />
       <p className="text-sm font-medium">
-        {isDragActive ? 'Drop the PDF here' : 'Drag & drop PDFs here, or click to browse'}
+        {isDragActive ? t('dropzone.dropHere') : t('dropzone.dragDrop')}
       </p>
       <p className="text-xs text-muted-foreground">
-        {upload.isPending ? 'Uploading…' : 'They’ll be converted to Markdown automatically'}
+        {upload.isPending ? t('dropzone.uploading') : t('dropzone.autoConvertHint')}
       </p>
     </div>
   )

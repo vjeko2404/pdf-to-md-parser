@@ -1,0 +1,19 @@
+{
+  "title": "Verwaltung",
+  "description": "Nur Admin — Registrierungen und Konten verwalten",
+  "openRegistration": {
+    "label": "Registrierung öffnen",
+    "help": "Wenn deaktiviert, können sich keine neuen Konten selbst registrieren. Aktivieren Sie sie, um jemanden einzuladen, und deaktivieren Sie sie danach wieder."
+  },
+  "users": {
+    "title": "Benutzer",
+    "you": "Sie",
+    "disabledBadge": "deaktiviert",
+    "enable": "Aktivieren",
+    "disable": "Deaktivieren"
+  },
+  "toast": {
+    "registrationEnabled": "Registrierung aktiviert",
+    "registrationDisabled": "Registrierung deaktiviert"
+  }
+}

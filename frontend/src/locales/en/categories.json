@@ -1,0 +1,18 @@
+{
+  "title": "Categories",
+  "description": "Your taxonomy (separate from the LLM tags)",
+  "namePlaceholder": "Category name",
+  "empty": "No categories yet.",
+  "viewDocuments": "View documents in {{name}}",
+  "docsCount_one": "{{count}} doc",
+  "docsCount_other": "{{count}} docs",
+  "delete": {
+    "title": "Delete category?",
+    "description_one": "“{{name}}” will be removed and unassigned from {{count}} document. This cannot be undone.",
+    "description_other": "“{{name}}” will be removed and unassigned from {{count}} documents. This cannot be undone."
+  },
+  "toast": {
+    "created": "Category created",
+    "deleted": "Category deleted"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Nadzirana mapa",
+  "currentlyWatching": "Trenutno se nadzire: {{path}}",
+  "watchThis": "Nadziri ovu",
+  "watching": "Nadzire se",
+  "empty": "Ovdje nema podmapa.",
+  "toast": {
+    "nowWatching": "Sada nadzire {{path}}"
+  }
+}

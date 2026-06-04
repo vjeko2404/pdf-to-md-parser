@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { LogOut, KeyRound, ShieldCheck, ChevronDown, User as UserIcon } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/providers/AuthProvider'
 
 /** Avatar button + dropdown: who you are, change password, log out. */
 export function UserMenu() {
+  const { t } = useTranslation('nav')
   const { user, isAdmin, logout } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
@@ -40,13 +42,15 @@ export function UserMenu() {
         <div className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-lg border bg-card shadow-lg">
           <div className="border-b px-3 py-2">
             <p className="truncate text-sm font-medium">{user.username}</p>
-            <p className="text-xs text-muted-foreground">{isAdmin ? 'Administrator' : 'User'}</p>
+            <p className="text-xs text-muted-foreground">
+              {isAdmin ? t('role.admin') : t('role.user')}
+            </p>
           </div>
           <button
             className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-primary/5"
             onClick={() => go('/settings#password')}
           >
-            <KeyRound className="size-4" /> Change password
+            <KeyRound className="size-4" /> {t('menu.changePassword')}
           </button>
           <button
             className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
@@ -55,7 +59,7 @@ export function UserMenu() {
               navigate('/login', { replace: true })
             }}
           >
-            <LogOut className="size-4" /> Log out
+            <LogOut className="size-4" /> {t('menu.logout')}
           </button>
         </div>
       )}

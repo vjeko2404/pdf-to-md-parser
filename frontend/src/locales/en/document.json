@@ -1,0 +1,51 @@
+{
+  "backLink": "Library",
+  "badge": {
+    "edited": "Edited",
+    "editedTooltip": "Markdown manually edited {{date}} — a re-convert would overwrite it"
+  },
+  "actions": {
+    "editNameCategories": "Edit name & categories",
+    "reCreateParsing": "Re-create parsing",
+    "downloadPdf": "Download PDF",
+    "printPdf": "Print PDF",
+    "editMarkdown": "Edit Markdown",
+    "copyMarkdown": "Copy Markdown",
+    "downloadMarkdown": "Download Markdown",
+    "printMarkdown": "Print Markdown",
+    "saveChanges": "Save changes",
+    "discardChanges": "Discard changes"
+  },
+  "summary": "Summary",
+  "empty": {
+    "noMarkdown": "No markdown yet."
+  },
+  "toast": {
+    "markdownSaved": "Markdown saved",
+    "markdownCopied": "Markdown copied",
+    "copyFailed": "Copy failed",
+    "allowPopups": "Allow pop-ups to print",
+    "pdfStillLoading": "PDF still loading",
+    "reParsingQueued": "Re-parsing queued"
+  },
+  "category": {
+    "addPlaceholder": "+ category",
+    "auto": "Auto",
+    "autoTooltip": "Auto-categorize with the LLM",
+    "autoResult": "Auto: {{names}}",
+    "autoNoMatch": "No category matched"
+  },
+  "layout": {
+    "pdfOnly": "PDF only",
+    "sideBySide": "Side by side",
+    "markdownOnly": "Markdown only"
+  },
+  "pdf": {
+    "loading": "Loading PDF…",
+    "loadFailed": "Failed to load PDF."
+  },
+  "tag": {
+    "removeTooltip": "Remove tag",
+    "addPlaceholder": "+ tag"
+  }
+}

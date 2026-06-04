@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Folder, FolderUp, Check } from 'lucide-react'
 import { toast } from 'sonner'
@@ -8,6 +9,7 @@ import { foldersApi } from '@/api/folders'
 import { usePatchSettings, useSettings } from '@/hooks/useSettings'
 
 export function FoldersPage() {
+  const { t } = useTranslation('folders')
   const [sub, setSub] = useState('')
   const { data: settings } = useSettings()
   const patch = usePatchSettings()
@@ -16,7 +18,7 @@ export function FoldersPage() {
 
   return (
     <div className="flex max-w-3xl flex-col gap-4">
-      <Section title="Watched folder" description={`Currently watching: ${current ?? '…'}`}>
+      <Section title={t('title')} description={t('currentlyWatching', { path: current ?? '…' })}>
         <div className="mb-3 text-sm text-muted-foreground">
           <span>/host/</span>
           <span className="font-medium text-foreground">{data?.current === '.' ? '' : data?.current}</span>
@@ -47,23 +49,23 @@ export function FoldersPage() {
                 onClick={() =>
                   patch.mutate(
                     { watchSubdir: d.sub },
-                    { onSuccess: () => toast.success(`Now watching ${d.sub}`) },
+                    { onSuccess: () => toast.success(t('toast.nowWatching', { path: d.sub })) },
                   )
                 }
               >
                 {current === d.sub ? (
                   <>
-                    <Check className="size-4" /> Watching
+                    <Check className="size-4" /> {t('watching')}
                   </>
                 ) : (
-                  'Watch this'
+                  t('watchThis')
                 )}
               </Button>
             </li>
           ))}
         </ul>
         {data && data.dirs.length === 0 && (
-          <p className="text-sm text-muted-foreground">No subfolders here.</p>
+          <p className="text-sm text-muted-foreground">{t('empty')}</p>
         )}
       </Section>
     </div>

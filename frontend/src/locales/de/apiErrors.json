@@ -1,0 +1,44 @@
+{
+  "unknown": "Etwas ist schiefgelaufen.",
+  "auth": {
+    "usernameTooShort": "Der Benutzername muss mindestens 3 Zeichen lang sein.",
+    "usernameTooLong": "Der Benutzername ist zu lang.",
+    "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen lang sein.",
+    "passwordNoUppercase": "Das Passwort muss einen Großbuchstaben enthalten.",
+    "passwordNoNumber": "Das Passwort muss eine Zahl enthalten.",
+    "passwordNoSymbol": "Das Passwort muss ein Symbol enthalten.",
+    "registrationDisabled": "Die Registrierung ist derzeit deaktiviert.",
+    "usernameTaken": "Dieser Benutzername ist bereits vergeben.",
+    "invalidCredentials": "Ungültiger Benutzername oder Passwort.",
+    "accountDisabled": "Dieses Konto ist deaktiviert.",
+    "userNotFound": "Benutzer nicht gefunden.",
+    "currentPasswordIncorrect": "Das aktuelle Passwort ist falsch.",
+    "cantChangeOwnActiveState": "Sie können Ihren eigenen Aktivstatus nicht ändern.",
+    "unsupportedLanguage": "Nicht unterstützte Sprache."
+  },
+  "documents": {
+    "noEngine": "Keine Konvertierungs-Engine ausgewählt — aktivieren Sie eine in den Einstellungen.",
+    "emptyFile": "Leere Datei.",
+    "notPdf": "Nur .pdf-Dateien werden akzeptiert.",
+    "expectedMultipart": "Ein Multipart-Formular wurde erwartet.",
+    "notImage": "Kein Bild: {{name}}",
+    "noImages": "Keine Bilder.",
+    "pdfBuildFailed": "PDF konnte nicht aus den Fotos erstellt werden: {{detail}}",
+    "contentRequired": "Inhalt ist erforderlich.",
+    "enrichFailed": "Anreicherung fehlgeschlagen — prüfen Sie den LLM-Anbieter in den Einstellungen (Ollama läuft / API-Schlüssel gültig / Modell festgelegt) und die api-Protokolle.",
+    "notFound": "Dokument nicht gefunden."
+  },
+  "categories": {
+    "nameRequired": "Name ist erforderlich."
+  },
+  "secrets": {
+    "keyRequired": "Schlüssel ist erforderlich."
+  },
+  "ollama": {
+    "unreachable": "Ollama nicht erreichbar: {{detail}}",
+    "nameRequired": "Name ist erforderlich."
+  },
+  "folders": {
+    "invalidPath": "Ungültiger Pfad."
+  }
+}

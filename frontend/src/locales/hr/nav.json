@@ -1,0 +1,25 @@
+{
+  "menu": {
+    "library": "Biblioteka",
+    "categories": "Kategorije",
+    "folders": "Mape",
+    "ai": "AI",
+    "settings": "Postavke",
+    "logs": "Zapisnici",
+    "changePassword": "Promijeni lozinku",
+    "logout": "Odjava"
+  },
+  "role": {
+    "admin": "Administrator",
+    "user": "Korisnik"
+  },
+  "theme": {
+    "tooltip": "Tema: {{theme}}",
+    "light": "svijetlo",
+    "dark": "tamno",
+    "system": "sustav"
+  },
+  "llm": {
+    "ollamaOffline": "Ollama izvan mreže"
+  }
+}

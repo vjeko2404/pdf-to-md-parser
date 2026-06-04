@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Pencil, RefreshCw, RotateCcw, Sparkles, Trash2 } from "lucide-react";
+import type { TFunction } from "i18next";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -27,20 +28,27 @@ export interface DocumentTableMeta {
   onSort: (v: string) => void;
 }
 
-const meta = (t: { options: { meta?: unknown } }) => t.options.meta as DocumentTableMeta;
+const meta = (table: { options: { meta?: unknown } }) =>
+  table.options.meta as DocumentTableMeta;
 
 /**
- * Column definitions for the documents table. Stable (module-level) so the table
- * keeps its identity; per-row state and callbacks flow through `meta`. Edit this
- * file to add/reorder columns without touching the table shell.
+ * Column definitions for the documents table. Built from a factory so the header
+ * text/tooltips can be localized via the passed-in `t`; per-row state and
+ * callbacks flow through `meta`. Edit this file to add/reorder columns without
+ * touching the table shell.
  */
-export const documentColumns: ColumnDef<DocumentDto>[] = [
+export function buildDocumentColumns(
+  t: TFunction<"library">,
+): ColumnDef<DocumentDto>[] {
+  return [
   {
     id: "select",
     meta: { headerClassName: "w-9" },
     header: ({ table }) => {
       const m = meta(table);
-      return <Checkbox checked={m.allSelected} onChange={m.onToggleAll} aria-label="Select all" />;
+      return (
+        <Checkbox checked={m.allSelected} onChange={m.onToggleAll} aria-label={t("table.selectAll")} />
+      );
     },
     cell: ({ row, table }) => {
       const m = meta(table);
@@ -48,7 +56,7 @@ export const documentColumns: ColumnDef<DocumentDto>[] = [
         <Checkbox
           checked={m.selected.has(row.original.id)}
           onChange={() => m.onToggle(row.original.id)}
-          aria-label="Select document"
+          aria-label={t("table.selectDocument")}
         />
       );
     },
@@ -59,7 +67,7 @@ export const documentColumns: ColumnDef<DocumentDto>[] = [
       const m = meta(table);
       return (
         <SortButton
-          label="Name"
+          label={t("table.name")}
           active={m.sort === "name"}
           dir="asc"
           onClick={() => m.onSort(m.sort === "name" ? "" : "name")}
@@ -76,7 +84,7 @@ export const documentColumns: ColumnDef<DocumentDto>[] = [
   },
   {
     id: "summary",
-    header: "Summary",
+    header: t("table.summary"),
     meta: { headerClassName: "hidden w-56 xl:table-cell", cellClassName: "hidden xl:table-cell" },
     cell: ({ row }) =>
       row.original.summary ? (
@@ -91,7 +99,7 @@ export const documentColumns: ColumnDef<DocumentDto>[] = [
   },
   {
     id: "type",
-    header: "Type",
+    header: t("table.type"),
     meta: {
       headerClassName: "hidden w-36 lg:table-cell",
       cellClassName: "hidden text-muted-foreground lg:table-cell",
@@ -107,25 +115,25 @@ export const documentColumns: ColumnDef<DocumentDto>[] = [
   },
   {
     id: "categories",
-    header: "Categories",
+    header: t("table.categories"),
     meta: { headerClassName: "hidden w-44 lg:table-cell", cellClassName: "hidden lg:table-cell" },
     cell: ({ row }) => <CategoryChips categories={row.original.categories} />,
   },
   {
     id: "tags",
-    header: "Tags",
+    header: t("table.tags"),
     meta: { headerClassName: "hidden w-56 md:table-cell", cellClassName: "hidden md:table-cell" },
     cell: ({ row, table }) => {
       const m = meta(table);
       return (
         <div className="flex flex-wrap gap-1">
-          {parseTags(row.original.tagsJson).map((t) => (
-            <Tooltip key={t} content={`Search “${t}”`} asChild>
+          {parseTags(row.original.tagsJson).map((tag) => (
+            <Tooltip key={tag} content={t("table.searchTag", { tag })} asChild>
               <button
                 type="button"
-                onClick={() => m.onTagClick(t)}
+                onClick={() => m.onTagClick(tag)}
                 className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground">
-                {t}
+                {tag}
               </button>
             </Tooltip>
           ))}
@@ -135,13 +143,13 @@ export const documentColumns: ColumnDef<DocumentDto>[] = [
   },
   {
     id: "status",
-    header: "Status",
+    header: t("table.status"),
     meta: { headerClassName: "w-24" },
     cell: ({ row }) => <StatusBadge status={row.original.status} />,
   },
   {
     id: "pages",
-    header: "Pages",
+    header: t("table.pages"),
     meta: {
       headerClassName: "hidden w-14 sm:table-cell",
       cellClassName: "hidden text-muted-foreground sm:table-cell",
@@ -159,7 +167,7 @@ export const documentColumns: ColumnDef<DocumentDto>[] = [
       const active = m.sort === "" || m.sort === "oldest";
       return (
         <SortButton
-          label="Date"
+          label={t("table.date")}
           active={active}
           dir={m.sort === "oldest" ? "asc" : "desc"}
           onClick={() => m.onSort(m.sort === "oldest" ? "" : "oldest")}
@@ -170,36 +178,36 @@ export const documentColumns: ColumnDef<DocumentDto>[] = [
   },
   {
     id: "actions",
-    header: "Actions",
+    header: t("table.actions"),
     meta: { headerClassName: "w-40 text-right", cellClassName: "text-right" },
     cell: ({ row, table }) => {
       const m = meta(table);
       const d = row.original;
       return (
         <div className="flex justify-end gap-1">
-          <Tooltip content="Enrich" asChild>
+          <Tooltip content={t("table.enrich")} asChild>
             <Button variant="ghost" size="sm" onClick={() => m.onEnrich(d.id)}>
               <Sparkles className="size-4" />
             </Button>
           </Tooltip>
-          <Tooltip content="Edit name & categories" asChild>
+          <Tooltip content={t("table.editNameCategories")} asChild>
             <Button variant="ghost" size="sm" onClick={() => m.onEdit(d)}>
               <Pencil className="size-4" />
             </Button>
           </Tooltip>
-          <Tooltip content="Re-create parsing" asChild>
+          <Tooltip content={t("table.recreateParsing")} asChild>
             <Button variant="ghost" size="sm" onClick={() => m.onReconvert(d.id)}>
               <RefreshCw className="size-4" />
             </Button>
           </Tooltip>
           {d.status === "Failed" && (
-            <Tooltip content="Retry" asChild>
+            <Tooltip content={t("table.retry")} asChild>
               <Button variant="ghost" size="sm" onClick={() => m.onRetry(d.id)}>
                 <RotateCcw className="size-4" />
               </Button>
             </Tooltip>
           )}
-          <Tooltip content="Delete from vault" asChild>
+          <Tooltip content={t("table.deleteFromVault")} asChild>
             <Button
               variant="ghost"
               size="sm"
@@ -212,4 +220,5 @@ export const documentColumns: ColumnDef<DocumentDto>[] = [
       );
     },
   },
-];
+  ];
+}

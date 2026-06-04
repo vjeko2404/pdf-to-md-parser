@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Dropzone } from '@/components/library/Dropzone'
@@ -28,6 +29,7 @@ import { useSignalR } from '@/hooks/useSignalR'
 import type { DocumentDto } from '@/types/api'
 
 export function LibraryPage() {
+  const { t } = useTranslation('library')
   const { search, setSearch, status, setStatus, categoryId, setCategoryId, sort, setSort } =
     useLibraryFilters()
   const [selected, setSelected] = useState<Set<number>>(new Set())
@@ -61,7 +63,8 @@ export function LibraryPage() {
   const pauseBusy = pause.isPending || resume.isPending
   const togglePause = () =>
     (paused ? resume : pause).mutate(undefined, {
-      onSuccess: (s) => toast.success(s.paused ? 'Processing paused' : 'Processing resumed'),
+      onSuccess: (s) =>
+        toast.success(s.paused ? t('toast.processingPaused') : t('toast.processingResumed')),
       onError: (e) => toast.error(e.message),
     })
 
@@ -87,15 +90,18 @@ export function LibraryPage() {
     if (ids.length === 0) return
     // Loading toast + per-doc SignalR pushes (see EnrichmentService) mean rows
     // refresh live as each finishes; the toast resolves when the batch returns.
-    toast.loading(`Enriching ${ids.length} document(s)…`, { id: 'enrich-batch' })
+    toast.loading(t('toast.enrichingBatch', { count: ids.length }), { id: 'enrich-batch' })
     enrichBatch.mutate(ids, {
       onSuccess: (res) => {
         const results = (res as EnrichResult[]) ?? []
         const ok = results.filter((r) => r.ok).length
         const failed = results.length - ok
-        toast.success(failed ? `Enriched ${ok}, ${failed} failed` : `Enriched ${ok} document(s)`, {
-          id: 'enrich-batch',
-        })
+        toast.success(
+          failed
+            ? t('toast.enrichedFailed', { count: ok, failed })
+            : t('toast.enrichedMany', { count: ok }),
+          { id: 'enrich-batch' },
+        )
         setSelected(new Set())
       },
       onError: (e) => toast.error(e.message, { id: 'enrich-batch' }),
@@ -104,13 +110,14 @@ export function LibraryPage() {
 
   const onEnrich = (id: number) =>
     reenrich.mutate(id, {
-      onSuccess: () => toast.success('Enriched'),
+      onSuccess: () => toast.success(t('toast.enriched')),
       onError: (e) => toast.error(e.message),
     })
-  const onRetry = (id: number) => retry.mutate(id, { onSuccess: () => toast.success('Re-queued') })
+  const onRetry = (id: number) =>
+    retry.mutate(id, { onSuccess: () => toast.success(t('toast.requeued')) })
   const onReconvert = (id: number) =>
     reconvert.mutate(id, {
-      onSuccess: () => toast.success('Re-parsing queued'),
+      onSuccess: () => toast.success(t('toast.reparseQueued')),
       onError: (e) => toast.error(e.message),
     })
 
@@ -127,7 +134,7 @@ export function LibraryPage() {
       const id = deleteTarget.id
       remove.mutate(id, {
         onSuccess: () => {
-          toast.success('Deleted from vault')
+          toast.success(t('toast.deletedFromVault'))
           deselect([id])
         },
         onError: (e) => toast.error(e.message),
@@ -137,7 +144,7 @@ export function LibraryPage() {
       removeBatch.mutate(ids, {
         onSuccess: (res) => {
           const n = (res as { deleted: number } | undefined)?.deleted ?? ids.length
-          toast.success(`Deleted ${n} document(s)`)
+          toast.success(t('toast.deletedMany', { count: n }))
           setSelected(new Set())
         },
         onError: (e) => toast.error(e.message),
@@ -199,10 +206,10 @@ export function LibraryPage() {
         }
       >
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground">{t('empty.loading')}</p>
         ) : docs.length === 0 ? (
           <div className="rounded-xl border border-dashed bg-card/50 p-10 text-center text-muted-foreground">
-            No documents yet. Drop a PDF above to get started.
+            {t('empty.noDocuments')}
           </div>
         ) : view === 'table' && !isMobile ? (
           <DocumentTable {...sharedProps} onToggleAll={toggleAll} sort={sort} onSort={setSort} />
@@ -213,15 +220,23 @@ export function LibraryPage() {
 
       <ConfirmDialog
         open={deleteTarget != null}
-        title={deleteTarget?.kind === 'many' ? `Delete ${deleteCount} documents?` : 'Delete document?'}
+        title={
+          deleteTarget?.kind === 'many'
+            ? t('delete.confirmManyTitle', { count: deleteCount })
+            : t('delete.confirmOneTitle')
+        }
         description={
           deleteTarget?.kind === 'many'
-            ? `${deleteCount} documents and all their artifacts (Markdown, images, archived PDF) will be permanently removed from the vault. This cannot be undone.`
+            ? t('delete.confirmManyDescription', { count: deleteCount })
             : deleteOne
-              ? `“${deleteOne.originalName}” and all its artifacts (Markdown, images, archived PDF) will be permanently removed from the vault. This cannot be undone.`
+              ? t('delete.confirmOneDescription', { name: deleteOne.originalName })
               : undefined
         }
-        confirmLabel={deleteTarget?.kind === 'many' ? `Delete ${deleteCount}` : 'Delete'}
+        confirmLabel={
+          deleteTarget?.kind === 'many'
+            ? t('delete.confirmMany', { count: deleteCount })
+            : t('delete.confirmOne')
+        }
         destructive
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}

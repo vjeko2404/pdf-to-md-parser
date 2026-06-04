@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { authApi, type UserInfo } from '@/api/auth'
 import { getToken, setToken } from '@/api/token'
+import { setLanguage } from '@/locales/i18n'
 
 type Status = 'loading' | 'authed' | 'anon'
 
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((u) => {
         setUser(u)
         setStatus('authed')
+        if (u.defaultLanguage) setLanguage(u.defaultLanguage)
       })
       .catch(() => {
         setToken(null)
@@ -38,6 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(token)
     setUser(u)
     setStatus('authed')
+    // Adopt the user's saved language so it follows them across devices/logins.
+    if (u.defaultLanguage) setLanguage(u.defaultLanguage)
   }
 
   const login = async (username: string, password: string) => {

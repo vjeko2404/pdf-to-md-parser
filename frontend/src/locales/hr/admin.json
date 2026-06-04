@@ -1,0 +1,19 @@
+{
+  "title": "Administracija",
+  "description": "Samo za administratore — upravljanje registracijama i računima",
+  "openRegistration": {
+    "label": "Otvori registraciju",
+    "help": "Kada je isključeno, novi se računi ne mogu sami registrirati. Uključite je da pozovete nekoga, a zatim je ponovno isključite."
+  },
+  "users": {
+    "title": "Korisnici",
+    "you": "vi",
+    "disabledBadge": "onemogućeno",
+    "enable": "Omogući",
+    "disable": "Onemogući"
+  },
+  "toast": {
+    "registrationEnabled": "Registracija omogućena",
+    "registrationDisabled": "Registracija onemogućena"
+  }
+}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus, Tag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Section } from "@/components/common/Section";
@@ -11,6 +12,7 @@ import { Input } from "@/components/ui/Input";
 import { useCategories, useCreateCategory, useDeleteCategory } from "@/hooks/useCategories";
 
 export function CategoriesPage() {
+  const { t } = useTranslation("categories");
   const { data: cats } = useCategories();
   const create = useCreateCategory();
   const del = useDeleteCategory();
@@ -23,7 +25,7 @@ export function CategoriesPage() {
   const confirmDelete = () => {
     if (deleteId == null) return;
     del.mutate(deleteId, {
-      onSuccess: () => toast.success("Category deleted"),
+      onSuccess: () => toast.success(t("toast.deleted")),
     });
     setDeleteId(null);
   };
@@ -34,7 +36,7 @@ export function CategoriesPage() {
       { name: name.trim(), color },
       {
         onSuccess: () => {
-          toast.success("Category created");
+          toast.success(t("toast.created"));
           setName("");
         },
       },
@@ -43,7 +45,7 @@ export function CategoriesPage() {
 
   return (
     <div className="flex max-w-2xl flex-col gap-4">
-      <Section title="Categories" description="Your taxonomy (separate from the LLM tags)">
+      <Section title={t("title")} description={t("description")}>
         <div className="flex flex-col gap-2">
           {(cats ?? []).map((c) => (
             <div key={c.id} className="flex items-center gap-2">
@@ -51,15 +53,17 @@ export function CategoriesPage() {
                 className="size-3 shrink-0 rounded-full"
                 style={{ background: c.color ?? "var(--muted-foreground)" }}
               />
-              <Tooltip content={`View documents in ${c.name}`} asChild>
+              <Tooltip content={t("viewDocuments", { name: c.name })} asChild>
                 <Link
                   to={`/?categoryId=${c.id}`}
                   className="flex-1 font-medium text-foreground no-underline hover:text-primary hover:underline">
                   {c.name}
                 </Link>
               </Tooltip>
-              <span className="text-xs text-muted-foreground">{c.count ?? 0} docs</span>
-              <Tooltip content="Delete" asChild>
+              <span className="text-xs text-muted-foreground">
+                {t("docsCount", { count: c.count ?? 0 })}
+              </span>
+              <Tooltip content={t("common:delete")} asChild>
                 <Button variant="ghost" size="sm" onClick={() => setDeleteId(c.id)}>
                   <Trash2 className="size-4" />
                 </Button>
@@ -68,7 +72,7 @@ export function CategoriesPage() {
           ))}
           {!cats?.length && (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Tag className="size-4" /> No categories yet.
+              <Tag className="size-4" /> {t("empty")}
             </p>
           )}
         </div>
@@ -77,24 +81,27 @@ export function CategoriesPage() {
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Category name"
+            placeholder={t("namePlaceholder")}
             onKeyDown={(e) => e.key === "Enter" && add()}
           />
           <Button variant="button_primary" size="sm" className="h-9" onClick={add}>
-            <Plus className="size-4" /> Add
+            <Plus className="size-4" /> {t("common:add")}
           </Button>
         </div>
       </Section>
 
       <ConfirmDialog
         open={deleteId != null}
-        title="Delete category?"
+        title={t("delete.title")}
         description={
           deleteTarget
-            ? `“${deleteTarget.name}” will be removed and unassigned from ${deleteTarget.count ?? 0} document(s). This cannot be undone.`
+            ? t("delete.description", {
+                name: deleteTarget.name,
+                count: deleteTarget.count ?? 0,
+              })
             : undefined
         }
-        confirmLabel="Delete"
+        confirmLabel={t("common:delete")}
         destructive
         onConfirm={confirmDelete}
         onCancel={() => setDeleteId(null)}

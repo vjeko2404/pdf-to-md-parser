@@ -1,4 +1,5 @@
 import { Sparkles, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
 import { Tooltip } from '@/components/ui/Tooltip'
@@ -12,6 +13,7 @@ import {
 } from '@/hooks/useCategories'
 
 export function CategoryBar({ docId }: { docId: number }) {
+  const { t } = useTranslation('document')
   const { data: all = [] } = useCategories()
   const { data: assigned = [] } = useDocCategories(docId)
   const assign = useAssignCategory(docId)
@@ -47,7 +49,7 @@ export function CategoryBar({ docId }: { docId: number }) {
           onChange={(v) => v && assign.mutate(Number(v))}
           className="h-7 pl-2 pr-7 text-xs"
         >
-          <option value="">+ category</option>
+          <option value="">{t('category.addPlaceholder')}</option>
           {available.map((c) => (
             <option key={c.id} value={String(c.id)}>
               {c.name}
@@ -55,7 +57,7 @@ export function CategoryBar({ docId }: { docId: number }) {
           ))}
         </Select>
       )}
-      <Tooltip content="Auto-categorize with the LLM" asChild>
+      <Tooltip content={t('category.autoTooltip')} asChild>
         <Button
           variant="ghost"
           size="sm"
@@ -63,13 +65,17 @@ export function CategoryBar({ docId }: { docId: number }) {
             auto.mutate(undefined, {
               onSuccess: (r) => {
                 const names = (r as { assigned: string[] }).assigned
-                toast.success(names.length ? `Auto: ${names.join(', ')}` : 'No category matched')
+                toast.success(
+                  names.length
+                    ? t('category.autoResult', { names: names.join(', ') })
+                    : t('category.autoNoMatch'),
+                )
               },
               onError: (e) => toast.error(e.message),
             })
           }
         >
-          <Sparkles className="size-4" /> Auto
+          <Sparkles className="size-4" /> {t('category.auto')}
         </Button>
       </Tooltip>
     </div>

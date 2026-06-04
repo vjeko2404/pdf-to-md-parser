@@ -1,5 +1,6 @@
 import { Combobox as BaseCombobox } from "@base-ui/react/combobox";
 import { Check, ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { popoverSurface } from "@/components/ui/Popover";
 import { cn } from "@/lib/utils";
 
@@ -46,11 +47,13 @@ export function Combobox({
   placeholder,
   className,
   disabled,
-  emptyMessage = "No matches",
+  emptyMessage,
   allowCustom = true,
   name,
   id,
 }: ComboboxProps) {
+  const { t } = useTranslation("common");
+  const empty = emptyMessage ?? t("common:noMatches");
   return (
     <BaseCombobox.Root
       items={items}
@@ -69,7 +72,7 @@ export function Combobox({
           className={cn(inputClass, className)}
         />
         <BaseCombobox.Trigger
-          aria-label="Toggle options"
+          aria-label={t("common:toggleOptions")}
           className="group absolute right-1 top-1/2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground">
           <BaseCombobox.Icon className="flex">
             <ChevronDown className="size-4 transition-transform duration-200 group-data-popup-open:rotate-180" />
@@ -85,7 +88,7 @@ export function Combobox({
               "max-h-[min(var(--available-height),20rem)] w-(--anchor-width) overflow-y-auto p-1",
             )}>
             <BaseCombobox.Empty className="px-2 py-4 text-center text-xs text-muted-foreground">
-              {emptyMessage}
+              {empty}
             </BaseCombobox.Empty>
             <BaseCombobox.List>
               {(item: string) => (

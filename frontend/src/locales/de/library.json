@@ -1,0 +1,117 @@
+{
+  "toolbar": {
+    "searchPlaceholder": "Titel, Tags, Inhalt durchsuchen…",
+    "clearSearch": "Suche löschen",
+    "allCategories": "Alle Kategorien",
+    "sort": "Sortieren",
+    "sortNewest": "Neueste",
+    "sortOldest": "Älteste",
+    "sortName": "Name A–Z",
+    "sortStatus": "Status",
+    "enriching": "Anreichern…",
+    "enrich": "{{count}} anreichern",
+    "delete": "{{count}} löschen",
+    "resumeProcessing": "Verarbeitung fortsetzen",
+    "pauseProcessing": "Verarbeitung pausieren",
+    "resume": "Fortsetzen",
+    "pause": "Pausieren"
+  },
+  "status": {
+    "all": "Alle",
+    "queued": "In Warteschlange",
+    "processing": "Wird verarbeitet",
+    "done": "Fertig",
+    "failed": "Fehlgeschlagen"
+  },
+  "table": {
+    "selectAll": "Alle auswählen",
+    "selectDocument": "Dokument auswählen",
+    "name": "Name",
+    "summary": "Zusammenfassung",
+    "type": "Typ",
+    "categories": "Kategorien",
+    "tags": "Tags",
+    "status": "Status",
+    "pages": "Seiten",
+    "date": "Datum",
+    "actions": "Aktionen",
+    "searchTag": "„{{tag}}“ suchen",
+    "enrich": "Anreichern",
+    "editNameCategories": "Name & Kategorien bearbeiten",
+    "recreateParsing": "Parsing neu erstellen",
+    "retry": "Wiederholen",
+    "deleteFromVault": "Aus Vault löschen"
+  },
+  "card": {
+    "selectDocument": "Dokument auswählen",
+    "searchTag": "„{{tag}}“ suchen",
+    "pagesMeta": "{{pages}} S. · {{date}}",
+    "enrichWithOllama": "Mit Ollama anreichern",
+    "editNameCategories": "Name & Kategorien bearbeiten",
+    "recreateParsing": "Parsing neu erstellen",
+    "retry": "Wiederholen",
+    "deleteFromVault": "Aus Vault löschen"
+  },
+  "dropzone": {
+    "noEngineTitle": "Keine Konvertierungs-Engine ausgewählt",
+    "noEngineHint": "Wähle in den Einstellungen eine Konvertierungs-Engine, bevor du PDFs hochlädst.",
+    "dropHere": "PDF hier ablegen",
+    "dragDrop": "PDFs hierher ziehen & ablegen oder klicken zum Durchsuchen",
+    "uploading": "Wird hochgeladen…",
+    "autoConvertHint": "Sie werden automatisch in Markdown konvertiert"
+  },
+  "capture": {
+    "title": "Ein Dokument mit der Kamera scannen",
+    "page": "Seite {{n}}",
+    "remove": "Entfernen",
+    "moveEarlier": "Nach vorne verschieben",
+    "moveLater": "Nach hinten verschieben",
+    "addPage": "Seite hinzufügen",
+    "takePhoto": "Foto aufnehmen",
+    "uploading": "Wird hochgeladen…",
+    "createPdf": "PDF erstellen ({{count}})",
+    "processError": "Die Fotos konnten nicht verarbeitet werden",
+    "scanned": "{{count}} Seite(n) gescannt → PDF in Warteschlange",
+    "uploadFailed": "Hochladen fehlgeschlagen"
+  },
+  "categoryChips": {
+    "filterBy": "Nach {{name}} filtern"
+  },
+  "edit": {
+    "ariaLabel": "Dokument bearbeiten",
+    "title": "Dokument bearbeiten",
+    "filename": "Dateiname",
+    "namePlaceholder": "Dokumentname",
+    "categories": "Kategorien",
+    "noCategories": "Noch keine Kategorien.",
+    "nameEmpty": "Name darf nicht leer sein"
+  },
+  "empty": {
+    "loading": "Wird geladen…",
+    "noDocuments": "Noch keine Dokumente. Lege oben ein PDF ab, um zu beginnen."
+  },
+  "toast": {
+    "processingPaused": "Verarbeitung pausiert",
+    "processingResumed": "Verarbeitung fortgesetzt",
+    "enrichingBatch": "{{count}} Dokument(e) werden angereichert…",
+    "enrichedFailed": "{{count}} angereichert, {{failed}} fehlgeschlagen",
+    "enrichedMany": "{{count}} Dokument(e) angereichert",
+    "enriched": "Angereichert",
+    "requeued": "Erneut in Warteschlange",
+    "reparseQueued": "Neu-Parsing in Warteschlange",
+    "deletedFromVault": "Aus Vault gelöscht",
+    "deletedMany": "{{count}} Dokument(e) gelöscht",
+    "uploaded": "{{name}} hochgeladen",
+    "uploadFailed": "Fehlgeschlagen: {{name}}"
+  },
+  "delete": {
+    "confirmManyTitle_one": "{{count}} Dokument löschen?",
+    "confirmManyTitle_other": "{{count}} Dokumente löschen?",
+    "confirmOneTitle": "Dokument löschen?",
+    "confirmManyDescription_one": "{{count}} Dokument und alle zugehörigen Artefakte (Markdown, Bilder, archiviertes PDF) werden dauerhaft aus dem Vault entfernt. Dies kann nicht rückgängig gemacht werden.",
+    "confirmManyDescription_other": "{{count}} Dokumente und alle zugehörigen Artefakte (Markdown, Bilder, archiviertes PDF) werden dauerhaft aus dem Vault entfernt. Dies kann nicht rückgängig gemacht werden.",
+    "confirmOneDescription": "„{{name}}“ und alle zugehörigen Artefakte (Markdown, Bilder, archiviertes PDF) werden dauerhaft aus dem Vault entfernt. Dies kann nicht rückgängig gemacht werden.",
+    "confirmMany": "{{count}} löschen",
+    "confirmOne": "Löschen"
+  }
+}

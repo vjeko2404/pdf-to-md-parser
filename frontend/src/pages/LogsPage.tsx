@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Section } from '@/components/common/Section'
 import { api } from '@/api/client'
 import { cn } from '@/lib/utils'
@@ -10,6 +11,7 @@ const levelColor = (l: string) =>
   l === 'error' ? 'text-destructive' : l === 'warn' ? 'text-amber-500' : 'text-muted-foreground'
 
 export function LogsPage() {
+  const { t } = useTranslation('logs')
   const qc = useQueryClient()
   const { data: events } = useQuery({
     queryKey: ['events'],
@@ -19,7 +21,7 @@ export function LogsPage() {
   useSignalR({ documentUpdated: () => qc.invalidateQueries({ queryKey: ['events'] }) })
 
   return (
-    <Section title="Activity log" description="Live pipeline events">
+    <Section title={t('title')} description={t('description')}>
       <div className="flex flex-col gap-2 font-mono text-xs sm:gap-1">
         {(events ?? []).map((e) => (
           <div
@@ -35,7 +37,7 @@ export function LogsPage() {
             <span className="min-w-0 wrap-break-word sm:truncate">{e.message}</span>
           </div>
         ))}
-        {!events?.length && <p className="text-sm text-muted-foreground">No events yet.</p>}
+        {!events?.length && <p className="text-sm text-muted-foreground">{t('empty')}</p>}
       </div>
     </Section>
   )

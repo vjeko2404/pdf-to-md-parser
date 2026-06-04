@@ -5,6 +5,7 @@ export interface UserInfo {
   username: string
   role: 'Admin' | 'User'
   isActive: boolean
+  defaultLanguage: string
 }
 
 export interface AuthResponse {
@@ -20,6 +21,10 @@ export const authApi = {
   me: () => api.get<UserInfo>('/auth/me'),
   changePassword: (currentPassword: string, newPassword: string) =>
     api.post<AuthResponse>('/auth/change-password', { currentPassword, newPassword }),
+
+  /** Persist the caller's preferred UI language to their profile. */
+  setLanguage: (language: string) =>
+    api.patch<UserInfo>('/auth/language', { language }),
 
   /** Public — whether the "Register" link should show on the login screen. */
   registrationStatus: () => api.get<{ enabled: boolean }>('/auth/registration'),

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Loader2, Pause, Play, Search, Sparkles, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -9,6 +10,14 @@ import type { Category } from "@/api/categories";
 import type { DocumentStatus } from "@/types/api";
 
 const STATUSES: (DocumentStatus | "All")[] = ["All", "Queued", "Processing", "Done", "Failed"];
+
+const STATUS_KEY: Record<string, string> = {
+  All: "status.all",
+  Queued: "status.queued",
+  Processing: "status.processing",
+  Done: "status.done",
+  Failed: "status.failed",
+};
 
 export interface LibraryToolbarProps {
   search: string;
@@ -54,6 +63,7 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
     onTogglePause,
     pauseBusy,
   } = props;
+  const { t } = useTranslation("library");
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -62,11 +72,11 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
           icon={<Search className="size-4" />}
           value={search}
           onChange={(e) => onSearch(e.target.value)}
-          placeholder="Search title, tags, content…"
+          placeholder={t("toolbar.searchPlaceholder")}
           className={search ? "pr-8" : undefined}
         />
         {search && (
-          <Tooltip content="Clear search" asChild>
+          <Tooltip content={t("toolbar.clearSearch")} asChild>
             <button
               type="button"
               onClick={() => onSearch("")}
@@ -79,24 +89,24 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
       <Select value={status} onChange={onStatus}>
         {STATUSES.map((s) => (
           <option key={s} value={s === "All" ? "" : s}>
-            {s}
+            {t(STATUS_KEY[s])}
           </option>
         ))}
       </Select>
       <Select value={categoryId} onChange={onCategory}>
-        <option value="">All categories</option>
+        <option value="">{t("toolbar.allCategories")}</option>
         {categories.map((c) => (
           <option key={c.id} value={String(c.id)}>
             {c.name}
           </option>
         ))}
       </Select>
-      <Tooltip content="Sort" asChild>
+      <Tooltip content={t("toolbar.sort")} asChild>
         <Select value={sort} onChange={onSort}>
-          <option value="">Newest</option>
-          <option value="oldest">Oldest</option>
-          <option value="name">Name A–Z</option>
-          <option value="status">Status</option>
+          <option value="">{t("toolbar.sortNewest")}</option>
+          <option value="oldest">{t("toolbar.sortOldest")}</option>
+          <option value="name">{t("toolbar.sortName")}</option>
+          <option value="status">{t("toolbar.sortStatus")}</option>
         </Select>
       </Tooltip>
       {selectedCount > 0 && (
@@ -112,7 +122,7 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
             ) : (
               <Sparkles className="size-4" />
             )}
-            {enriching ? "Enriching…" : `Enrich ${selectedCount}`}
+            {enriching ? t("toolbar.enriching") : t("toolbar.enrich", { count: selectedCount })}
           </Button>
           <Button
             variant="button_red"
@@ -120,11 +130,11 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
             className="h-9"
             onClick={onDeleteSelected}
             disabled={enriching}>
-            <Trash2 className="size-4" /> Delete {selectedCount}
+            <Trash2 className="size-4" /> {t("toolbar.delete", { count: selectedCount })}
           </Button>
         </>
       )}
-      <Tooltip content={paused ? "Resume processing" : "Pause processing"} asChild>
+      <Tooltip content={paused ? t("toolbar.resumeProcessing") : t("toolbar.pauseProcessing")} asChild>
         <Button
           variant={paused ? "button_yellow" : "button_neutral"}
           size="sm"
@@ -138,7 +148,7 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
           ) : (
             <Pause className="size-4" />
           )}
-          {paused ? "Resume" : "Pause"}
+          {paused ? t("toolbar.resume") : t("toolbar.pause")}
         </Button>
       </Tooltip>
       {showViewSwitcher && <ViewSwitcher mode={view} onChange={onView} />}

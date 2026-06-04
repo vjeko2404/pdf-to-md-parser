@@ -1,0 +1,119 @@
+{
+  "toolbar": {
+    "searchPlaceholder": "Pretraži naslov, oznake, sadržaj…",
+    "clearSearch": "Očisti pretragu",
+    "allCategories": "Sve kategorije",
+    "sort": "Sortiraj",
+    "sortNewest": "Najnovije",
+    "sortOldest": "Najstarije",
+    "sortName": "Naziv A–Z",
+    "sortStatus": "Status",
+    "enriching": "Obogaćivanje…",
+    "enrich": "Obogati {{count}}",
+    "delete": "Izbriši {{count}}",
+    "resumeProcessing": "Nastavi obradu",
+    "pauseProcessing": "Pauziraj obradu",
+    "resume": "Nastavi",
+    "pause": "Pauziraj"
+  },
+  "status": {
+    "all": "Sve",
+    "queued": "U redu čekanja",
+    "processing": "Obrada",
+    "done": "Gotovo",
+    "failed": "Neuspjelo"
+  },
+  "table": {
+    "selectAll": "Odaberi sve",
+    "selectDocument": "Odaberi dokument",
+    "name": "Naziv",
+    "summary": "Sažetak",
+    "type": "Vrsta",
+    "categories": "Kategorije",
+    "tags": "Oznake",
+    "status": "Status",
+    "pages": "Stranice",
+    "date": "Datum",
+    "actions": "Radnje",
+    "searchTag": "Pretraži „{{tag}}“",
+    "enrich": "Obogati",
+    "editNameCategories": "Uredi naziv i kategorije",
+    "recreateParsing": "Ponovno izradi parsiranje",
+    "retry": "Pokušaj ponovno",
+    "deleteFromVault": "Izbriši iz trezora"
+  },
+  "card": {
+    "selectDocument": "Odaberi dokument",
+    "searchTag": "Pretraži „{{tag}}“",
+    "pagesMeta": "{{pages}} str. · {{date}}",
+    "enrichWithOllama": "Obogati s Ollama",
+    "editNameCategories": "Uredi naziv i kategorije",
+    "recreateParsing": "Ponovno izradi parsiranje",
+    "retry": "Pokušaj ponovno",
+    "deleteFromVault": "Izbriši iz trezora"
+  },
+  "dropzone": {
+    "noEngineTitle": "Nije odabran mehanizam za konverziju",
+    "noEngineHint": "Odaberite mehanizam za konverziju u Postavkama prije učitavanja PDF-ova.",
+    "dropHere": "Ispustite PDF ovdje",
+    "dragDrop": "Povucite i ispustite PDF-ove ovdje ili kliknite za pregled",
+    "uploading": "Učitavanje…",
+    "autoConvertHint": "Automatski će se pretvoriti u Markdown"
+  },
+  "capture": {
+    "title": "Skenirajte dokument kamerom",
+    "page": "stranica {{n}}",
+    "remove": "Ukloni",
+    "moveEarlier": "Pomakni ranije",
+    "moveLater": "Pomakni kasnije",
+    "addPage": "Dodaj stranicu",
+    "takePhoto": "Snimi fotografiju",
+    "uploading": "Učitavanje…",
+    "createPdf": "Izradi PDF ({{count}})",
+    "processError": "Fotografije se nisu mogle obraditi",
+    "scanned": "Skenirano {{count}} stranica → PDF u redu čekanja",
+    "uploadFailed": "Učitavanje nije uspjelo"
+  },
+  "categoryChips": {
+    "filterBy": "Filtriraj po {{name}}"
+  },
+  "edit": {
+    "ariaLabel": "Uredi dokument",
+    "title": "Uredi dokument",
+    "filename": "Naziv datoteke",
+    "namePlaceholder": "Naziv dokumenta",
+    "categories": "Kategorije",
+    "noCategories": "Još nema kategorija.",
+    "nameEmpty": "Naziv ne smije biti prazan"
+  },
+  "empty": {
+    "loading": "Učitavanje…",
+    "noDocuments": "Još nema dokumenata. Ispustite PDF iznad za početak."
+  },
+  "toast": {
+    "processingPaused": "Obrada pauzirana",
+    "processingResumed": "Obrada nastavljena",
+    "enrichingBatch": "Obogaćivanje {{count}} dokumenata…",
+    "enrichedFailed": "Obogaćeno {{count}}, {{failed}} neuspjelo",
+    "enrichedMany": "Obogaćeno {{count}} dokumenata",
+    "enriched": "Obogaćeno",
+    "requeued": "Ponovno u redu čekanja",
+    "reparseQueued": "Ponovno parsiranje u redu čekanja",
+    "deletedFromVault": "Izbrisano iz trezora",
+    "deletedMany": "Izbrisano {{count}} dokumenata",
+    "uploaded": "Učitano {{name}}",
+    "uploadFailed": "Neuspjelo: {{name}}"
+  },
+  "delete": {
+    "confirmManyTitle_one": "Izbriši {{count}} dokument?",
+    "confirmManyTitle_few": "Izbriši {{count}} dokumenta?",
+    "confirmManyTitle_other": "Izbriši {{count}} dokumenata?",
+    "confirmOneTitle": "Izbrisati dokument?",
+    "confirmManyDescription_one": "{{count}} dokument i svi njegovi artefakti (Markdown, slike, arhivirani PDF) bit će trajno uklonjeni iz trezora. Ovo se ne može poništiti.",
+    "confirmManyDescription_few": "{{count}} dokumenta i svi njihovi artefakti (Markdown, slike, arhivirani PDF) bit će trajno uklonjeni iz trezora. Ovo se ne može poništiti.",
+    "confirmManyDescription_other": "{{count}} dokumenata i svi njihovi artefakti (Markdown, slike, arhivirani PDF) bit će trajno uklonjeni iz trezora. Ovo se ne može poništiti.",
+    "confirmOneDescription": "„{{name}}“ i svi njegovi artefakti (Markdown, slike, arhivirani PDF) bit će trajno uklonjeni iz trezora. Ovo se ne može poništiti.",
+    "confirmMany": "Izbriši {{count}}",
+    "confirmOne": "Izbriši"
+  }
+}

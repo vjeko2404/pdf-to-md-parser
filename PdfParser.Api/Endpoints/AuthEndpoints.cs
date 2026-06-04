@@ -8,6 +8,14 @@ namespace PdfParser.Api.Endpoints;
 
 public static class AuthEndpoints
 {
+    /// <summary>UI languages the app ships — mirrors the frontend's <c>SUPPORTED</c> list.</summary>
+    private static readonly HashSet<string> SupportedLanguages = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "en",
+        "de",
+        "hr",
+    };
+
     public static void MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
         var g = app.MapGroup("/api/auth").WithTags("Auth");
@@ -67,6 +75,23 @@ public static class AuthEndpoints
                 return r.Ok
                     ? Results.Ok(r.Response)
                     : Results.Problem(r.Error, statusCode: r.Status);
+            }
+        );
+
+        // Persist the caller's preferred UI language; returns the updated UserInfo.
+        g.MapPatch(
+            "/language",
+            async (SetLanguage body, ClaimsPrincipal user, UserRepository users) =>
+            {
+                var lang = (body.Language ?? "").Trim().ToLowerInvariant();
+                if (!SupportedLanguages.Contains(lang))
+                    return Results.BadRequest("Unsupported language.");
+                var id = user.GetUserId();
+                if (await users.GetByIdAsync(id) is not { } u)
+                    return Results.Unauthorized();
+                await users.UpdateLanguageAsync(id, lang);
+                u.DefaultLanguage = lang;
+                return Results.Ok(AuthService.ToInfo(u));
             }
         );
 

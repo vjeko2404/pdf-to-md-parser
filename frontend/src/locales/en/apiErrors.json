@@ -1,0 +1,44 @@
+{
+  "unknown": "Something went wrong.",
+  "auth": {
+    "usernameTooShort": "Username must be at least 3 characters.",
+    "usernameTooLong": "Username is too long.",
+    "passwordTooShort": "Password must be at least 8 characters.",
+    "passwordNoUppercase": "Password must contain an uppercase letter.",
+    "passwordNoNumber": "Password must contain a number.",
+    "passwordNoSymbol": "Password must contain a symbol.",
+    "registrationDisabled": "Registration is currently disabled.",
+    "usernameTaken": "That username is already taken.",
+    "invalidCredentials": "Invalid username or password.",
+    "accountDisabled": "This account is disabled.",
+    "userNotFound": "User not found.",
+    "currentPasswordIncorrect": "Current password is incorrect.",
+    "cantChangeOwnActiveState": "You can't change your own active state.",
+    "unsupportedLanguage": "Unsupported language."
+  },
+  "documents": {
+    "noEngine": "No conversion engine selected — enable one in Settings.",
+    "emptyFile": "Empty file.",
+    "notPdf": "Only .pdf files are accepted.",
+    "expectedMultipart": "Expected a multipart form.",
+    "notImage": "Not an image: {{name}}",
+    "noImages": "No images.",
+    "pdfBuildFailed": "Could not build a PDF from the photos: {{detail}}",
+    "contentRequired": "Content is required.",
+    "enrichFailed": "Enrichment failed — check the LLM provider in Settings (Ollama running / API key valid / model set) and the api logs.",
+    "notFound": "Document not found."
+  },
+  "categories": {
+    "nameRequired": "Name is required."
+  },
+  "secrets": {
+    "keyRequired": "Key is required."
+  },
+  "ollama": {
+    "unreachable": "Ollama unreachable: {{detail}}",
+    "nameRequired": "Name is required."
+  },
+  "folders": {
+    "invalidPath": "Invalid path."
+  }
+}

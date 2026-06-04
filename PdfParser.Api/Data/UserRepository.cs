@@ -74,6 +74,16 @@ public class UserRepository(Database db)
         );
     }
 
+    /// <summary>Persist the user's preferred UI language (validate the code before calling).</summary>
+    public async Task UpdateLanguageAsync(long id, string language)
+    {
+        using var c = db.Open();
+        await c.ExecuteAsync(
+            "UPDATE users SET DefaultLanguage = @language WHERE Id = @id",
+            new { id, language }
+        );
+    }
+
     /// <summary>
     /// One-time migration helper: assign every pre-auth (owner-less) document, category,
     /// per-user setting and secret to the first admin. Global settings (UserId 0,

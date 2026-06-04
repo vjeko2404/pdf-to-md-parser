@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Loader2, LogIn } from 'lucide-react'
 import { authApi } from '@/api/auth'
@@ -9,6 +10,7 @@ import { AuthShell } from '@/components/auth/AuthShell'
 import { useAuth } from '@/providers/AuthProvider'
 
 export function LoginPage() {
+  const { t } = useTranslation('auth')
   const { status, login } = useAuth()
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
@@ -34,16 +36,16 @@ export function LoginPage() {
       await login(username.trim(), password)
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError(err instanceof Error ? err.message : t('login.failed'))
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <AuthShell title="Welcome back" subtitle="Sign in to your library">
+    <AuthShell title={t('login.title')} subtitle={t('login.subtitle')}>
       <form className="flex flex-col gap-4" onSubmit={submit}>
-        <Field label="Username">
+        <Field label={t('login.username')}>
           <Input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -52,7 +54,7 @@ export function LoginPage() {
             required
           />
         </Field>
-        <Field label="Password">
+        <Field label={t('login.password')}>
           <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -65,14 +67,14 @@ export function LoginPage() {
 
         <Button type="submit" variant="hero_login" disabled={busy || !username || !password}>
           {busy ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
-          Sign in
+          {t('login.signIn')}
         </Button>
 
         {canRegister && (
           <p className="text-center text-sm text-muted-foreground">
-            No account?{' '}
+            {t('login.noAccount')}{' '}
             <Link to="/register" className="font-medium text-primary hover:underline">
-              Register
+              {t('login.register')}
             </Link>
           </p>
         )}

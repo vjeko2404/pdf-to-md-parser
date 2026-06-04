@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Loader2, UserPlus } from 'lucide-react'
 import { authApi } from '@/api/auth'
@@ -10,6 +11,7 @@ import { PasswordStrength, isStrong } from '@/components/auth/PasswordStrength'
 import { useAuth } from '@/providers/AuthProvider'
 
 export function RegisterPage() {
+  const { t } = useTranslation('auth')
   const { status, register } = useAuth()
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
@@ -41,26 +43,26 @@ export function RegisterPage() {
       await register(username.trim(), password)
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed')
+      setError(err instanceof Error ? err.message : t('register.failed'))
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <AuthShell title="Create your account" subtitle="One library, just for you">
+    <AuthShell title={t('register.title')} subtitle={t('register.subtitle')}>
       {allowed === false ? (
         <div className="flex flex-col gap-4 text-center">
           <p className="text-sm text-muted-foreground">
-            Registration is currently closed. Ask the administrator to enable it.
+            {t('register.closed')}
           </p>
           <Link to="/login" className="text-sm font-medium text-primary hover:underline">
-            Back to sign in
+            {t('register.backToSignIn')}
           </Link>
         </div>
       ) : (
         <form className="flex flex-col gap-4" onSubmit={submit}>
-          <Field label="Username" hint="At least 3 characters.">
+          <Field label={t('register.username')} hint={t('register.usernameHint')}>
             <Input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -69,7 +71,7 @@ export function RegisterPage() {
               required
             />
           </Field>
-          <Field label="Password">
+          <Field label={t('register.password')}>
             <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -78,7 +80,7 @@ export function RegisterPage() {
             />
           </Field>
           <PasswordStrength password={password} />
-          <Field label="Repeat password">
+          <Field label={t('register.repeatPassword')}>
             <PasswordInput
               value={repeat}
               onChange={(e) => setRepeat(e.target.value)}
@@ -87,20 +89,20 @@ export function RegisterPage() {
             />
           </Field>
           {repeat.length > 0 && !matches && (
-            <p className="text-xs text-destructive">Passwords don't match.</p>
+            <p className="text-xs text-destructive">{t('register.passwordsDontMatch')}</p>
           )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <Button type="submit" variant="hero_login" disabled={!canSubmit}>
             {busy ? <Loader2 className="size-4 animate-spin" /> : <UserPlus className="size-4" />}
-            Create account
+            {t('register.createAccount')}
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
-            Already have one?{' '}
+            {t('register.alreadyHaveOne')}{' '}
             <Link to="/login" className="font-medium text-primary hover:underline">
-              Sign in
+              {t('register.signIn')}
             </Link>
           </p>
         </form>

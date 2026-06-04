@@ -1,0 +1,51 @@
+{
+  "backLink": "Biblioteka",
+  "badge": {
+    "edited": "Uređeno",
+    "editedTooltip": "Markdown ručno uređen {{date}} — ponovna konverzija bi ga prepisala"
+  },
+  "actions": {
+    "editNameCategories": "Uredi naziv i kategorije",
+    "reCreateParsing": "Ponovno obradi",
+    "downloadPdf": "Preuzmi PDF",
+    "printPdf": "Ispiši PDF",
+    "editMarkdown": "Uredi Markdown",
+    "copyMarkdown": "Kopiraj Markdown",
+    "downloadMarkdown": "Preuzmi Markdown",
+    "printMarkdown": "Ispiši Markdown",
+    "saveChanges": "Spremi promjene",
+    "discardChanges": "Odbaci promjene"
+  },
+  "summary": "Sažetak",
+  "empty": {
+    "noMarkdown": "Još nema Markdowna."
+  },
+  "toast": {
+    "markdownSaved": "Markdown spremljen",
+    "markdownCopied": "Markdown kopiran",
+    "copyFailed": "Kopiranje nije uspjelo",
+    "allowPopups": "Dopustite skočne prozore za ispis",
+    "pdfStillLoading": "PDF se još učitava",
+    "reParsingQueued": "Ponovna obrada u redu čekanja"
+  },
+  "category": {
+    "addPlaceholder": "+ kategorija",
+    "auto": "Auto",
+    "autoTooltip": "Automatski kategoriziraj pomoću LLM-a",
+    "autoResult": "Auto: {{names}}",
+    "autoNoMatch": "Nijedna kategorija nije odgovarala"
+  },
+  "layout": {
+    "pdfOnly": "Samo PDF",
+    "sideBySide": "Jedno uz drugo",
+    "markdownOnly": "Samo Markdown"
+  },
+  "pdf": {
+    "loading": "Učitavanje PDF-a…",
+    "loadFailed": "PDF se nije mogao učitati."
+  },
+  "tag": {
+    "removeTooltip": "Ukloni oznaku",
+    "addPlaceholder": "+ oznaka"
+  }
+}

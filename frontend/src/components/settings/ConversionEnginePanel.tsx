@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plug, Save } from 'lucide-react'
 import { toast } from 'sonner'
@@ -12,31 +13,16 @@ import { settingsApi } from '@/api/settings'
 
 const KEYS = ['conversionEngine', 'markerRemoteUrl']
 
-// Short description shown under the picker for the selected engine.
-const ENGINES: { value: string; label: string; desc: string }[] = [
-  {
-    value: 'off',
-    label: 'Off — no conversion',
-    desc: 'Conversion is disabled. Uploads and watched files are rejected until you pick an engine.',
-  },
-  {
-    value: 'marker-host',
-    label: 'Marker — on this server',
-    desc: 'Highest quality (OCR, tables, layout, equations) via the local marker container. Heavy: loads ~5 GB of models on first use and is CPU-intensive — best on a roomy machine.',
-  },
-  {
-    value: 'marker-remote',
-    label: 'Marker — off this server',
-    desc: 'Use a marker server running elsewhere (e.g. your workstation). Enter its URL below. While it is offline, documents wait and auto-resume the moment it is reachable again — nothing fails.',
-  },
-  {
-    value: 'pdfplumber',
-    label: 'pdfplumber — lightweight',
-    desc: 'Instant, near-zero-cost text extraction for born-digital PDFs. No OCR, tables, or images — scanned/image-only PDFs will come out empty. Ideal for simple text documents on a small box.',
-  },
+// Engine option values mapped to their i18n key under engine.options.*
+const ENGINES: { value: string; key: string }[] = [
+  { value: 'off', key: 'off' },
+  { value: 'marker-host', key: 'markerHost' },
+  { value: 'marker-remote', key: 'markerRemote' },
+  { value: 'pdfplumber', key: 'pdfplumber' },
 ]
 
 export function ConversionEnginePanel() {
+  const { t } = useTranslation('settings')
   const { data: settings } = useSettings()
   const patch = usePatchSettings()
   const qc = useQueryClient()
@@ -61,7 +47,7 @@ export function ConversionEnginePanel() {
   const save = () =>
     patch.mutate(Object.fromEntries(KEYS.map((k) => [k, draft[k] ?? ''])), {
       onSuccess: () => {
-        toast.success('Conversion engine saved')
+        toast.success(t('engine.saved'))
         qc.invalidateQueries({ queryKey: ['conversion-status'] })
       },
       onError: (e) => toast.error(e.message),
@@ -72,8 +58,8 @@ export function ConversionEnginePanel() {
     setTesting(true)
     try {
       const r = await settingsApi.markerTest(draft.markerRemoteUrl ?? '')
-      if (r.ok) toast.success(`Marker reachable · ${draft.markerRemoteUrl}`)
-      else toast.error(`Unreachable — ${r.detail}`)
+      if (r.ok) toast.success(t('engine.markerReachable', { url: draft.markerRemoteUrl }))
+      else toast.error(t('engine.unreachable', { detail: r.detail }))
     } catch (e) {
       toast.error((e as Error).message)
     } finally {
@@ -83,32 +69,32 @@ export function ConversionEnginePanel() {
 
   return (
     <Section
-      title="Conversion engine"
-      description="How uploaded PDFs are turned into Markdown"
+      title={t('engine.title')}
+      description={t('engine.description')}
       action={
         <Button variant="button_primary" size="sm" onClick={save}>
-          <Save className="size-4" /> Save
+          <Save className="size-4" /> {t('common:save')}
         </Button>
       }
     >
       <div className="flex flex-col gap-3">
-        <Field label="Engine">
+        <Field label={t('engine.engineLabel')}>
           <Select value={engine} onChange={(v) => set('conversionEngine', v)}>
             {ENGINES.map((e) => (
               <option key={e.value} value={e.value}>
-                {e.label}
+                {t(`engine.options.${e.key}.label`)}
               </option>
             ))}
           </Select>
         </Field>
 
         <p className="rounded-lg border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
-          {meta.desc}
+          {t(`engine.options.${meta.key}.desc`)}
         </p>
 
         {engine === 'marker-remote' && (
           <>
-            <Field label="Marker URL" hint="e.g. http://192.168.1.10:8000 — the marker-server base URL">
+            <Field label={t('engine.markerUrlLabel')} hint={t('engine.markerUrlHint')}>
               <Input
                 value={draft.markerRemoteUrl ?? ''}
                 onChange={(e) => set('markerRemoteUrl', e.target.value)}
@@ -117,7 +103,7 @@ export function ConversionEnginePanel() {
             </Field>
             <div>
               <Button variant="outline" size="sm" onClick={testMarker} disabled={testing}>
-                <Plug className="size-4" /> Test connection
+                <Plug className="size-4" /> {t('engine.test')}
               </Button>
             </div>
           </>
@@ -127,7 +113,8 @@ export function ConversionEnginePanel() {
         {status && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>
-              Active engine: <span className="font-medium text-foreground">{status.engine}</span>
+              {t('engine.activeEngine')}{' '}
+              <span className="font-medium text-foreground">{status.engine}</span>
             </span>
             {status.healthy != null && (
               <span className="flex items-center gap-1">
@@ -137,7 +124,10 @@ export function ConversionEnginePanel() {
                     (status.healthy ? 'bg-green-500' : 'bg-destructive')
                   }
                 />
-                marker {status.healthy ? 'reachable' : 'offline'}
+                marker{' '}
+                {status.healthy
+                  ? t('engine.markerReachableStatus')
+                  : t('engine.markerOfflineStatus')}
               </span>
             )}
           </div>

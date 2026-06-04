@@ -1,0 +1,49 @@
+{
+  "language": {
+    "title": "Jezik",
+    "description": "Odaberite jezik sučelja",
+    "label": "Jezik prikaza"
+  },
+  "watch": {
+    "title": "Nadzor mape",
+    "description": "Automatski uvezi PDF-ove ubačene u nadziranu mapu",
+    "watchLabel": "Nadziri mapu",
+    "watchHint": "Kada je uključeno, novi PDF-ovi u vašoj nadziranoj podmapi automatski se uvoze.",
+    "subdirLabel": "Nadzirani podmapa",
+    "subdirHint": "Relativno prema montiranom korijenu glavnog računala (/host).",
+    "debounceLabel": "Odgoda (sekunde)",
+    "saved": "Postavke spremljene"
+  },
+  "engine": {
+    "title": "Mehanizam konverzije",
+    "description": "Kako se učitani PDF-ovi pretvaraju u Markdown",
+    "saved": "Mehanizam konverzije spremljen",
+    "engineLabel": "Mehanizam",
+    "markerUrlLabel": "Marker URL",
+    "markerUrlHint": "npr. http://192.168.1.10:8000 — osnovni URL marker-servera",
+    "test": "Testiraj vezu",
+    "markerReachable": "Marker dostupan · {{url}}",
+    "unreachable": "Nedostupno — {{detail}}",
+    "activeEngine": "Aktivni mehanizam:",
+    "markerReachableStatus": "dostupan",
+    "markerOfflineStatus": "izvan mreže",
+    "options": {
+      "off": {
+        "label": "Isključeno — bez konverzije",
+        "desc": "Konverzija je onemogućena. Učitavanja i nadzirane datoteke se odbijaju dok ne odaberete mehanizam."
+      },
+      "markerHost": {
+        "label": "Marker — na ovom poslužitelju",
+        "desc": "Najviša kvaliteta (OCR, tablice, raspored, jednadžbe) putem lokalnog marker kontejnera. Zahtjevno: pri prvoj uporabi učitava ~5 GB modela i intenzivno koristi CPU — najbolje na snažnom računalu."
+      },
+      "markerRemote": {
+        "label": "Marker — na drugom poslužitelju",
+        "desc": "Koristite marker poslužitelj koji radi negdje drugdje (npr. vaša radna stanica). Unesite njegov URL ispod. Dok je izvan mreže, dokumenti čekaju i automatski se nastavljaju čim ponovno postane dostupan — ništa ne propada."
+      },
+      "pdfplumber": {
+        "label": "pdfplumber — lagani",
+        "desc": "Trenutačno, gotovo besplatno izdvajanje teksta za izvorno digitalne PDF-ove. Bez OCR-a, tablica ili slika — skenirani/isključivo slikovni PDF-ovi izaći će prazni. Idealno za jednostavne tekstualne dokumente na malom računalu."
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "title": "Kategorije",
+  "description": "Vaša taksonomija (odvojena od LLM oznaka)",
+  "namePlaceholder": "Naziv kategorije",
+  "empty": "Još nema kategorija.",
+  "viewDocuments": "Prikaži dokumente u {{name}}",
+  "docsCount_one": "{{count}} dokument",
+  "docsCount_few": "{{count}} dokumenta",
+  "docsCount_other": "{{count}} dokumenata",
+  "delete": {
+    "title": "Izbrisati kategoriju?",
+    "description_one": "„{{name}}“ bit će uklonjena i odvojena od {{count}} dokumenta. Ovo se ne može poništiti.",
+    "description_few": "„{{name}}“ bit će uklonjena i odvojena od {{count}} dokumenta. Ovo se ne može poništiti.",
+    "description_other": "„{{name}}“ bit će uklonjena i odvojena od {{count}} dokumenata. Ovo se ne može poništiti."
+  },
+  "toast": {
+    "created": "Kategorija stvorena",
+    "deleted": "Kategorija izbrisana"
+  }
+}

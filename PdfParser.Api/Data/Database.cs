@@ -166,6 +166,11 @@ public class Database
         // (no constraint change), so existing rows simply start out NULL = never edited.
         if (!HasColumn(conn, "documents", "MarkdownEditedAt"))
             conn.Execute("ALTER TABLE documents ADD COLUMN MarkdownEditedAt TEXT;");
+
+        // Preferred UI language per user — added with the i18n rollout. NOT NULL DEFAULT 'en'
+        // backfills every existing row to English, no data loss.
+        if (!HasColumn(conn, "users", "DefaultLanguage"))
+            conn.Execute("ALTER TABLE users ADD COLUMN DefaultLanguage TEXT NOT NULL DEFAULT 'en';");
     }
 
     /// <summary>True if <paramref name="table"/> has a column named <paramref name="column"/>.</summary>
@@ -187,7 +192,8 @@ public class Database
             PasswordHash TEXT NOT NULL,
             Role         TEXT NOT NULL,
             IsActive     INTEGER NOT NULL DEFAULT 1,
-            CreatedAt    TEXT NOT NULL
+            CreatedAt    TEXT NOT NULL,
+            DefaultLanguage TEXT NOT NULL DEFAULT 'en'
         );
 
         CREATE TABLE IF NOT EXISTS documents (

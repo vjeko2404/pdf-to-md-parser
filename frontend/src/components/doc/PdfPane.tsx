@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { RefObject } from 'react'
 import { Document, Page } from 'react-pdf'
+import { useTranslation } from 'react-i18next'
 import '@/lib/pdfWorker'
 
 export function PdfPane({
@@ -11,6 +12,7 @@ export function PdfPane({
   url: string | null
   containerRef: RefObject<HTMLDivElement | null>
 }) {
+  const { t } = useTranslation('document')
   const [pages, setPages] = useState(0)
   // Fit the rendered page to the container instead of a fixed 560px — on a phone that
   // fixed width overflowed horizontally. Capped at 560 so it never balloons on desktop.
@@ -28,7 +30,7 @@ export function PdfPane({
   if (!url)
     return (
       <div ref={containerRef} className="h-full overflow-auto bg-muted/30 p-4">
-        <p className="p-4 text-sm text-muted-foreground">Loading PDF…</p>
+        <p className="p-4 text-sm text-muted-foreground">{t('pdf.loading')}</p>
       </div>
     )
 
@@ -37,8 +39,8 @@ export function PdfPane({
       <Document
         file={url}
         onLoadSuccess={({ numPages }) => setPages(numPages)}
-        loading={<p className="p-4 text-sm text-muted-foreground">Loading PDF…</p>}
-        error={<p className="p-4 text-sm text-destructive">Failed to load PDF.</p>}
+        loading={<p className="p-4 text-sm text-muted-foreground">{t('pdf.loading')}</p>}
+        error={<p className="p-4 text-sm text-destructive">{t('pdf.loadFailed')}</p>}
       >
         {Array.from({ length: pages }, (_, i) => (
           <div

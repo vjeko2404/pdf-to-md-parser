@@ -189,7 +189,8 @@ public class AuthService
         return new JsonWebTokenHandler().CreateToken(descriptor);
     }
 
-    public static UserInfo ToInfo(User u) => new(u.Id, u.Username, u.Role, u.IsActive);
+    public static UserInfo ToInfo(User u) =>
+        new(u.Id, u.Username, u.Role, u.IsActive, u.DefaultLanguage);
 
     // A well-formed PHC string that no password verifies against — used so login does
     // the same PBKDF2 work whether or not the username exists.

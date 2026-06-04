@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { DataTable } from '@/components/ui/DataTable'
-import { documentColumns, type DocumentTableMeta } from './documentColumns'
+import { buildDocumentColumns, type DocumentTableMeta } from './documentColumns'
 import type { DocumentDto } from '@/types/api'
 
 export interface DocumentTableProps {
@@ -22,6 +24,8 @@ export interface DocumentTableProps {
  * Layout/behaviour lives in those two files; this just funnels props into `meta`.
  */
 export function DocumentTable({ docs, ...handlers }: DocumentTableProps) {
+  const { t } = useTranslation('library')
+  const columns = useMemo(() => buildDocumentColumns(t), [t])
   const meta: DocumentTableMeta = {
     ...handlers,
     allSelected: docs.length > 0 && docs.every((d) => handlers.selected.has(d.id)),
@@ -29,7 +33,7 @@ export function DocumentTable({ docs, ...handlers }: DocumentTableProps) {
 
   return (
     <DataTable
-      columns={documentColumns}
+      columns={columns}
       data={docs}
       meta={meta}
       getRowId={(d) => String(d.id)}

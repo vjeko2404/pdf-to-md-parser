@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Check, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Section } from '@/components/common/Section'
@@ -13,17 +14,18 @@ export function ModelsPanel({
   activeModel?: string
   onSelect: (model: string) => void
 }) {
+  const { t } = useTranslation('ai')
   const { data: models, isError } = useOllamaModels()
   const { data: loaded } = useLoadedModels()
   const remove = useRemoveModel()
   const loadedNames = new Set((loaded ?? []).map((m) => m.name))
 
   return (
-    <Section title="Models" description="Installed models — click to set as the enrichment model">
+    <Section title={t('models.title')} description={t('models.description')}>
       {isError ? (
-        <p className="text-sm text-muted-foreground">Ollama unreachable.</p>
+        <p className="text-sm text-muted-foreground">{t('models.unreachable')}</p>
       ) : !models?.length ? (
-        <p className="text-sm text-muted-foreground">No models installed.</p>
+        <p className="text-sm text-muted-foreground">{t('models.none')}</p>
       ) : (
         <ul className="flex flex-col divide-y">
           {models.map((m) => (
@@ -43,16 +45,18 @@ export function ModelsPanel({
                 )}
                 {loadedNames.has(m.name) && (
                   <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-600 dark:text-emerald-400">
-                    loaded
+                    {t('models.loaded')}
                   </span>
                 )}
               </button>
-              <Tooltip content="Delete model" asChild>
+              <Tooltip content={t('models.deleteTooltip')} asChild>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() =>
-                    remove.mutate(m.name, { onSuccess: () => toast.success(`Removed ${m.name}`) })
+                    remove.mutate(m.name, {
+                      onSuccess: () => toast.success(t('models.removed', { name: m.name })),
+                    })
                   }
                 >
                   <Trash2 className="size-4" />

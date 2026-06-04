@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { Section } from '@/components/common/Section'
@@ -8,14 +9,15 @@ import { Textarea } from '@/components/ui/Textarea'
 export function PromptPanel({
   value,
   onSave,
-  title = 'Enrichment prompt',
-  description = 'System prompt for extracting tags, type & metadata',
+  title,
+  description,
 }: {
   value: string
   onSave: (v: string) => void
-  title?: string
-  description?: string
+  title: string
+  description: string
 }) {
+  const { t } = useTranslation('ai')
   const [draft, setDraft] = useState(value)
   useEffect(() => setDraft(value), [value])
 
@@ -29,10 +31,10 @@ export function PromptPanel({
           size="sm"
           onClick={() => {
             onSave(draft)
-            toast.success('Prompt saved')
+            toast.success(t('prompt.saved'))
           }}
         >
-          <Save className="size-4" /> Save
+          <Save className="size-4" /> {t('common:save')}
         </Button>
       }
     >

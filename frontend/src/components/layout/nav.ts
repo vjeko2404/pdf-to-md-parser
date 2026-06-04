@@ -10,16 +10,16 @@ import {
 
 export interface NavItem {
   to: string
-  label: string
+  labelKey: string
   icon: LucideIcon
   end?: boolean
 }
 
 export const NAV: NavItem[] = [
-  { to: '/', label: 'Library', icon: FileText, end: true },
-  { to: '/categories', label: 'Categories', icon: Tags },
-  { to: '/folders', label: 'Folders', icon: FolderTree },
-  { to: '/ai', label: 'AI', icon: Bot },
-  { to: '/settings', label: 'Settings', icon: Settings },
-  { to: '/logs', label: 'Logs', icon: ScrollText },
+  { to: '/', labelKey: 'menu.library', icon: FileText, end: true },
+  { to: '/categories', labelKey: 'menu.categories', icon: Tags },
+  { to: '/folders', labelKey: 'menu.folders', icon: FolderTree },
+  { to: '/ai', labelKey: 'menu.ai', icon: Bot },
+  { to: '/settings', labelKey: 'menu.settings', icon: Settings },
+  { to: '/logs', labelKey: 'menu.logs', icon: ScrollText },
 ]

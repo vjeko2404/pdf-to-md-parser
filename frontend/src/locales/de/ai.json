@@ -1,0 +1,63 @@
+{
+  "enrichment": {
+    "title": "Anreicherung",
+    "description": "Verhalten für Tagging, Zusammenfassung & automatische Kategorisierung",
+    "enabledLabel": "Anreicherung aktiviert",
+    "enabledHint": "Hauptschalter — wenn aus, ruft die App nie das LLM auf.",
+    "autoEnrichLabel": "Automatisch anreichern bei Konvertierung",
+    "autoEnrichHint": "Anreicherung automatisch nach jeder Konvertierung ausführen.",
+    "autoCategorizeLabel": "Automatisch kategorisieren (LLM)",
+    "autoCategorizeHint": "Nach der Anreicherung das Modell passende vorhandene Kategorien zuweisen lassen."
+  },
+  "models": {
+    "title": "Modelle",
+    "description": "Installierte Modelle — klicken, um als Anreicherungsmodell festzulegen",
+    "unreachable": "Ollama nicht erreichbar.",
+    "none": "Keine Modelle installiert.",
+    "loaded": "geladen",
+    "deleteTooltip": "Modell löschen",
+    "removed": "{{name}} entfernt"
+  },
+  "pull": {
+    "title": "Modell herunterladen",
+    "description": "Aus der Ollama-Registry herunterladen",
+    "placeholder": "z. B. qwen2.5:7b-instruct",
+    "pull": "Herunterladen",
+    "pulled": "{{name}} heruntergeladen",
+    "failed": "Download fehlgeschlagen: {{error}}"
+  },
+  "prompt": {
+    "enrichTitle": "Anreicherungs-Prompt",
+    "enrichDescription": "System-Prompt zum Extrahieren von Tags, Typ & Metadaten",
+    "summaryTitle": "Zusammenfassungs-Prompt",
+    "summaryDescription": "Separater System-Prompt für die Fließtext-Zusammenfassung des Dokuments",
+    "saved": "Prompt gespeichert"
+  },
+  "provider": {
+    "title": "LLM-Anbieter",
+    "description": "Lokales Ollama oder eine beliebige OpenAI-kompatible API verwenden (OpenRouter, Gemini, …)",
+    "saved": "Anbietereinstellungen gespeichert",
+    "providerLabel": "Anbieter",
+    "ollamaOption": "Lokal — Ollama",
+    "openaiOption": "API — OpenAI-kompatibel",
+    "ollamaUrl": "Ollama-URL",
+    "ollamaModel": "Ollama-Modell",
+    "test": "Verbindung testen",
+    "ollamaOnline": "Ollama online · {{version}}",
+    "ollamaOffline": "Offline — {{error}}",
+    "ollamaUnreachable": "nicht erreichbar",
+    "connected": "Verbunden · {{detail}}",
+    "connectFailed": "Fehlgeschlagen — {{detail}}",
+    "apiBaseUrl": "API-Basis-URL",
+    "apiBaseUrlHint": "z. B. https://openrouter.ai/api/v1 — oder Geminis https://generativelanguage.googleapis.com/v1beta/openai",
+    "modelLabel": "Modell",
+    "modelHintLoaded": "Aus der Liste wählen oder eine beliebige Modell-ID eingeben.",
+    "modelHintEmpty": "Modell-ID eingeben (z. B. google/gemini-2.5-flash-lite). Speichern + testen, um die Liste zu laden.",
+    "modelEmptyMessage": "Keine Modelle geladen — Speichern + Verbindung testen, um die Liste abzurufen",
+    "apiKeyLabel": "API-Schlüssel-Geheimnis",
+    "apiKeyHint": "Das verschlüsselte Geheimnis mit dem Schlüssel — füge es unter Einstellungen → Geheimnisse hinzu.",
+    "selectSecret": "— ein Geheimnis auswählen —",
+    "apiKeyPlaceholder": "LLM_API_KEY (unter Einstellungen → Geheimnisse hinzufügen)",
+    "saveFirst": "Zuerst speichern — der Test verwendet die gespeicherten Einstellungen + das Geheimnis."
+  }
+}

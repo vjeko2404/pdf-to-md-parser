@@ -1,0 +1,25 @@
+{
+  "menu": {
+    "library": "Bibliothek",
+    "categories": "Kategorien",
+    "folders": "Ordner",
+    "ai": "KI",
+    "settings": "Einstellungen",
+    "logs": "Protokolle",
+    "changePassword": "Passwort ändern",
+    "logout": "Abmelden"
+  },
+  "role": {
+    "admin": "Administrator",
+    "user": "Benutzer"
+  },
+  "theme": {
+    "tooltip": "Thema: {{theme}}",
+    "light": "hell",
+    "dark": "dunkel",
+    "system": "System"
+  },
+  "llm": {
+    "ollamaOffline": "Ollama offline"
+  }
+}

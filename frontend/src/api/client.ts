@@ -1,4 +1,5 @@
 import { getToken, setToken } from './token'
+import type { ApiError } from './apiErrors'
 
 const BASE = '/api'
 
@@ -23,13 +24,20 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     }
     const body = await res.text().catch(() => '')
     let message = body || res.statusText
+    let code: string | undefined
     try {
       const j = JSON.parse(body)
       message = j.detail || j.title || message
+      // Stable machine code (RFC7807 extension) — used to localize the error via
+      // apiErrors.ts when present; falls back to the raw `detail` otherwise.
+      if (typeof j.code === 'string') code = j.code
     } catch {
       // body wasn't JSON — use it as-is
     }
-    throw new Error(message)
+    const err = new Error(message) as ApiError
+    err.status = res.status
+    if (code) err.code = code
+    throw err
   }
   if (res.status === 204) return undefined as T
   const ct = res.headers.get('content-type') ?? ''

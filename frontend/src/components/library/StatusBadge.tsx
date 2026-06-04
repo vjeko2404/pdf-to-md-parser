@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import type { DocumentStatus } from '@/types/api'
 
@@ -9,10 +10,20 @@ const STYLES: Record<DocumentStatus, string> = {
   Skipped: 'bg-muted text-muted-foreground',
 }
 
+const LABEL_KEY: Partial<Record<DocumentStatus, string>> = {
+  Queued: 'status.queued',
+  Processing: 'status.processing',
+  Done: 'status.done',
+  Failed: 'status.failed',
+}
+
 export function StatusBadge({ status }: { status: DocumentStatus }) {
+  const { t } = useTranslation('library')
+  const key = LABEL_KEY[status]
+  const label = key ? t(key) : status
   return (
     <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs font-medium', STYLES[status])}>
-      {status}
+      {label}
     </span>
   )
 }

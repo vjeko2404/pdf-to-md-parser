@@ -1,0 +1,18 @@
+{
+  "title": "Kategorien",
+  "description": "Ihre Taxonomie (getrennt von den LLM-Tags)",
+  "namePlaceholder": "Kategoriename",
+  "empty": "Noch keine Kategorien.",
+  "viewDocuments": "Dokumente in {{name}} anzeigen",
+  "docsCount_one": "{{count}} Dokument",
+  "docsCount_other": "{{count}} Dokumente",
+  "delete": {
+    "title": "Kategorie löschen?",
+    "description_one": "„{{name}}“ wird entfernt und von {{count}} Dokument abgemeldet. Dies kann nicht rückgängig gemacht werden.",
+    "description_other": "„{{name}}“ wird entfernt und von {{count}} Dokumenten abgemeldet. Dies kann nicht rückgängig gemacht werden."
+  },
+  "toast": {
+    "created": "Kategorie erstellt",
+    "deleted": "Kategorie gelöscht"
+  }
+}

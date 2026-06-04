@@ -1,0 +1,10 @@
+{
+  "title": "Überwachter Ordner",
+  "currentlyWatching": "Wird aktuell überwacht: {{path}}",
+  "watchThis": "Diesen überwachen",
+  "watching": "Wird überwacht",
+  "empty": "Keine Unterordner hier.",
+  "toast": {
+    "nowWatching": "Überwacht jetzt {{path}}"
+  }
+}

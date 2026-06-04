@@ -1,0 +1,19 @@
+{
+  "title": "Administration",
+  "description": "Admin-only — control sign-ups and accounts",
+  "openRegistration": {
+    "label": "Open registration",
+    "help": "When off, no new accounts can self-register. Turn it on to invite someone, then off again."
+  },
+  "users": {
+    "title": "Users",
+    "you": "you",
+    "disabledBadge": "disabled",
+    "enable": "Enable",
+    "disable": "Disable"
+  },
+  "toast": {
+    "registrationEnabled": "Registration enabled",
+    "registrationDisabled": "Registration disabled"
+  }
+}

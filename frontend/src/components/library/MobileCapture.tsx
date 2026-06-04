@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Camera, ChevronDown, ChevronUp, FileUp, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
@@ -22,6 +23,7 @@ const nextId = () => `shot-${counter++}`;
  * re-encoded client-side first so a phone's 5–8 MB shots don't bloat the upload.
  */
 export function MobileCapture() {
+  const { t } = useTranslation("library");
   const inputRef = useRef<HTMLInputElement>(null);
   const [shots, setShots] = useState<Shot[]>([]);
   const upload = useUploadPhotos();
@@ -66,16 +68,16 @@ export function MobileCapture() {
     try {
       blobs = await Promise.all(shots.map((s) => compressImage(s.file)));
     } catch (e) {
-      toast.error("Could not process the photos", { description: String(e) });
+      toast.error(t("capture.processError"), { description: String(e) });
       return;
     }
     upload.mutate(blobs, {
       onSuccess: () => {
-        toast.success(`Scanned ${shots.length} page(s) → PDF queued`);
+        toast.success(t("capture.scanned", { count: shots.length }));
         shots.forEach((s) => URL.revokeObjectURL(s.url));
         setShots([]);
       },
-      onError: (e) => toast.error("Upload failed", { description: String(e) }),
+      onError: (e) => toast.error(t("capture.uploadFailed"), { description: String(e) }),
     });
   };
 
@@ -96,19 +98,19 @@ export function MobileCapture() {
 
       <div className="flex items-center gap-2">
         <Camera className="size-5 text-muted-foreground" />
-        <span className="text-sm font-medium">Scan a document with the camera</span>
+        <span className="text-sm font-medium">{t("capture.title")}</span>
       </div>
 
       {shots.length > 0 && (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {shots.map((s, i) => (
             <div key={s.id} className="group relative overflow-hidden rounded-lg border">
-              <img src={s.url} alt={`page ${i + 1}`} className="aspect-3/4 w-full object-cover" />
+              <img src={s.url} alt={t("capture.page", { n: i + 1 })} className="aspect-3/4 w-full object-cover" />
               <span className="absolute left-1 top-1 rounded bg-black/60 px-1.5 text-xs text-white">
                 {i + 1}
               </span>
               <div className="absolute right-1 top-1 flex flex-col gap-0.5">
-                <Tooltip content="Remove" asChild>
+                <Tooltip content={t("capture.remove")} asChild>
                   <button
                     type="button"
                     onClick={() => remove(s.id)}
@@ -118,7 +120,7 @@ export function MobileCapture() {
                 </Tooltip>
               </div>
               <div className="absolute bottom-1 right-1 flex gap-0.5">
-                <Tooltip content="Move earlier" asChild>
+                <Tooltip content={t("capture.moveEarlier")} asChild>
                   <button
                     type="button"
                     onClick={() => move(i, -1)}
@@ -127,7 +129,7 @@ export function MobileCapture() {
                     <ChevronUp className="size-3.5" />
                   </button>
                 </Tooltip>
-                <Tooltip content="Move later" asChild>
+                <Tooltip content={t("capture.moveLater")} asChild>
                   <button
                     type="button"
                     onClick={() => move(i, 1)}
@@ -148,7 +150,7 @@ export function MobileCapture() {
           size="sm"
           onClick={() => inputRef.current?.click()}
           disabled={upload.isPending}>
-          <Camera className="size-4" /> {shots.length ? "Add page" : "Take photo"}
+          <Camera className="size-4" /> {shots.length ? t("capture.addPage") : t("capture.takePhoto")}
         </Button>
         {shots.length > 0 && (
           <Button variant="button_primary" size="sm" onClick={submit} disabled={upload.isPending}>
@@ -157,7 +159,7 @@ export function MobileCapture() {
             ) : (
               <FileUp className="size-4" />
             )}
-            {upload.isPending ? "Uploading…" : `Create PDF (${shots.length})`}
+            {upload.isPending ? t("capture.uploading") : t("capture.createPdf", { count: shots.length })}
           </Button>
         )}
       </div>

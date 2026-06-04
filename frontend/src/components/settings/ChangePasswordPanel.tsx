@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { KeyRound, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { authApi } from '@/api/auth'
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/Button'
 import { PasswordStrength, isStrong } from '@/components/auth/PasswordStrength'
 
 export function ChangePasswordPanel() {
+  const { t } = useTranslation('auth')
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
   const [repeat, setRepeat] = useState('')
@@ -25,12 +27,12 @@ export function ChangePasswordPanel() {
     try {
       const r = await authApi.changePassword(current, next)
       setToken(r.token) // refresh the token (the old one stays valid until expiry too)
-      toast.success('Password changed')
+      toast.success(t('changePassword.changed'))
       setCurrent('')
       setNext('')
       setRepeat('')
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not change password')
+      toast.error(err instanceof Error ? err.message : t('changePassword.couldNotChange'))
     } finally {
       setBusy(false)
     }
@@ -38,16 +40,16 @@ export function ChangePasswordPanel() {
 
   return (
     <div id="password">
-      <Section title="Password" description="Change your account password">
+      <Section title={t('changePassword.title')} description={t('changePassword.description')}>
         <form className="flex max-w-md flex-col gap-3" onSubmit={submit}>
-          <Field label="Current password">
+          <Field label={t('changePassword.current')}>
             <PasswordInput
               value={current}
               onChange={(e) => setCurrent(e.target.value)}
               autoComplete="current-password"
             />
           </Field>
-          <Field label="New password">
+          <Field label={t('changePassword.new')}>
             <PasswordInput
               value={next}
               onChange={(e) => setNext(e.target.value)}
@@ -55,7 +57,7 @@ export function ChangePasswordPanel() {
             />
           </Field>
           <PasswordStrength password={next} />
-          <Field label="Repeat new password">
+          <Field label={t('changePassword.repeat')}>
             <PasswordInput
               value={repeat}
               onChange={(e) => setRepeat(e.target.value)}
@@ -63,12 +65,12 @@ export function ChangePasswordPanel() {
             />
           </Field>
           {repeat.length > 0 && !matches && (
-            <p className="text-xs text-destructive">Passwords don't match.</p>
+            <p className="text-xs text-destructive">{t('changePassword.passwordsDontMatch')}</p>
           )}
           <div>
             <Button type="submit" variant="button_primary" size="sm" disabled={!canSubmit}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <KeyRound className="size-4" />}
-              Update password
+              {t('changePassword.update')}
             </Button>
           </div>
         </form>

@@ -1,0 +1,51 @@
+{
+  "backLink": "Bibliothek",
+  "badge": {
+    "edited": "Bearbeitet",
+    "editedTooltip": "Markdown manuell bearbeitet {{date}} — eine erneute Konvertierung würde es überschreiben"
+  },
+  "actions": {
+    "editNameCategories": "Name & Kategorien bearbeiten",
+    "reCreateParsing": "Parsing neu erstellen",
+    "downloadPdf": "PDF herunterladen",
+    "printPdf": "PDF drucken",
+    "editMarkdown": "Markdown bearbeiten",
+    "copyMarkdown": "Markdown kopieren",
+    "downloadMarkdown": "Markdown herunterladen",
+    "printMarkdown": "Markdown drucken",
+    "saveChanges": "Änderungen speichern",
+    "discardChanges": "Änderungen verwerfen"
+  },
+  "summary": "Zusammenfassung",
+  "empty": {
+    "noMarkdown": "Noch kein Markdown."
+  },
+  "toast": {
+    "markdownSaved": "Markdown gespeichert",
+    "markdownCopied": "Markdown kopiert",
+    "copyFailed": "Kopieren fehlgeschlagen",
+    "allowPopups": "Pop-ups zum Drucken zulassen",
+    "pdfStillLoading": "PDF wird noch geladen",
+    "reParsingQueued": "Erneutes Parsing in Warteschlange"
+  },
+  "category": {
+    "addPlaceholder": "+ Kategorie",
+    "auto": "Auto",
+    "autoTooltip": "Automatisch mit dem LLM kategorisieren",
+    "autoResult": "Auto: {{names}}",
+    "autoNoMatch": "Keine Kategorie passte"
+  },
+  "layout": {
+    "pdfOnly": "Nur PDF",
+    "sideBySide": "Nebeneinander",
+    "markdownOnly": "Nur Markdown"
+  },
+  "pdf": {
+    "loading": "PDF wird geladen…",
+    "loadFailed": "PDF konnte nicht geladen werden."
+  },
+  "tag": {
+    "removeTooltip": "Tag entfernen",
+    "addPlaceholder": "+ Tag"
+  }
+}

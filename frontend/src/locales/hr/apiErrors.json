@@ -1,0 +1,44 @@
+{
+  "unknown": "Nešto je pošlo po zlu.",
+  "auth": {
+    "usernameTooShort": "Korisničko ime mora imati najmanje 3 znaka.",
+    "usernameTooLong": "Korisničko ime je predugačko.",
+    "passwordTooShort": "Lozinka mora imati najmanje 8 znakova.",
+    "passwordNoUppercase": "Lozinka mora sadržavati veliko slovo.",
+    "passwordNoNumber": "Lozinka mora sadržavati broj.",
+    "passwordNoSymbol": "Lozinka mora sadržavati simbol.",
+    "registrationDisabled": "Registracija je trenutačno onemogućena.",
+    "usernameTaken": "To korisničko ime je već zauzeto.",
+    "invalidCredentials": "Neispravno korisničko ime ili lozinka.",
+    "accountDisabled": "Ovaj račun je onemogućen.",
+    "userNotFound": "Korisnik nije pronađen.",
+    "currentPasswordIncorrect": "Trenutačna lozinka nije ispravna.",
+    "cantChangeOwnActiveState": "Ne možete promijeniti vlastiti status aktivnosti.",
+    "unsupportedLanguage": "Nepodržani jezik."
+  },
+  "documents": {
+    "noEngine": "Nije odabran mehanizam konverzije — omogućite ga u Postavkama.",
+    "emptyFile": "Prazna datoteka.",
+    "notPdf": "Prihvaćaju se samo .pdf datoteke.",
+    "expectedMultipart": "Očekivan je multipart obrazac.",
+    "notImage": "Nije slika: {{name}}",
+    "noImages": "Nema slika.",
+    "pdfBuildFailed": "PDF se nije mogao izraditi iz fotografija: {{detail}}",
+    "contentRequired": "Sadržaj je obavezan.",
+    "enrichFailed": "Obogaćivanje nije uspjelo — provjerite LLM pružatelja u Postavkama (Ollama radi / API ključ valjan / model postavljen) i api zapisnike.",
+    "notFound": "Dokument nije pronađen."
+  },
+  "categories": {
+    "nameRequired": "Naziv je obavezan."
+  },
+  "secrets": {
+    "keyRequired": "Ključ je obavezan."
+  },
+  "ollama": {
+    "unreachable": "Ollama nedostupna: {{detail}}",
+    "nameRequired": "Naziv je obavezan."
+  },
+  "folders": {
+    "invalidPath": "Neispravan put."
+  }
+}

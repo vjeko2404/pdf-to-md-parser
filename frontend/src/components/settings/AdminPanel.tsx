@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { ShieldCheck, UserCheck, UserX } from 'lucide-react'
 import { toast } from 'sonner'
 import { authApi } from '@/api/auth'
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/providers/AuthProvider'
 
 export function AdminPanel() {
+  const { t } = useTranslation('admin')
   const { user } = useAuth()
   const qc = useQueryClient()
 
@@ -20,31 +22,31 @@ export function AdminPanel() {
     mutationFn: (enabled: boolean) => authApi.setRegistration(enabled),
     onSuccess: (data) => {
       qc.setQueryData(['admin', 'registration'], data)
-      toast.success(`Registration ${data.enabled ? 'enabled' : 'disabled'}`)
+      toast.success(data.enabled ? t('toast.registrationEnabled') : t('toast.registrationDisabled'))
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : 'Failed'),
+    onError: (e) => toast.error(e instanceof Error ? e.message : t('common:failed')),
   })
 
   const setActive = useMutation({
     mutationFn: ({ id, active }: { id: number; active: boolean }) => authApi.setActive(id, active),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'users'] }),
-    onError: (e) => toast.error(e instanceof Error ? e.message : 'Failed'),
+    onError: (e) => toast.error(e instanceof Error ? e.message : t('common:failed')),
   })
 
   const enabled = registration.data?.enabled ?? false
 
   return (
     <Section
-      title="Administration"
-      description="Admin-only — control sign-ups and accounts"
+      title={t('title')}
+      description={t('description')}
     >
       <div className="flex flex-col gap-6">
         {/* Registration toggle */}
         <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
           <div>
-            <p className="text-sm font-medium">Open registration</p>
+            <p className="text-sm font-medium">{t('openRegistration.label')}</p>
             <p className="text-xs text-muted-foreground">
-              When off, no new accounts can self-register. Turn it on to invite someone, then off again.
+              {t('openRegistration.help')}
             </p>
           </div>
           <Button
@@ -53,13 +55,13 @@ export function AdminPanel() {
             disabled={toggleReg.isPending}
             onClick={() => toggleReg.mutate(!enabled)}
           >
-            {enabled ? 'Enabled' : 'Disabled'}
+            {enabled ? t('common:enabled') : t('common:disabled')}
           </Button>
         </div>
 
         {/* Users */}
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium">Users</p>
+          <p className="text-sm font-medium">{t('users.title')}</p>
           <div className="overflow-hidden rounded-lg border">
             {users.data?.map((u) => (
               <div
@@ -71,12 +73,12 @@ export function AdminPanel() {
                   <span className="truncate text-sm">{u.username}</span>
                   {!u.isActive && (
                     <span className="rounded bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
-                      disabled
+                      {t('users.disabledBadge')}
                     </span>
                   )}
                 </div>
                 {u.id === user?.id ? (
-                  <span className="text-xs text-muted-foreground">you</span>
+                  <span className="text-xs text-muted-foreground">{t('users.you')}</span>
                 ) : (
                   <Button
                     variant="ghost"
@@ -86,11 +88,11 @@ export function AdminPanel() {
                   >
                     {u.isActive ? (
                       <>
-                        <UserX className="size-4" /> Disable
+                        <UserX className="size-4" /> {t('users.disable')}
                       </>
                     ) : (
                       <>
-                        <UserCheck className="size-4" /> Enable
+                        <UserCheck className="size-4" /> {t('users.enable')}
                       </>
                     )}
                   </Button>

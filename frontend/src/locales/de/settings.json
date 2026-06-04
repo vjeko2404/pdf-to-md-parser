@@ -1,0 +1,49 @@
+{
+  "language": {
+    "title": "Sprache",
+    "description": "Sprache der Benutzeroberfläche wählen",
+    "label": "Anzeigesprache"
+  },
+  "watch": {
+    "title": "Ordnerüberwachung",
+    "description": "PDFs automatisch importieren, die in den überwachten Ordner gelegt werden",
+    "watchLabel": "Ordner überwachen",
+    "watchHint": "Wenn aktiviert, werden neue PDFs in deinem überwachten Unterordner automatisch importiert.",
+    "subdirLabel": "Überwachter Unterordner",
+    "subdirHint": "Relativ zum eingebundenen Host-Root (/host).",
+    "debounceLabel": "Entprellung (Sekunden)",
+    "saved": "Einstellungen gespeichert"
+  },
+  "engine": {
+    "title": "Konvertierungs-Engine",
+    "description": "Wie hochgeladene PDFs in Markdown umgewandelt werden",
+    "saved": "Konvertierungs-Engine gespeichert",
+    "engineLabel": "Engine",
+    "markerUrlLabel": "Marker-URL",
+    "markerUrlHint": "z. B. http://192.168.1.10:8000 — die Basis-URL des marker-server",
+    "test": "Verbindung testen",
+    "markerReachable": "Marker erreichbar · {{url}}",
+    "unreachable": "Nicht erreichbar — {{detail}}",
+    "activeEngine": "Aktive Engine:",
+    "markerReachableStatus": "erreichbar",
+    "markerOfflineStatus": "offline",
+    "options": {
+      "off": {
+        "label": "Aus — keine Konvertierung",
+        "desc": "Die Konvertierung ist deaktiviert. Uploads und überwachte Dateien werden abgelehnt, bis du eine Engine auswählst."
+      },
+      "markerHost": {
+        "label": "Marker — auf diesem Server",
+        "desc": "Höchste Qualität (OCR, Tabellen, Layout, Gleichungen) über den lokalen marker-Container. Ressourcenintensiv: lädt beim ersten Gebrauch ~5 GB an Modellen und ist CPU-intensiv — am besten auf einer leistungsstarken Maschine."
+      },
+      "markerRemote": {
+        "label": "Marker — auf einem anderen Server",
+        "desc": "Einen anderswo laufenden marker-Server verwenden (z. B. deine Workstation). Gib unten die URL ein. Solange er offline ist, warten Dokumente und nehmen automatisch wieder auf, sobald er erneut erreichbar ist — nichts schlägt fehl."
+      },
+      "pdfplumber": {
+        "label": "pdfplumber — leichtgewichtig",
+        "desc": "Sofortige, nahezu kostenlose Textextraktion für digital erstellte PDFs. Kein OCR, keine Tabellen oder Bilder — gescannte/reine Bild-PDFs kommen leer heraus. Ideal für einfache Textdokumente auf einer kleinen Maschine."
+      }
+    }
+  }
+}

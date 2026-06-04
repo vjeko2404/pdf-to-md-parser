@@ -1,0 +1,10 @@
+{
+  "title": "Watched folder",
+  "currentlyWatching": "Currently watching: {{path}}",
+  "watchThis": "Watch this",
+  "watching": "Watching",
+  "empty": "No subfolders here.",
+  "toast": {
+    "nowWatching": "Now watching {{path}}"
+  }
+}

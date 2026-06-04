@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Section } from '@/components/common/Section'
 import { Toggle } from '@/components/common/Toggle'
 import { LlmProviderPanel } from '@/components/settings/LlmProviderPanel'
@@ -29,6 +30,7 @@ function ToggleRow({
 }
 
 export function OllamaPage() {
+  const { t } = useTranslation('ai')
   const { data: settings } = useSettings()
   const patch = usePatchSettings()
   const setBool = (key: string, v: boolean) => patch.mutate({ [key]: String(v) })
@@ -38,23 +40,23 @@ export function OllamaPage() {
     <div className="flex max-w-3xl flex-col gap-4">
       <LlmProviderPanel />
 
-      <Section title="Enrichment" description="Tagging, summary & auto-categorize behaviour">
+      <Section title={t('enrichment.title')} description={t('enrichment.description')}>
         <div className="flex flex-col gap-4">
           <ToggleRow
-            label="Enrichment enabled"
-            hint="Master switch — when off, the app never calls the LLM."
+            label={t('enrichment.enabledLabel')}
+            hint={t('enrichment.enabledHint')}
             checked={settings?.enrichmentEnabled === 'true'}
             onChange={(v) => setBool('enrichmentEnabled', v)}
           />
           <ToggleRow
-            label="Auto-enrich on convert"
-            hint="Run enrichment automatically after each conversion."
+            label={t('enrichment.autoEnrichLabel')}
+            hint={t('enrichment.autoEnrichHint')}
             checked={settings?.autoEnrich === 'true'}
             onChange={(v) => setBool('autoEnrich', v)}
           />
           <ToggleRow
-            label="Auto-categorize (LLM)"
-            hint="After enrichment, let the model assign matching existing categories."
+            label={t('enrichment.autoCategorizeLabel')}
+            hint={t('enrichment.autoCategorizeHint')}
             checked={settings?.autoCategorize === 'true'}
             onChange={(v) => setBool('autoCategorize', v)}
           />
@@ -72,12 +74,14 @@ export function OllamaPage() {
       )}
 
       <PromptPanel
+        title={t('prompt.enrichTitle')}
+        description={t('prompt.enrichDescription')}
         value={settings?.enrichPrompt ?? ''}
         onSave={(p) => patch.mutate({ enrichPrompt: p })}
       />
       <PromptPanel
-        title="Summary prompt"
-        description="Separate system prompt for the document's prose summary"
+        title={t('prompt.summaryTitle')}
+        description={t('prompt.summaryDescription')}
         value={settings?.summaryPrompt ?? ''}
         onSave={(p) => patch.mutate({ summaryPrompt: p })}
       />

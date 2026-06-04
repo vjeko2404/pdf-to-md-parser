@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Section } from '@/components/common/Section'
@@ -10,6 +11,7 @@ import { secretsApi } from '@/api/secrets'
 import { useDeleteSecret, useSecrets, useSetSecret } from '@/hooks/useSecrets'
 
 export function SecretsPanel() {
+  const { t } = useTranslation('secrets')
   const { data: secrets } = useSecrets()
   const setSecret = useSetSecret()
   const del = useDeleteSecret()
@@ -23,7 +25,7 @@ export function SecretsPanel() {
       { key: key.trim(), value },
       {
         onSuccess: () => {
-          toast.success('Secret saved')
+          toast.success(t('toast.saved'))
           setKey('')
           setValue('')
         },
@@ -46,7 +48,7 @@ export function SecretsPanel() {
   }
 
   return (
-    <Section title="Secrets" description="Encrypted at rest (AES-GCM)">
+    <Section title={t('title')} description={t('description')}>
       <div className="flex flex-col gap-2">
         {(secrets ?? []).map((s) => {
           const shown = revealed[s.key] != null
@@ -67,12 +69,12 @@ export function SecretsPanel() {
               >
                 {revealed[s.key] ?? s.masked}
               </span>
-              <Tooltip content={shown ? 'Hide' : 'Reveal'} asChild>
+              <Tooltip content={shown ? t('common:hide') : t('common:reveal')} asChild>
                 <Button variant="ghost" size="sm" onClick={() => toggleReveal(s.key)}>
                   {shown ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </Button>
               </Tooltip>
-              <Tooltip content="Delete" asChild>
+              <Tooltip content={t('common:delete')} asChild>
                 <Button variant="ghost" size="sm" onClick={() => del.mutate(s.key)}>
                   <Trash2 className="size-4" />
                 </Button>
@@ -80,24 +82,24 @@ export function SecretsPanel() {
             </div>
           )
         })}
-        {!secrets?.length && <p className="text-sm text-muted-foreground">No secrets yet.</p>}
+        {!secrets?.length && <p className="text-sm text-muted-foreground">{t('empty')}</p>}
       </div>
       <div className="mt-3 flex flex-wrap gap-2 border-t pt-3">
         <Input
           value={key}
           onChange={(e) => setKey(e.target.value)}
-          placeholder="KEY"
+          placeholder={t('keyPlaceholder')}
           className="w-32 shrink-0 sm:max-w-40"
         />
         <Input
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="value"
+          placeholder={t('valuePlaceholder')}
           type="password"
           className="min-w-0 flex-1"
         />
         <Button variant="button_primary" size="sm" className="h-9" onClick={add}>
-          <Plus className="size-4" /> Add
+          <Plus className="size-4" /> {t('common:add')}
         </Button>
       </div>
     </Section>

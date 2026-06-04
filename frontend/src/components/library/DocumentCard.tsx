@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { FileText, Pencil, RefreshCw, Sparkles, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -32,6 +33,7 @@ export function DocumentCard({
   onDelete,
   onTagClick,
 }: DocumentCardProps) {
+  const { t } = useTranslation("library");
   const tags = parseTags(doc.tagsJson);
 
   return (
@@ -40,7 +42,7 @@ export function DocumentCard({
         <Checkbox
           checked={selected}
           onChange={() => onToggle(doc.id)}
-          aria-label="Select document"
+          aria-label={t("card.selectDocument")}
           className="mt-1"
         />
         <Link to={`/doc/${doc.id}`} className="flex min-w-0 flex-1 items-center gap-2">
@@ -67,13 +69,13 @@ export function DocumentCard({
               {formatDocType(doc.docType)}
             </span>
           )}
-          {tags.slice(0, 5).map((t) => (
-            <Tooltip key={t} content={`Search “${t}”`} asChild>
+          {tags.slice(0, 5).map((tag) => (
+            <Tooltip key={tag} content={t("card.searchTag", { tag })} asChild>
               <button
                 type="button"
-                onClick={() => onTagClick(t)}
+                onClick={() => onTagClick(tag)}
                 className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground">
-                {t}
+                {tag}
               </button>
             </Tooltip>
           ))}
@@ -82,32 +84,32 @@ export function DocumentCard({
 
       <div className="mt-auto flex items-center justify-between pt-1">
         <span className="text-xs text-muted-foreground">
-          {doc.pages} pp · {formatDate(doc.createdAt)}
+          {t("card.pagesMeta", { pages: doc.pages, date: formatDate(doc.createdAt) })}
         </span>
         <div className="flex gap-1">
-          <Tooltip content="Enrich with Ollama" asChild>
+          <Tooltip content={t("card.enrichWithOllama")} asChild>
             <Button variant="ghost" size="sm" onClick={() => onEnrich(doc.id)}>
               <Sparkles className="size-4" />
             </Button>
           </Tooltip>
-          <Tooltip content="Edit name & categories" asChild>
+          <Tooltip content={t("card.editNameCategories")} asChild>
             <Button variant="ghost" size="sm" onClick={() => onEdit(doc)}>
               <Pencil className="size-4" />
             </Button>
           </Tooltip>
-          <Tooltip content="Re-create parsing" asChild>
+          <Tooltip content={t("card.recreateParsing")} asChild>
             <Button variant="ghost" size="sm" onClick={() => onReconvert(doc.id)}>
               <RefreshCw className="size-4" />
             </Button>
           </Tooltip>
           {doc.status === "Failed" && (
-            <Tooltip content="Retry" asChild>
+            <Tooltip content={t("card.retry")} asChild>
               <Button variant="ghost" size="sm" onClick={() => onRetry(doc.id)}>
                 <RotateCcw className="size-4" />
               </Button>
             </Tooltip>
           )}
-          <Tooltip content="Delete from vault" asChild>
+          <Tooltip content={t("card.deleteFromVault")} asChild>
             <Button
               variant="ghost"
               size="sm"

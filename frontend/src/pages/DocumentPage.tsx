@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Copy, Download, Pencil, PencilLine, Printer, RefreshCw, Save, SquarePen, X } from 'lucide-react'
 import { toast } from 'sonner'
@@ -28,6 +29,7 @@ const overlayBase =
 const overlayCls = cn(overlayBase, 'opacity-100 md:opacity-0 md:group-hover:opacity-100')
 
 export function DocumentPage() {
+  const { t } = useTranslation('document')
   const { id } = useParams()
   const docId = Number(id)
   const isMobile = useIsMobile()
@@ -103,7 +105,7 @@ export function DocumentPage() {
     updateMarkdown.mutate(draft, {
       onSuccess: () => {
         setMdEditing(false)
-        toast.success('Markdown saved')
+        toast.success(t('toast.markdownSaved'))
       },
       onError: (e) => toast.error(e.message),
     })
@@ -113,9 +115,9 @@ export function DocumentPage() {
     if (markdown == null) return
     try {
       await navigator.clipboard.writeText(markdown)
-      toast.success('Markdown copied')
+      toast.success(t('toast.markdownCopied'))
     } catch {
-      toast.error('Copy failed')
+      toast.error(t('toast.copyFailed'))
     }
   }
 
@@ -137,7 +139,7 @@ export function DocumentPage() {
     if (!node) return
     const w = window.open('', '_blank', 'width=820,height=1000')
     if (!w) {
-      toast.error('Allow pop-ups to print')
+      toast.error(t('toast.allowPopups'))
       return
     }
     const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"],style'))
@@ -155,7 +157,7 @@ export function DocumentPage() {
   // Print the original PDF via a hidden iframe pointed at the (auth-fetched) blob object URL.
   const printPdf = () => {
     if (!pdfUrl) {
-      toast.error('PDF still loading')
+      toast.error(t('toast.pdfStillLoading'))
       return
     }
     const frame = document.createElement('iframe')
@@ -179,7 +181,7 @@ export function DocumentPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Button asChild variant="ghost" size="sm">
             <Link to="/">
-              <ArrowLeft className="size-4" /> Library
+              <ArrowLeft className="size-4" /> {t('backLink')}
             </Link>
           </Button>
           <span className="truncate font-medium">{doc?.originalName}</span>
@@ -190,16 +192,16 @@ export function DocumentPage() {
           )}
           {doc?.markdownEditedAt && (
             <Tooltip
-              content={`Markdown manually edited ${formatDateTime(doc.markdownEditedAt)} — a re-convert would overwrite it`}
+              content={t('badge.editedTooltip', { date: formatDateTime(doc.markdownEditedAt) })}
               asChild
             >
               <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-600 dark:text-amber-400">
-                <PencilLine className="size-3" /> Edited
+                <PencilLine className="size-3" /> {t('badge.edited')}
               </span>
             </Tooltip>
           )}
           <div className="ml-auto flex items-center gap-1">
-            <Tooltip content="Edit name & categories" asChild>
+            <Tooltip content={t('actions.editNameCategories')} asChild>
               <Button
                 variant="ghost"
                 size="sm"
@@ -209,13 +211,13 @@ export function DocumentPage() {
                 <Pencil className="size-4" />
               </Button>
             </Tooltip>
-            <Tooltip content="Re-create parsing" asChild>
+            <Tooltip content={t('actions.reCreateParsing')} asChild>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() =>
                   reconvert.mutate(docId, {
-                    onSuccess: () => toast.success('Re-parsing queued'),
+                    onSuccess: () => toast.success(t('toast.reParsingQueued')),
                     onError: (e) => toast.error(e.message),
                   })
                 }
@@ -232,7 +234,7 @@ export function DocumentPage() {
         {doc?.summary && (
           <div className="rounded-xl border bg-card p-3 text-sm leading-relaxed text-muted-foreground">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-foreground/60">
-              Summary
+              {t('summary')}
             </span>
             {doc.summary}
           </div>
@@ -258,14 +260,14 @@ export function DocumentPage() {
             )}
           >
             <div className={overlayCls}>
-              <Tooltip content="Download PDF" asChild>
+              <Tooltip content={t('actions.downloadPdf')} asChild>
                 <Button asChild variant="ghost" size="icon" disabled={!pdfUrl}>
                   <a href={pdfUrl ?? undefined} download={doc?.originalName}>
                     <Download className="size-4" />
                   </a>
                 </Button>
               </Tooltip>
-              <Tooltip content="Print PDF" asChild>
+              <Tooltip content={t('actions.printPdf')} asChild>
                 <Button variant="ghost" size="icon" onClick={printPdf}>
                   <Printer className="size-4" />
                 </Button>
@@ -285,7 +287,7 @@ export function DocumentPage() {
               {mdEditing ? (
                 <>
                   {mdDirty && (
-                    <Tooltip content="Save changes" asChild>
+                    <Tooltip content={t('actions.saveChanges')} asChild>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -296,7 +298,7 @@ export function DocumentPage() {
                       </Button>
                     </Tooltip>
                   )}
-                  <Tooltip content="Discard changes" asChild>
+                  <Tooltip content={t('actions.discardChanges')} asChild>
                     <Button variant="ghost" size="icon" onClick={cancelEditMd}>
                       <X className="size-4" />
                     </Button>
@@ -304,7 +306,7 @@ export function DocumentPage() {
                 </>
               ) : (
                 <>
-                  <Tooltip content="Edit Markdown" asChild>
+                  <Tooltip content={t('actions.editMarkdown')} asChild>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -314,17 +316,17 @@ export function DocumentPage() {
                       <SquarePen className="size-4" />
                     </Button>
                   </Tooltip>
-                  <Tooltip content="Copy Markdown" asChild>
+                  <Tooltip content={t('actions.copyMarkdown')} asChild>
                     <Button variant="ghost" size="icon" onClick={copyMd}>
                       <Copy className="size-4" />
                     </Button>
                   </Tooltip>
-                  <Tooltip content="Download Markdown" asChild>
+                  <Tooltip content={t('actions.downloadMarkdown')} asChild>
                     <Button variant="ghost" size="icon" onClick={downloadMd}>
                       <Download className="size-4" />
                     </Button>
                   </Tooltip>
-                  <Tooltip content="Print Markdown" asChild>
+                  <Tooltip content={t('actions.printMarkdown')} asChild>
                     <Button variant="ghost" size="icon" onClick={printMd}>
                       <Printer className="size-4" />
                     </Button>
@@ -341,7 +343,7 @@ export function DocumentPage() {
                 onDraftChange={setDraft}
               />
             ) : (
-              <p className="p-6 text-sm text-muted-foreground">No markdown yet.</p>
+              <p className="p-6 text-sm text-muted-foreground">{t('empty.noMarkdown')}</p>
             )}
           </div>
         )}

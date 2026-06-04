@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Popover as BasePopover } from '@base-ui/react/popover'
 import { Tooltip as BaseTooltip } from '@base-ui/react/tooltip'
+import { useTranslation } from 'react-i18next'
 import { Popover, PopoverTrigger, popoverSurface } from '@/components/ui/Popover'
 import { cn } from '@/lib/utils'
 
@@ -72,6 +73,7 @@ export interface ColorPickerProps {
  * on the shared {@link popoverSurface} so it follows the active theme.
  */
 export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
+  const { t } = useTranslation('common')
   const [hsv, setHsv] = useState<Hsv>(() => hexToHsv(value) ?? { h: 270, s: 0.6, v: 0.9 })
   const [hexText, setHexText] = useState(value)
   const svRef = useRef<HTMLDivElement>(null)
@@ -136,7 +138,7 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
                 render={
                   <button
                     type="button"
-                    aria-label="Pick a color"
+                    aria-label={t('common:pickColor')}
                     style={{ backgroundColor: value }}
                     className={cn(
                       'size-9 shrink-0 cursor-pointer rounded-lg border shadow-sm outline-none transition-transform',
@@ -156,7 +158,7 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
                   'pointer-events-none px-2.5 py-1.5 text-xs leading-relaxed',
                 )}
               >
-                Pick a color
+                {t('common:pickColor')}
               </BaseTooltip.Popup>
             </BaseTooltip.Positioner>
           </BaseTooltip.Portal>

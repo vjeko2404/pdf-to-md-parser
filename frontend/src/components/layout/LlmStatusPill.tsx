@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Bot, Cloud } from 'lucide-react'
 import { useSettings } from '@/hooks/useSettings'
 import { settingsApi } from '@/api/settings'
@@ -22,6 +23,7 @@ function providerName(url?: string) {
 
 /** Live LLM status — shows the selected provider (Ollama or the API client) + online dot. */
 export function LlmStatusPill() {
+  const { t } = useTranslation('nav')
   const { data: settings } = useSettings()
   const isApi = settings?.llmProvider === 'openai'
   const { data: test } = useQuery({
@@ -35,7 +37,7 @@ export function LlmStatusPill() {
     ? `${providerName(settings?.openaiBaseUrl)}${settings?.openaiModel ? ` · ${settings.openaiModel}` : ''}`
     : online
       ? `Ollama ${(test?.detail ?? '').replace(/^Ollama/i, '').trim()}`.trim()
-      : 'Ollama offline'
+      : t('llm.ollamaOffline')
 
   return (
     <Tooltip content={isApi ? label : (test?.detail ?? undefined)} asChild>
