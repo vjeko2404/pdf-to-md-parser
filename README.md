@@ -1,7 +1,7 @@
 # PDF → Markdown Parser
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Built with Claude](https://img.shields.io/badge/built%20with-Claude%20Opus%204.7-8A63D2.svg)](https://claude.com/claude-code)
+[![Built with Claude](https://img.shields.io/badge/built%20with-Claude%20Opus%204.8-8A63D2.svg)](https://claude.com/claude-code)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-00457C.svg?logo=paypal)](https://www.paypal.com/donate/?business=paypal@v-direkt.de)
 
 A self-hosted app that **watches a folder for new PDFs** (or accepts
