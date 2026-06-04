@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Bot, Cloud } from 'lucide-react'
 import { useSettings } from '@/hooks/useSettings'
 import { settingsApi } from '@/api/settings'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 
 /** Friendly name for an OpenAI-compatible base URL. */
@@ -37,23 +38,24 @@ export function LlmStatusPill() {
       : 'Ollama offline'
 
   return (
-    <span
-      className={cn(
-        'inline-flex max-w-[40vw] items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs sm:max-w-[18rem] sm:px-2.5',
-        online ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground',
-      )}
-      title={isApi ? label : (test?.detail ?? undefined)}
-    >
-      <Icon className="size-3.5 shrink-0" />
+    <Tooltip content={isApi ? label : (test?.detail ?? undefined)} asChild>
       <span
         className={cn(
-          'size-1.5 shrink-0 rounded-full',
-          online ? 'bg-emerald-500' : 'bg-muted-foreground/50',
+          'inline-flex max-w-[40vw] items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs sm:max-w-[18rem] sm:px-2.5',
+          online ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground',
         )}
-      />
-      {/* Label is the main offender for top-bar overflow on phones — hide it below sm,
-          leaving the compact icon + status dot. Full text returns on tablet/desktop. */}
-      <span className="hidden truncate sm:inline">{label}</span>
-    </span>
+      >
+        <Icon className="size-3.5 shrink-0" />
+        <span
+          className={cn(
+            'size-1.5 shrink-0 rounded-full',
+            online ? 'bg-emerald-500' : 'bg-muted-foreground/50',
+          )}
+        />
+        {/* Label is the main offender for top-bar overflow on phones — hide it below sm,
+            leaving the compact icon + status dot. Full text returns on tablet/desktop. */}
+        <span className="hidden truncate sm:inline">{label}</span>
+      </span>
+    </Tooltip>
   )
 }

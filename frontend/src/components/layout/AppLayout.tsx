@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { Animate } from '@/components/common/Animate'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 
 export function AppLayout() {
   const isMobile = useIsMobile()
+  const location = useLocation()
   const [drawer, setDrawer] = useState(false)
 
   return (
@@ -22,7 +24,11 @@ export function AppLayout() {
           </>
         )}
         <main className="flex-1 overflow-auto p-4 sm:p-6">
-          <Outlet />
+          {/* Key by pathname so every route change (incl. opening a document) replays
+              the entrance animation. Search-param changes (filters) don't re-trigger. */}
+          <Animate key={location.pathname} className="h-full">
+            <Outlet />
+          </Animate>
         </main>
       </div>
     </div>

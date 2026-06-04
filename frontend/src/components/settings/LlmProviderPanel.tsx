@@ -4,8 +4,9 @@ import { Plug, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { Section } from '@/components/common/Section'
 import { Field } from '@/components/common/Field'
-import { TextInput } from '@/components/common/inputs'
+import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
+import { Combobox } from '@/components/ui/Combobox'
 import { Button } from '@/components/ui/Button'
 import { useSettings, usePatchSettings } from '@/hooks/useSettings'
 import { useSecrets } from '@/hooks/useSecrets'
@@ -116,13 +117,13 @@ export function LlmProviderPanel() {
         {provider === 'ollama' ? (
           <>
             <Field label="Ollama URL">
-              <TextInput
+              <Input
                 value={draft.ollamaUrl ?? ''}
                 onChange={(e) => set('ollamaUrl', e.target.value)}
               />
             </Field>
             <Field label="Ollama model">
-              <TextInput
+              <Input
                 list={MODELS_LIST_ID}
                 value={draft.ollamaModel ?? ''}
                 onChange={(e) => set('ollamaModel', e.target.value)}
@@ -140,7 +141,7 @@ export function LlmProviderPanel() {
               label="API base URL"
               hint="e.g. https://openrouter.ai/api/v1 — or Gemini's https://generativelanguage.googleapis.com/v1beta/openai"
             >
-              <TextInput
+              <Input
                 value={draft.openaiBaseUrl ?? ''}
                 onChange={(e) => set('openaiBaseUrl', e.target.value)}
                 placeholder="https://openrouter.ai/api/v1"
@@ -154,11 +155,12 @@ export function LlmProviderPanel() {
                   : 'Type a model id (e.g. google/gemini-2.5-flash-lite). Save + test to load the list.'
               }
             >
-              <TextInput
-                list={MODELS_LIST_ID}
+              <Combobox
                 value={draft.openaiModel ?? ''}
-                onChange={(e) => set('openaiModel', e.target.value)}
+                onChange={(v) => set('openaiModel', v)}
+                items={models}
                 placeholder="google/gemini-2.5-flash-lite"
+                emptyMessage="No models loaded — Save + Test connection to fetch the list"
               />
             </Field>
             <Field
@@ -175,7 +177,7 @@ export function LlmProviderPanel() {
                   ))}
                 </Select>
               ) : (
-                <TextInput
+                <Input
                   value={keyName}
                   onChange={(e) => set('openaiApiKeyName', e.target.value)}
                   placeholder="LLM_API_KEY (add it under Settings → Secrets)"

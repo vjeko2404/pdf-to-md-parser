@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Loader2, UserPlus } from 'lucide-react'
 import { authApi } from '@/api/auth'
 import { Button } from '@/components/ui/Button'
-import { TextInput, PasswordInput } from '@/components/common/inputs'
+import { Input, PasswordInput } from '@/components/ui/Input'
 import { Field } from '@/components/common/Field'
 import { AuthShell } from '@/components/auth/AuthShell'
 import { PasswordStrength, isStrong } from '@/components/auth/PasswordStrength'
@@ -61,7 +61,7 @@ export function RegisterPage() {
       ) : (
         <form className="flex flex-col gap-4" onSubmit={submit}>
           <Field label="Username" hint="At least 3 characters.">
-            <TextInput
+            <Input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"

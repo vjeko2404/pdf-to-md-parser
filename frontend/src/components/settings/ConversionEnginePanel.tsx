@@ -4,7 +4,7 @@ import { Plug, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { Section } from '@/components/common/Section'
 import { Field } from '@/components/common/Field'
-import { TextInput } from '@/components/common/inputs'
+import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { useSettings, usePatchSettings } from '@/hooks/useSettings'
@@ -109,7 +109,7 @@ export function ConversionEnginePanel() {
         {engine === 'marker-remote' && (
           <>
             <Field label="Marker URL" hint="e.g. http://192.168.1.10:8000 — the marker-server base URL">
-              <TextInput
+              <Input
                 value={draft.markerRemoteUrl ?? ''}
                 onChange={(e) => set('markerRemoteUrl', e.target.value)}
                 placeholder="http://your-host:8000"

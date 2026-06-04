@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Copy, Download, Pencil, PencilLine, Printer, RefreshCw, Save, SquarePen, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 import { formatDateTime, formatDocType } from '@/lib/format'
 import { documentsApi } from '@/api/documents'
@@ -65,8 +66,22 @@ export function DocumentPage() {
     enabled: Boolean(doc?.archivedPdfPath),
     staleTime: Infinity,
   })
-  const pdfUrl = useMemo(() => (pdfBlob ? URL.createObjectURL(pdfBlob) : null), [pdfBlob])
-  useEffect(() => () => { if (pdfUrl) URL.revokeObjectURL(pdfUrl) }, [pdfUrl])
+  // Create AND revoke the object URL inside one effect keyed on the blob — not in
+  // useMemo. createObjectURL is a side effect; doing it in render means the URL is
+  // retained across StrictMode's dev mount→unmount→mount, while the separate revoke
+  // effect fires on the simulated unmount — so react-pdf gets handed an already-revoked
+  // blob URL (intermittent `blob:… ERR_FILE_NOT_FOUND`, "fixed" by a refresh that clears
+  // the cached blob). Doing both here gives each mount a fresh, live URL.
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  useEffect(() => {
+    if (!pdfBlob) {
+      setPdfUrl(null)
+      return
+    }
+    const url = URL.createObjectURL(pdfBlob)
+    setPdfUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [pdfBlob])
 
   useSyncScroll(leftRef, rightRef, layout === 'split' && !isMobile)
 
@@ -174,37 +189,41 @@ export function DocumentPage() {
             </span>
           )}
           {doc?.markdownEditedAt && (
-            <span
-              className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-600 dark:text-amber-400"
-              title={`Markdown manually edited ${formatDateTime(doc.markdownEditedAt)} — a re-convert would overwrite it`}
+            <Tooltip
+              content={`Markdown manually edited ${formatDateTime(doc.markdownEditedAt)} — a re-convert would overwrite it`}
+              asChild
             >
-              <PencilLine className="size-3" /> Edited
-            </span>
+              <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-600 dark:text-amber-400">
+                <PencilLine className="size-3" /> Edited
+              </span>
+            </Tooltip>
           )}
           <div className="ml-auto flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setEditing(true)}
-              title="Edit name & categories"
-              disabled={!doc}
-            >
-              <Pencil className="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                reconvert.mutate(docId, {
-                  onSuccess: () => toast.success('Re-parsing queued'),
-                  onError: (e) => toast.error(e.message),
-                })
-              }
-              title="Re-create parsing"
-              disabled={!doc || reconvert.isPending}
-            >
-              <RefreshCw className="size-4" />
-            </Button>
+            <Tooltip content="Edit name & categories" asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditing(true)}
+                disabled={!doc}
+              >
+                <Pencil className="size-4" />
+              </Button>
+            </Tooltip>
+            <Tooltip content="Re-create parsing" asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  reconvert.mutate(docId, {
+                    onSuccess: () => toast.success('Re-parsing queued'),
+                    onError: (e) => toast.error(e.message),
+                  })
+                }
+                disabled={!doc || reconvert.isPending}
+              >
+                <RefreshCw className="size-4" />
+              </Button>
+            </Tooltip>
             <LayoutSwitch value={layout} onChange={changeLayout} />
           </div>
         </div>
@@ -239,14 +258,18 @@ export function DocumentPage() {
             )}
           >
             <div className={overlayCls}>
-              <Button asChild variant="ghost" size="icon" title="Download PDF" disabled={!pdfUrl}>
-                <a href={pdfUrl ?? undefined} download={doc?.originalName}>
-                  <Download className="size-4" />
-                </a>
-              </Button>
-              <Button variant="ghost" size="icon" onClick={printPdf} title="Print PDF">
-                <Printer className="size-4" />
-              </Button>
+              <Tooltip content="Download PDF" asChild>
+                <Button asChild variant="ghost" size="icon" disabled={!pdfUrl}>
+                  <a href={pdfUrl ?? undefined} download={doc?.originalName}>
+                    <Download className="size-4" />
+                  </a>
+                </Button>
+              </Tooltip>
+              <Tooltip content="Print PDF" asChild>
+                <Button variant="ghost" size="icon" onClick={printPdf}>
+                  <Printer className="size-4" />
+                </Button>
+              </Tooltip>
             </div>
             {Number.isFinite(docId) && <PdfPane url={pdfUrl} containerRef={leftRef} />}
           </div>
@@ -262,40 +285,50 @@ export function DocumentPage() {
               {mdEditing ? (
                 <>
                   {mdDirty && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={saveMd}
-                      title="Save changes"
-                      disabled={updateMarkdown.isPending}
-                    >
-                      <Save className="size-4" />
-                    </Button>
+                    <Tooltip content="Save changes" asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={saveMd}
+                        disabled={updateMarkdown.isPending}
+                      >
+                        <Save className="size-4" />
+                      </Button>
+                    </Tooltip>
                   )}
-                  <Button variant="ghost" size="icon" onClick={cancelEditMd} title="Discard changes">
-                    <X className="size-4" />
-                  </Button>
+                  <Tooltip content="Discard changes" asChild>
+                    <Button variant="ghost" size="icon" onClick={cancelEditMd}>
+                      <X className="size-4" />
+                    </Button>
+                  </Tooltip>
                 </>
               ) : (
                 <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={startEditMd}
-                    title="Edit Markdown"
-                    disabled={markdown == null}
-                  >
-                    <SquarePen className="size-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={copyMd} title="Copy Markdown">
-                    <Copy className="size-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={downloadMd} title="Download Markdown">
-                    <Download className="size-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={printMd} title="Print Markdown">
-                    <Printer className="size-4" />
-                  </Button>
+                  <Tooltip content="Edit Markdown" asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={startEditMd}
+                      disabled={markdown == null}
+                    >
+                      <SquarePen className="size-4" />
+                    </Button>
+                  </Tooltip>
+                  <Tooltip content="Copy Markdown" asChild>
+                    <Button variant="ghost" size="icon" onClick={copyMd}>
+                      <Copy className="size-4" />
+                    </Button>
+                  </Tooltip>
+                  <Tooltip content="Download Markdown" asChild>
+                    <Button variant="ghost" size="icon" onClick={downloadMd}>
+                      <Download className="size-4" />
+                    </Button>
+                  </Tooltip>
+                  <Tooltip content="Print Markdown" asChild>
+                    <Button variant="ghost" size="icon" onClick={printMd}>
+                      <Printer className="size-4" />
+                    </Button>
+                  </Tooltip>
                 </>
               )}
             </div>

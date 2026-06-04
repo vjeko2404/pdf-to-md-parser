@@ -1,52 +1,83 @@
-import type { ReactNode } from 'react'
-import { Tooltip as BaseTooltip } from '@base-ui/react/tooltip'
+import { useState, isValidElement, type ReactElement, type ReactNode } from 'react'
+import { Popover as BasePopover } from '@base-ui/react/popover'
+import { Popover, PopoverTrigger, popoverSurface, type PopoverSide } from '@/components/ui/Popover'
 import { cn } from '@/lib/utils'
 
 /**
- * Hover tooltip (Base UI). Wraps `children` as the trigger and shows `content` after `delay`
- * ms of hovering. Renders nothing extra when there's no content. The delay lives on Base UI's
- * Provider in this version, so each Tooltip is self-contained with its own timing.
+ * Hover tooltip built on the shared {@link Popover} surface. Wraps `children` as the
+ * trigger and reveals `content` after `delay` ms of hovering, fading in (~150ms) and
+ * fading out fast (~80ms) the moment the pointer leaves. Renders nothing extra when
+ * there's no content. Background/border follow the active theme (`bg-popover`).
+ *
+ * Because it rides on Base UI's popover (not its tooltip primitive), we keep it
+ * tooltip-like by hand: open only on hover/focus (presses are ignored, so clicking
+ * the trigger never makes the tip stick) and the popup is `pointer-events-none`.
+ *
+ * By default the children are wrapped in an `inline-flex` span (the tooltip anchor).
+ * Pass `asChild` to merge the trigger onto a single child element instead — required
+ * when the child is absolutely positioned or must remain the direct flex/grid item.
  */
 export function Tooltip({
   content,
   children,
-  delay = 600,
+  delay = 1000,
   side = 'top',
   className,
+  asChild = false,
 }: {
   content: ReactNode
   children: ReactNode
   /** Hover dwell before the tooltip opens, in ms. */
   delay?: number
-  side?: 'top' | 'bottom' | 'left' | 'right'
-  /** Class applied to the trigger wrapper. */
+  side?: PopoverSide
+  /** Class applied to the trigger wrapper span (ignored when `asChild`). */
   className?: string
+  /** Merge the trigger onto the single child element instead of wrapping it. */
+  asChild?: boolean
 }) {
+  const [open, setOpen] = useState(false)
   if (content == null || content === '') return <>{children}</>
 
   return (
-    <BaseTooltip.Provider delay={delay}>
-      <BaseTooltip.Root>
-        <BaseTooltip.Trigger
-          render={(props) => (
-            <span {...props} className={className}>
-              {children}
-            </span>
-          )}
-        />
-        <BaseTooltip.Portal>
-          <BaseTooltip.Positioner side={side} sideOffset={6} className="z-50">
-            <BaseTooltip.Popup
-              className={cn(
-                'max-w-sm rounded-md border bg-card px-3 py-2 text-xs leading-relaxed',
-                'text-foreground shadow-md',
-              )}
-            >
-              {content}
-            </BaseTooltip.Popup>
-          </BaseTooltip.Positioner>
-        </BaseTooltip.Portal>
-      </BaseTooltip.Root>
-    </BaseTooltip.Provider>
+    <Popover
+      open={open}
+      onOpenChange={(next, details) => {
+        // Hover/focus drive the tip; ignore presses so clicking the trigger
+        // (often a button) doesn't latch it open or toggle it shut.
+        if (details.reason === 'trigger-press') return
+        setOpen(next)
+      }}
+    >
+      <PopoverTrigger
+        openOnHover
+        delay={delay}
+        closeDelay={0}
+        render={
+          asChild && isValidElement(children) ? (
+            (children as ReactElement)
+          ) : (
+            (props) => (
+              // inline-flex keeps the wrapper from disturbing flex/grid rows of
+              // buttons & chips; callers override the display via `className`.
+              <span {...props} className={cn('inline-flex', className)}>
+                {children}
+              </span>
+            )
+          )
+        }
+      />
+      <BasePopover.Portal>
+        <BasePopover.Positioner side={side} sideOffset={6} className="z-50">
+          <BasePopover.Popup
+            className={cn(
+              popoverSurface,
+              'pointer-events-none max-w-xs px-2.5 py-1.5 text-xs leading-relaxed',
+            )}
+          >
+            {content}
+          </BasePopover.Popup>
+        </BasePopover.Positioner>
+      </BasePopover.Portal>
+    </Popover>
   )
 }

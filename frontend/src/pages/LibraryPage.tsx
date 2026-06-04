@@ -8,6 +8,7 @@ import { DocumentGrid } from '@/components/library/DocumentGrid'
 import { DocumentTable } from '@/components/library/DocumentTable'
 import { EditDocumentModal } from '@/components/library/EditDocumentModal'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { Animate } from '@/components/common/Animate'
 import {
   useDeleteBatch,
   useDeleteDocument,
@@ -184,17 +185,31 @@ export function LibraryPage() {
         onTogglePause={togglePause}
         pauseBusy={pauseBusy}
       />
-      {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      ) : docs.length === 0 ? (
-        <div className="rounded-xl border border-dashed bg-card/50 p-10 text-center text-muted-foreground">
-          No documents yet. Drop a PDF above to get started.
-        </div>
-      ) : view === 'table' && !isMobile ? (
-        <DocumentTable {...sharedProps} onToggleAll={toggleAll} sort={sort} onSort={setSort} />
-      ) : (
-        <DocumentGrid {...sharedProps} />
-      )}
+      {/* Key by content state so the load→ready swap and grid↔table switch each
+          replay the entrance animation, keeping navigation feeling alive. */}
+      <Animate
+        key={
+          isLoading
+            ? 'loading'
+            : docs.length === 0
+              ? 'empty'
+              : view === 'table' && !isMobile
+                ? 'table'
+                : 'grid'
+        }
+      >
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : docs.length === 0 ? (
+          <div className="rounded-xl border border-dashed bg-card/50 p-10 text-center text-muted-foreground">
+            No documents yet. Drop a PDF above to get started.
+          </div>
+        ) : view === 'table' && !isMobile ? (
+          <DocumentTable {...sharedProps} onToggleAll={toggleAll} sort={sort} onSort={setSort} />
+        ) : (
+          <DocumentGrid {...sharedProps} />
+        )}
+      </Animate>
 
       <ConfirmDialog
         open={deleteTarget != null}

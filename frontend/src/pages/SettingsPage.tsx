@@ -3,7 +3,7 @@ import { Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { Section } from '@/components/common/Section'
 import { Field } from '@/components/common/Field'
-import { TextInput } from '@/components/common/inputs'
+import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { ConversionEnginePanel } from '@/components/settings/ConversionEnginePanel'
 import { SecretsPanel } from '@/components/settings/SecretsPanel'
@@ -66,7 +66,7 @@ export function SettingsPage() {
 
           {FIELDS.map((f) => (
             <Field key={f.key} label={f.label} hint={f.hint}>
-              <TextInput
+              <Input
                 value={draft[f.key] ?? ''}
                 onChange={(e) => setDraft((d) => ({ ...d, [f.key]: e.target.value }))}
               />

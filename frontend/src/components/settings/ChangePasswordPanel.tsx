@@ -5,7 +5,7 @@ import { authApi } from '@/api/auth'
 import { setToken } from '@/api/token'
 import { Section } from '@/components/common/Section'
 import { Field } from '@/components/common/Field'
-import { PasswordInput } from '@/components/common/inputs'
+import { PasswordInput } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { PasswordStrength, isStrong } from '@/components/auth/PasswordStrength'
 

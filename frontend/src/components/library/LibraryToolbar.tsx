@@ -2,7 +2,8 @@ import { Loader2, Pause, Play, Search, Sparkles, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { ViewSwitcher } from "./ViewSwitcher";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { ViewSwitcher } from "../ui/ViewSwitcher";
 import type { ViewMode } from "@/hooks/useViewMode";
 import type { Category } from "@/api/categories";
 import type { DocumentStatus } from "@/types/api";
@@ -65,13 +66,14 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
           className={search ? "pr-8" : undefined}
         />
         {search && (
-          <button
-            type="button"
-            onClick={() => onSearch("")}
-            title="Clear search"
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground">
-            <X className="size-4" />
-          </button>
+          <Tooltip content="Clear search" asChild>
+            <button
+              type="button"
+              onClick={() => onSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground">
+              <X className="size-4" />
+            </button>
+          </Tooltip>
         )}
       </div>
       <Select value={status} onChange={onStatus}>
@@ -89,17 +91,20 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
           </option>
         ))}
       </Select>
-      <Select value={sort} onChange={onSort} title="Sort">
-        <option value="">Newest</option>
-        <option value="oldest">Oldest</option>
-        <option value="name">Name A–Z</option>
-        <option value="status">Status</option>
-      </Select>
+      <Tooltip content="Sort" asChild>
+        <Select value={sort} onChange={onSort}>
+          <option value="">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="name">Name A–Z</option>
+          <option value="status">Status</option>
+        </Select>
+      </Tooltip>
       {selectedCount > 0 && (
         <>
           <Button
             variant="button_primary"
             size="sm"
+            className="h-9"
             onClick={onEnrichSelected}
             disabled={enriching}>
             {enriching ? (
@@ -109,26 +114,33 @@ export function LibraryToolbar(props: LibraryToolbarProps) {
             )}
             {enriching ? "Enriching…" : `Enrich ${selectedCount}`}
           </Button>
-          <Button variant="button_red" size="sm" onClick={onDeleteSelected} disabled={enriching}>
+          <Button
+            variant="button_red"
+            size="sm"
+            className="h-9"
+            onClick={onDeleteSelected}
+            disabled={enriching}>
             <Trash2 className="size-4" /> Delete {selectedCount}
           </Button>
         </>
       )}
-      <Button
-        variant={paused ? "button_yellow" : "button_neutral"}
-        size="sm"
-        onClick={onTogglePause}
-        disabled={pauseBusy}
-        title={paused ? "Resume processing" : "Pause processing"}>
-        {pauseBusy ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : paused ? (
-          <Play className="size-4" />
-        ) : (
-          <Pause className="size-4" />
-        )}
-        {paused ? "Resume" : "Pause"}
-      </Button>
+      <Tooltip content={paused ? "Resume processing" : "Pause processing"} asChild>
+        <Button
+          variant={paused ? "button_yellow" : "button_neutral"}
+          size="sm"
+          className="h-9"
+          onClick={onTogglePause}
+          disabled={pauseBusy}>
+          {pauseBusy ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : paused ? (
+            <Play className="size-4" />
+          ) : (
+            <Pause className="size-4" />
+          )}
+          {paused ? "Resume" : "Pause"}
+        </Button>
+      </Tooltip>
       {showViewSwitcher && <ViewSwitcher mode={view} onChange={onView} />}
     </div>
   );

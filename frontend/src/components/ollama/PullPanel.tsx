@@ -4,7 +4,7 @@ import { Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { Section } from '@/components/common/Section'
 import { Button } from '@/components/ui/Button'
-import { TextInput } from '@/components/common/inputs'
+import { Input } from '@/components/ui/Input'
 import { usePullModel } from '@/hooks/useOllama'
 import { useSignalR } from '@/hooks/useSignalR'
 
@@ -51,7 +51,7 @@ export function PullPanel() {
   return (
     <Section title="Pull a model" description="Download from the Ollama registry">
       <div className="flex gap-2">
-        <TextInput
+        <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g. qwen2.5:7b-instruct"

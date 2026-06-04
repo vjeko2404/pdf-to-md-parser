@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Loader2, LogIn } from 'lucide-react'
 import { authApi } from '@/api/auth'
 import { Button } from '@/components/ui/Button'
-import { TextInput, PasswordInput } from '@/components/common/inputs'
+import { Input, PasswordInput } from '@/components/ui/Input'
 import { Field } from '@/components/common/Field'
 import { AuthShell } from '@/components/auth/AuthShell'
 import { useAuth } from '@/providers/AuthProvider'
@@ -44,7 +44,7 @@ export function LoginPage() {
     <AuthShell title="Welcome back" subtitle="Sign in to your library">
       <form className="flex flex-col gap-4" onSubmit={submit}>
         <Field label="Username">
-          <TextInput
+          <Input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             autoComplete="username"

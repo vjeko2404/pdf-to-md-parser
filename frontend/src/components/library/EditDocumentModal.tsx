@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
 import { Checkbox } from '@/components/ui/Checkbox'
-import { TextInput } from '@/components/common/inputs'
+import { Input } from '@/components/ui/Input'
 import { useUpdateDocument } from '@/hooks/useDocuments'
 import type { Category } from '@/api/categories'
 import type { DocumentDto } from '@/types/api'
@@ -72,7 +72,7 @@ export function EditDocumentModal({ doc, categories, onClose }: EditDocumentModa
         <label className="mt-4 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Filename
         </label>
-        <TextInput
+        <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Document name"

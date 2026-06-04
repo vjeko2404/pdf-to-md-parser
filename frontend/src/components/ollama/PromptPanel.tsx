@@ -3,7 +3,7 @@ import { Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { Section } from '@/components/common/Section'
 import { Button } from '@/components/ui/Button'
-import { TextArea } from '@/components/common/inputs'
+import { Textarea } from '@/components/ui/Textarea'
 
 export function PromptPanel({
   value,
@@ -36,7 +36,7 @@ export function PromptPanel({
         </Button>
       }
     >
-      <TextArea rows={6} value={draft} onChange={(e) => setDraft(e.target.value)} />
+      <Textarea rows={6} value={draft} onChange={(e) => setDraft(e.target.value)} />
     </Section>
   )
 }

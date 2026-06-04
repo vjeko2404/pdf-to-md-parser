@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, ChevronDown, ChevronUp, FileUp, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { compressImage } from "@/lib/compressImage";
 import { useUploadPhotos } from "@/hooks/useDocuments";
 
@@ -107,31 +108,34 @@ export function MobileCapture() {
                 {i + 1}
               </span>
               <div className="absolute right-1 top-1 flex flex-col gap-0.5">
-                <button
-                  type="button"
-                  onClick={() => remove(s.id)}
-                  title="Remove"
-                  className="rounded bg-black/60 p-0.5 text-white hover:bg-destructive">
-                  <X className="size-3.5" />
-                </button>
+                <Tooltip content="Remove" asChild>
+                  <button
+                    type="button"
+                    onClick={() => remove(s.id)}
+                    className="rounded bg-black/60 p-0.5 text-white hover:bg-destructive">
+                    <X className="size-3.5" />
+                  </button>
+                </Tooltip>
               </div>
               <div className="absolute bottom-1 right-1 flex gap-0.5">
-                <button
-                  type="button"
-                  onClick={() => move(i, -1)}
-                  disabled={i === 0}
-                  title="Move earlier"
-                  className="rounded bg-black/60 p-0.5 text-white hover:bg-primary disabled:opacity-30">
-                  <ChevronUp className="size-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => move(i, 1)}
-                  disabled={i === shots.length - 1}
-                  title="Move later"
-                  className="rounded bg-black/60 p-0.5 text-white hover:bg-primary disabled:opacity-30">
-                  <ChevronDown className="size-3.5" />
-                </button>
+                <Tooltip content="Move earlier" asChild>
+                  <button
+                    type="button"
+                    onClick={() => move(i, -1)}
+                    disabled={i === 0}
+                    className="rounded bg-black/60 p-0.5 text-white hover:bg-primary disabled:opacity-30">
+                    <ChevronUp className="size-3.5" />
+                  </button>
+                </Tooltip>
+                <Tooltip content="Move later" asChild>
+                  <button
+                    type="button"
+                    onClick={() => move(i, 1)}
+                    disabled={i === shots.length - 1}
+                    className="rounded bg-black/60 p-0.5 text-white hover:bg-primary disabled:opacity-30">
+                    <ChevronDown className="size-3.5" />
+                  </button>
+                </Tooltip>
               </div>
             </div>
           ))}

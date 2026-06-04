@@ -1,5 +1,6 @@
 import { Columns2, File, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { Tooltip } from '@/components/ui/Tooltip'
 
 export type DocLayout = 'split' | 'pdf' | 'md'
 
@@ -19,15 +20,15 @@ export function LayoutSwitch({
   return (
     <div className="flex gap-0.5 rounded-md border p-0.5">
       {MODES.map(({ value: v, icon: Icon, title }) => (
-        <Button
-          key={v}
-          variant={value === v ? 'secondary' : 'ghost'}
-          size="icon"
-          onClick={() => onChange(v)}
-          title={title}
-        >
-          <Icon className="size-4" />
-        </Button>
+        <Tooltip key={v} content={title} asChild>
+          <Button
+            variant={value === v ? 'secondary' : 'ghost'}
+            size="icon"
+            onClick={() => onChange(v)}
+          >
+            <Icon className="size-4" />
+          </Button>
+        </Tooltip>
       ))}
     </div>
   )

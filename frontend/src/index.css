@@ -126,6 +126,27 @@
   }
 }
 
+/* ── Entrance motion — page/route changes, view switches, drill-ins. Replayed by
+   changing the React `key` on the <Animate> wrapper (a fresh node re-runs the anim). ── */
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-enter {
+  animation: enter-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-enter {
+    animation: none;
+  }
+}
+
 /* ── Rendered Markdown (doc detail). Sync anchors are invisible position markers. ── */
 .prose-doc {
   line-height: 1.6;

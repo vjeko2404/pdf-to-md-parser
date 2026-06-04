@@ -2,6 +2,7 @@ import { Check, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Section } from '@/components/common/Section'
 import { Button } from '@/components/ui/Button'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 import { useLoadedModels, useOllamaModels, useRemoveModel } from '@/hooks/useOllama'
 
@@ -46,16 +47,17 @@ export function ModelsPanel({
                   </span>
                 )}
               </button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() =>
-                  remove.mutate(m.name, { onSuccess: () => toast.success(`Removed ${m.name}`) })
-                }
-                title="Delete model"
-              >
-                <Trash2 className="size-4" />
-              </Button>
+              <Tooltip content="Delete model" asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    remove.mutate(m.name, { onSuccess: () => toast.success(`Removed ${m.name}`) })
+                  }
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </Tooltip>
             </li>
           ))}
         </ul>

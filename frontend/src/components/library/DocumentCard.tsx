@@ -1,24 +1,24 @@
-import { Link } from 'react-router-dom'
-import { FileText, Pencil, RefreshCw, Sparkles, RotateCcw, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Checkbox } from '@/components/ui/Checkbox'
-import { StatusBadge } from './StatusBadge'
-import { CategoryChips } from './CategoryChips'
-import { Tooltip } from '@/components/ui/Tooltip'
-import { cn } from '@/lib/utils'
-import { formatDate, formatDocType } from '@/lib/format'
-import { parseTags, type DocumentDto } from '@/types/api'
+import { Link } from "react-router-dom";
+import { FileText, Pencil, RefreshCw, Sparkles, RotateCcw, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { StatusBadge } from "./StatusBadge";
+import { CategoryChips } from "./CategoryChips";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { formatDate, formatDocType } from "@/lib/format";
+import { parseTags, type DocumentDto } from "@/types/api";
 
 export interface DocumentCardProps {
-  doc: DocumentDto
-  selected: boolean
-  onToggle: (id: number) => void
-  onEnrich: (id: number) => void
-  onRetry: (id: number) => void
-  onReconvert: (id: number) => void
-  onEdit: (doc: DocumentDto) => void
-  onDelete: (id: number) => void
-  onTagClick: (tag: string) => void
+  doc: DocumentDto;
+  selected: boolean;
+  onToggle: (id: number) => void;
+  onEnrich: (id: number) => void;
+  onRetry: (id: number) => void;
+  onReconvert: (id: number) => void;
+  onEdit: (doc: DocumentDto) => void;
+  onDelete: (id: number) => void;
+  onTagClick: (tag: string) => void;
 }
 
 export function DocumentCard({
@@ -32,15 +32,10 @@ export function DocumentCard({
   onDelete,
   onTagClick,
 }: DocumentCardProps) {
-  const tags = parseTags(doc.tagsJson)
+  const tags = parseTags(doc.tagsJson);
 
   return (
-    <div
-      className={cn(
-        'flex min-w-0 flex-col gap-3 rounded-xl border bg-card p-4 transition-shadow hover:shadow-sm',
-        selected && 'ring-2 ring-primary',
-      )}
-    >
+    <Card selected={selected} className="flex min-w-0 flex-col gap-3">
       <div className="flex items-start gap-2">
         <Checkbox
           checked={selected}
@@ -56,8 +51,10 @@ export function DocumentCard({
       </div>
 
       {doc.summary && (
-        <Tooltip content={doc.summary} delay={2000} className="block">
-          <p className="line-clamp-2 cursor-default wrap-break-word text-sm text-muted-foreground">{doc.summary}</p>
+        <Tooltip content={doc.summary} asChild>
+          <p className="line-clamp-2 cursor-default wrap-break-word text-sm text-muted-foreground">
+            {doc.summary}
+          </p>
         </Tooltip>
       )}
 
@@ -71,15 +68,14 @@ export function DocumentCard({
             </span>
           )}
           {tags.slice(0, 5).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => onTagClick(t)}
-              title={`Search “${t}”`}
-              className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
-            >
-              {t}
-            </button>
+            <Tooltip key={t} content={`Search “${t}”`} asChild>
+              <button
+                type="button"
+                onClick={() => onTagClick(t)}
+                className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground">
+                {t}
+              </button>
+            </Tooltip>
           ))}
         </div>
       )}
@@ -89,36 +85,39 @@ export function DocumentCard({
           {doc.pages} pp · {formatDate(doc.createdAt)}
         </span>
         <div className="flex gap-1">
-          <Button variant="ghost" size="sm" onClick={() => onEnrich(doc.id)} title="Enrich with Ollama">
-            <Sparkles className="size-4" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => onEdit(doc)} title="Edit name & categories">
-            <Pencil className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onReconvert(doc.id)}
-            title="Re-create parsing"
-          >
-            <RefreshCw className="size-4" />
-          </Button>
-          {doc.status === 'Failed' && (
-            <Button variant="ghost" size="sm" onClick={() => onRetry(doc.id)} title="Retry">
-              <RotateCcw className="size-4" />
+          <Tooltip content="Enrich with Ollama" asChild>
+            <Button variant="ghost" size="sm" onClick={() => onEnrich(doc.id)}>
+              <Sparkles className="size-4" />
             </Button>
+          </Tooltip>
+          <Tooltip content="Edit name & categories" asChild>
+            <Button variant="ghost" size="sm" onClick={() => onEdit(doc)}>
+              <Pencil className="size-4" />
+            </Button>
+          </Tooltip>
+          <Tooltip content="Re-create parsing" asChild>
+            <Button variant="ghost" size="sm" onClick={() => onReconvert(doc.id)}>
+              <RefreshCw className="size-4" />
+            </Button>
+          </Tooltip>
+          {doc.status === "Failed" && (
+            <Tooltip content="Retry" asChild>
+              <Button variant="ghost" size="sm" onClick={() => onRetry(doc.id)}>
+                <RotateCcw className="size-4" />
+              </Button>
+            </Tooltip>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onDelete(doc.id)}
-            title="Delete from vault"
-            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-          >
-            <Trash2 className="size-4" />
-          </Button>
+          <Tooltip content="Delete from vault" asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(doc.id)}
+              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+              <Trash2 className="size-4" />
+            </Button>
+          </Tooltip>
         </div>
       </div>
-    </div>
-  )
+    </Card>
+  );
 }

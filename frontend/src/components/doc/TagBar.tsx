@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Tag as TagIcon, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { useUpdateTags } from '@/hooks/useDocuments'
 
 export function TagBar({ docId, tags }: { docId: number; tags: string[] }) {
@@ -30,14 +31,15 @@ export function TagBar({ docId, tags }: { docId: number; tags: string[] }) {
           className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground"
         >
           {t}
-          <button
-            type="button"
-            onClick={() => remove(t)}
-            title="Remove tag"
-            className="text-muted-foreground hover:text-destructive"
-          >
-            <X className="size-3" />
-          </button>
+          <Tooltip content="Remove tag" asChild>
+            <button
+              type="button"
+              onClick={() => remove(t)}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <X className="size-3" />
+            </button>
+          </Tooltip>
         </span>
       ))}
       <input

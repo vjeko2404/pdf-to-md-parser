@@ -4,8 +4,10 @@ import { toast } from "sonner";
 import { Section } from "@/components/common/Section";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { ColorPicker } from "@/components/ui/ColorPicker";
 import { Link } from "@/components/ui/Link";
-import { TextInput } from "@/components/common/inputs";
+import { Input } from "@/components/ui/Input";
 import { useCategories, useCreateCategory, useDeleteCategory } from "@/hooks/useCategories";
 
 export function CategoriesPage() {
@@ -49,16 +51,19 @@ export function CategoriesPage() {
                 className="size-3 shrink-0 rounded-full"
                 style={{ background: c.color ?? "var(--muted-foreground)" }}
               />
-              <Link
-                to={`/?categoryId=${c.id}`}
-                className="flex-1 font-medium text-foreground no-underline hover:text-primary hover:underline"
-                title={`View documents in ${c.name}`}>
-                {c.name}
-              </Link>
+              <Tooltip content={`View documents in ${c.name}`} asChild>
+                <Link
+                  to={`/?categoryId=${c.id}`}
+                  className="flex-1 font-medium text-foreground no-underline hover:text-primary hover:underline">
+                  {c.name}
+                </Link>
+              </Tooltip>
               <span className="text-xs text-muted-foreground">{c.count ?? 0} docs</span>
-              <Button variant="ghost" size="sm" onClick={() => setDeleteId(c.id)} title="Delete">
-                <Trash2 className="size-4" />
-              </Button>
+              <Tooltip content="Delete" asChild>
+                <Button variant="ghost" size="sm" onClick={() => setDeleteId(c.id)}>
+                  <Trash2 className="size-4" />
+                </Button>
+              </Tooltip>
             </div>
           ))}
           {!cats?.length && (
@@ -68,19 +73,14 @@ export function CategoriesPage() {
           )}
         </div>
         <div className="mt-3 flex gap-2 border-t pt-3">
-          <input
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="h-9 w-12 rounded-md border bg-background"
-          />
-          <TextInput
+          <ColorPicker value={color} onChange={setColor} />
+          <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Category name"
             onKeyDown={(e) => e.key === "Enter" && add()}
           />
-          <Button variant="button_primary" size="sm" onClick={add}>
+          <Button variant="button_primary" size="sm" className="h-9" onClick={add}>
             <Plus className="size-4" /> Add
           </Button>
         </div>

@@ -1,6 +1,7 @@
 import { Sparkles, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
+import { Tooltip } from '@/components/ui/Tooltip'
 import { Select } from '@/components/ui/Select'
 import {
   useAssignCategory,
@@ -54,22 +55,23 @@ export function CategoryBar({ docId }: { docId: number }) {
           ))}
         </Select>
       )}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() =>
-          auto.mutate(undefined, {
-            onSuccess: (r) => {
-              const names = (r as { assigned: string[] }).assigned
-              toast.success(names.length ? `Auto: ${names.join(', ')}` : 'No category matched')
-            },
-            onError: (e) => toast.error(e.message),
-          })
-        }
-        title="Auto-categorize with the LLM"
-      >
-        <Sparkles className="size-4" /> Auto
-      </Button>
+      <Tooltip content="Auto-categorize with the LLM" asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() =>
+            auto.mutate(undefined, {
+              onSuccess: (r) => {
+                const names = (r as { assigned: string[] }).assigned
+                toast.success(names.length ? `Auto: ${names.join(', ')}` : 'No category matched')
+              },
+              onError: (e) => toast.error(e.message),
+            })
+          }
+        >
+          <Sparkles className="size-4" /> Auto
+        </Button>
+      </Tooltip>
     </div>
   )
 }
