@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Loader2, LogIn } from 'lucide-react'
 import { authApi } from '@/api/auth'
 import { Button } from '@/components/ui/Button'
-import { TextInput } from '@/components/common/inputs'
+import { TextInput, PasswordInput } from '@/components/common/inputs'
 import { Field } from '@/components/common/Field'
 import { AuthShell } from '@/components/auth/AuthShell'
 import { useAuth } from '@/providers/AuthProvider'
@@ -53,8 +53,7 @@ export function LoginPage() {
           />
         </Field>
         <Field label="Password">
-          <TextInput
-            type="password"
+          <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"

@@ -246,6 +246,30 @@ public static class DocumentsEndpoints
             }
         );
 
+        // Overwrite a document's Markdown — manual cleanup of marker's occasional bloat
+        // (repeated-word runs on scanned pages). The body is the full .md INCLUDING the
+        // invisible sync-scroll anchors, so preserving them keeps PDF↔MD scroll aligned.
+        // We rewrite the file and refresh the FTS search content with the anchor-stripped text.
+        g.MapPatch(
+            "/{id:long}/markdown",
+            async (long id, UpdateMarkdownRequest req, ClaimsPrincipal user, DocumentRepository repo) =>
+            {
+                var userId = user.GetUserId();
+                var d = await repo.GetByIdAsync(id, userId);
+                if (d?.MdPath is null || !File.Exists(d.MdPath))
+                    return Results.NotFound();
+                if (req.Content is null)
+                    return Results.BadRequest("content is required");
+
+                var editedAt = DateTime.UtcNow;
+                await File.WriteAllTextAsync(d.MdPath, req.Content);
+                await repo.RecordMarkdownEditAsync(id, Helpers.StripAnchors(req.Content), editedAt);
+                await repo.AddEventAsync(id, "info", "edit", "Markdown edited");
+                d.MarkdownEditedAt = editedAt; // reflect in the returned doc (drives the badge)
+                return Results.Ok(d);
+            }
+        );
+
         // Requeue a failed (or any) document.
         g.MapPost(
             "/{id:long}/retry",
@@ -425,6 +449,9 @@ public record DeleteBatchRequest(long[] Ids);
 
 /// <summary>Request body for PATCH /api/documents/{id}/tags.</summary>
 public record UpdateTagsRequest(string[]? Tags);
+
+/// <summary>Request body for PATCH /api/documents/{id}/markdown — the full edited .md text.</summary>
+public record UpdateMarkdownRequest(string? Content);
 
 /// <summary>Request body for PATCH /api/documents/{id} — rename and/or set categories.
 /// Both fields optional: null CategoryIds leaves categories untouched; an empty array clears them.</summary>

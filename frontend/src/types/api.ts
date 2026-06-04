@@ -28,6 +28,8 @@ export interface DocumentDto {
   durationMs: number
   createdAt: string
   processedAt?: string | null
+  /** Set when the Markdown was manually edited (cleared on reconvert); null = never edited. */
+  markdownEditedAt?: string | null
   categories?: DocCategory[]
 }
 

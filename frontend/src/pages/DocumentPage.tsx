@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Copy, Download, Pencil, Printer, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Copy, Download, Pencil, PencilLine, Printer, RefreshCw, Save, SquarePen, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
-import { formatDocType } from '@/lib/format'
+import { formatDateTime, formatDocType } from '@/lib/format'
 import { documentsApi } from '@/api/documents'
 import { parseTags } from '@/types/api'
 import { PdfPane } from '@/components/doc/PdfPane'
@@ -14,14 +14,17 @@ import { CategoryBar } from '@/components/doc/CategoryBar'
 import { TagBar } from '@/components/doc/TagBar'
 import { EditDocumentModal } from '@/components/library/EditDocumentModal'
 import { LayoutSwitch, type DocLayout } from '@/components/doc/LayoutSwitch'
-import { useReconvert } from '@/hooks/useDocuments'
+import { useReconvert, useUpdateMarkdown } from '@/hooks/useDocuments'
 import { useCategories } from '@/hooks/useCategories'
 import { useSyncScroll } from '@/hooks/useSyncScroll'
 import { useIsMobile } from '@/hooks/useIsMobile'
 
-const overlayCls =
+const overlayBase =
   'absolute right-3 top-3 z-10 flex gap-0.5 rounded-lg border bg-card/90 p-0.5 shadow-sm ' +
-  'backdrop-blur transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100'
+  'backdrop-blur transition-opacity'
+// Hidden until hover on desktop; always shown on mobile (no hover) — and while editing,
+// pinned visible so Save/Cancel stay reachable without hovering.
+const overlayCls = cn(overlayBase, 'opacity-100 md:opacity-0 md:group-hover:opacity-100')
 
 export function DocumentPage() {
   const { id } = useParams()
@@ -37,7 +40,10 @@ export function DocumentPage() {
     setLayout(l)
   }
   const [editing, setEditing] = useState(false)
+  const [mdEditing, setMdEditing] = useState(false)
+  const [draft, setDraft] = useState('')
   const reconvert = useReconvert()
+  const updateMarkdown = useUpdateMarkdown(docId)
   const { data: categories = [] } = useCategories()
 
   const { data: doc } = useQuery({
@@ -68,6 +74,25 @@ export function DocumentPage() {
   const baseName = (doc?.originalName ?? 'document').replace(/\.pdf$/i, '')
   const showPdf = layout !== 'md'
   const showMd = layout !== 'pdf'
+
+  const mdDirty = mdEditing && draft !== (markdown ?? '')
+  const startEditMd = () => {
+    setDraft(markdown ?? '')
+    setMdEditing(true)
+  }
+  const cancelEditMd = () => {
+    setMdEditing(false)
+    setDraft('')
+  }
+  const saveMd = () => {
+    updateMarkdown.mutate(draft, {
+      onSuccess: () => {
+        setMdEditing(false)
+        toast.success('Markdown saved')
+      },
+      onError: (e) => toast.error(e.message),
+    })
+  }
 
   const copyMd = async () => {
     if (markdown == null) return
@@ -148,6 +173,14 @@ export function DocumentPage() {
               {formatDocType(doc.docType)}
             </span>
           )}
+          {doc?.markdownEditedAt && (
+            <span
+              className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-600 dark:text-amber-400"
+              title={`Markdown manually edited ${formatDateTime(doc.markdownEditedAt)} — a re-convert would overwrite it`}
+            >
+              <PencilLine className="size-3" /> Edited
+            </span>
+          )}
           <div className="ml-auto flex items-center gap-1">
             <Button
               variant="ghost"
@@ -225,19 +258,55 @@ export function DocumentPage() {
               isMobile && 'h-[80vh]',
             )}
           >
-            <div className={overlayCls}>
-              <Button variant="ghost" size="icon" onClick={copyMd} title="Copy Markdown">
-                <Copy className="size-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={downloadMd} title="Download Markdown">
-                <Download className="size-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={printMd} title="Print Markdown">
-                <Printer className="size-4" />
-              </Button>
+            <div className={cn(overlayBase, mdEditing ? 'opacity-100' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100')}>
+              {mdEditing ? (
+                <>
+                  {mdDirty && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={saveMd}
+                      title="Save changes"
+                      disabled={updateMarkdown.isPending}
+                    >
+                      <Save className="size-4" />
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon" onClick={cancelEditMd} title="Discard changes">
+                    <X className="size-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={startEditMd}
+                    title="Edit Markdown"
+                    disabled={markdown == null}
+                  >
+                    <SquarePen className="size-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={copyMd} title="Copy Markdown">
+                    <Copy className="size-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={downloadMd} title="Download Markdown">
+                    <Download className="size-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={printMd} title="Print Markdown">
+                    <Printer className="size-4" />
+                  </Button>
+                </>
+              )}
             </div>
             {markdown != null ? (
-              <MarkdownPane markdown={markdown} containerRef={rightRef} />
+              <MarkdownPane
+                markdown={markdown}
+                containerRef={rightRef}
+                editing={mdEditing}
+                draft={draft}
+                onDraftChange={setDraft}
+              />
             ) : (
               <p className="p-6 text-sm text-muted-foreground">No markdown yet.</p>
             )}

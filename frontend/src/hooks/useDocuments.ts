@@ -38,6 +38,20 @@ export function useUpdateTags(id: number) {
 }
 export const useDeleteBatch = () => useInvalidatingMutation((ids: number[]) => documentsApi.removeBatch(ids))
 
+/** Overwrite a document's Markdown. Refreshes the rendered MD query so the edit shows
+ *  immediately, and the list (FTS search content changed). */
+export function useUpdateMarkdown(id: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (content: string) => documentsApi.updateMarkdown(id, content),
+    onSuccess: (doc) => {
+      qc.setQueryData(['document', id], doc) // refresh the "edited" badge immediately
+      qc.invalidateQueries({ queryKey: ['document-md', id] })
+      qc.invalidateQueries({ queryKey: KEY })
+    },
+  })
+}
+
 /** Rename and/or replace a document's categories. Refreshes the list, detail, and the
  *  per-doc category query so every view stays consistent. */
 export function useUpdateDocument() {

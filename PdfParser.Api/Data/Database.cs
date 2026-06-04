@@ -161,6 +161,11 @@ public class Database
                 """
             );
         }
+
+        // Manual-edit marker for the Markdown — added after launch. Plain nullable ADD COLUMN
+        // (no constraint change), so existing rows simply start out NULL = never edited.
+        if (!HasColumn(conn, "documents", "MarkdownEditedAt"))
+            conn.Execute("ALTER TABLE documents ADD COLUMN MarkdownEditedAt TEXT;");
     }
 
     /// <summary>True if <paramref name="table"/> has a column named <paramref name="column"/>.</summary>
@@ -206,7 +211,8 @@ public class Database
             ErrorReason     TEXT,
             DurationMs      INTEGER NOT NULL DEFAULT 0,
             CreatedAt       TEXT NOT NULL,
-            ProcessedAt     TEXT
+            ProcessedAt     TEXT,
+            MarkdownEditedAt TEXT
         );
 
         CREATE TABLE IF NOT EXISTS events (

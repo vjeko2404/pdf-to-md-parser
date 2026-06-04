@@ -5,7 +5,7 @@ import { authApi } from '@/api/auth'
 import { setToken } from '@/api/token'
 import { Section } from '@/components/common/Section'
 import { Field } from '@/components/common/Field'
-import { TextInput } from '@/components/common/inputs'
+import { PasswordInput } from '@/components/common/inputs'
 import { Button } from '@/components/ui/Button'
 import { PasswordStrength, isStrong } from '@/components/auth/PasswordStrength'
 
@@ -41,16 +41,14 @@ export function ChangePasswordPanel() {
       <Section title="Password" description="Change your account password">
         <form className="flex max-w-md flex-col gap-3" onSubmit={submit}>
           <Field label="Current password">
-            <TextInput
-              type="password"
+            <PasswordInput
               value={current}
               onChange={(e) => setCurrent(e.target.value)}
               autoComplete="current-password"
             />
           </Field>
           <Field label="New password">
-            <TextInput
-              type="password"
+            <PasswordInput
               value={next}
               onChange={(e) => setNext(e.target.value)}
               autoComplete="new-password"
@@ -58,8 +56,7 @@ export function ChangePasswordPanel() {
           </Field>
           <PasswordStrength password={next} />
           <Field label="Repeat new password">
-            <TextInput
-              type="password"
+            <PasswordInput
               value={repeat}
               onChange={(e) => setRepeat(e.target.value)}
               autoComplete="new-password"

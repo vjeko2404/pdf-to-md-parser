@@ -170,6 +170,25 @@ public class DocumentRepository(Database db)
         await c.ExecuteAsync("UPDATE documents_fts SET tags = @json WHERE rowid = @id", new { id, json });
     }
 
+    /// <summary>
+    /// Record a manual Markdown edit: refresh the FTS search content (pass anchor-stripped
+    /// text so search indexes clean prose) and stamp MarkdownEditedAt for the "edited" badge.
+    /// The FTS row exists from conversion onward (see SaveResultAsync), so the FTS update is a
+    /// plain column update; it no-ops before then.
+    /// </summary>
+    public async Task RecordMarkdownEditAsync(long id, string plainContent, DateTime editedAt)
+    {
+        using var c = db.Open();
+        await c.ExecuteAsync(
+            "UPDATE documents SET MarkdownEditedAt = @editedAt WHERE Id = @id",
+            new { id, editedAt }
+        );
+        await c.ExecuteAsync(
+            "UPDATE documents_fts SET content = @plainContent WHERE rowid = @id",
+            new { id, plainContent }
+        );
+    }
+
     /// <summary>Search + filter for the dashboard, scoped to the user. FTS5 when q is present.</summary>
     public async Task<IEnumerable<Document>> SearchAsync(SearchQuery query, long userId)
     {
@@ -324,7 +343,7 @@ public class DocumentRepository(Database db)
                 Status = 'Queued', MdPath = NULL, LayoutJsonPath = NULL, Pages = 0,
                 Language = NULL, DocType = NULL, DocDate = NULL, DocNumber = NULL,
                 PartiesJson = NULL, TagsJson = NULL, Summary = NULL, ErrorReason = NULL,
-                DurationMs = 0, ProcessedAt = NULL
+                DurationMs = 0, ProcessedAt = NULL, MarkdownEditedAt = NULL
             WHERE Id = @id;
             DELETE FROM documents_fts WHERE rowid = @id;
             """,

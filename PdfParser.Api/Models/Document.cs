@@ -43,6 +43,10 @@ public class Document
     public DateTime CreatedAt { get; set; }
     public DateTime? ProcessedAt { get; set; }
 
+    /// <summary>Set when the user manually edits the Markdown; null otherwise (and cleared on
+    /// reconvert). Drives the "edited" badge and warns that a reconvert would overwrite the edit.</summary>
+    public DateTime? MarkdownEditedAt { get; set; }
+
     /// <summary>Categories assigned to this doc. Populated for list/detail HTTP responses
     /// (not a DB column — Dapper leaves it empty on plain SELECTs and the pipeline ignores it).</summary>
     public IReadOnlyList<Category> Categories { get; set; } = [];

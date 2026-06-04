@@ -66,6 +66,10 @@ export const documentsApi = {
   enrichBatch: (ids: number[]) => api.post<EnrichResult[]>('/documents/enrich', { ids }),
   events: (id: number) => api.get<EventDto[]>(`/documents/${id}/events`),
   markdown: (id: number) => api.get<string>(`/documents/${id}/markdown`),
+  /** Overwrite the stored Markdown (manual cleanup of bloated blocks). Send the full text
+   *  including the invisible sync-scroll anchors so PDF↔MD scroll stays aligned. */
+  updateMarkdown: (id: number, content: string) =>
+    api.patch<DocumentDto>(`/documents/${id}/markdown`, { content }),
   blocks: (id: number) => api.get<MarkerBlock[]>(`/documents/${id}/blocks`),
   facets: () => api.get<Facets>('/facets'),
   /** Fetch the archived PDF as a Blob WITH auth — callers wrap it in an object URL.
