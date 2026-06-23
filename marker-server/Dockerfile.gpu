@@ -1,0 +1,38 @@
+# GPU variant of marker-server for an NVIDIA box (e.g. the IONOS VDC + H200).
+# The stock Dockerfile installs CPU torch and forces TORCH_DEVICE=cpu; this one
+# installs the CUDA build and lets marker use the GPU.
+#
+#   Build:  docker build -f Dockerfile.gpu -t marker-server:gpu .
+#   Run:    docker run -d --name marker --gpus all -p 8000:8000 \
+#               -v marker-models:/models --restart unless-stopped marker-server:gpu
+#
+# Only the host NVIDIA driver + nvidia-container-toolkit are needed (already
+# working — `docker run --gpus all` succeeded). The torch wheel bundles the rest.
+FROM python:3.12-slim
+
+# System libs surya/opencv/pdfium need at runtime.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PIP_NO_CACHE_DIR=1 \
+    HF_HOME=/models \
+    TORCH_DEVICE=cuda \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# CUDA 12.4 torch — matches the host driver (nvidia-smi shows CUDA 12.4). The cu124
+# index ships a self-contained wheel (bundles the CUDA runtime). If pip can't resolve
+# a wheel here, swap cu124 -> cu126 (driver 550 runs it via CUDA minor-version compat).
+RUN pip install torch --index-url https://download.pytorch.org/whl/cu124
+
+COPY requirements.txt .
+# Install marker, then force the transformers pin to win resolution (surya #484).
+# torch is already the CUDA build above, so marker won't pull a CPU one over it.
+RUN pip install -r requirements.txt && pip install "transformers==4.57.3"
+
+COPY app.py .
+
+EXPOSE 8000
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
